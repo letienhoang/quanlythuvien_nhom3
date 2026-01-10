@@ -96,5 +96,50 @@ public class LibraryDbContext : DbContext
         mb.Entity<PhieuPhat>()
           .Property(x => x.SoTienPhat)
           .HasColumnType("decimal(18,2)");
+
+        mb.Entity<CuonSach>()
+          .Property(c => c.TinhTrang)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<CuonSach>()
+          .Property(c => c.TrangThai)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<NguoiMuon>()
+          .Property(c => c.LoaiDocGia)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<NguoiMuon>()
+          .Property(c => c.TrangThai)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<PhieuMuon>()
+          .Property(c => c.TrangThai)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<PhieuPhat>()
+          .Property(c => c.TrangThaiThanhToan)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<ChiTietPhieuMuon>()
+          .Property(c => c.TinhTrangTra)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<NhanVien>()
+          .Property(c => c.ChucVu)
+          .HasConversion<string>()
+          .HasMaxLength(20);
+
+        mb.Entity<HoaDonPhat>()
+          .Property(c => c.PhuongThuc)
+          .HasConversion<string>()
+          .HasMaxLength(20);
     }
 }

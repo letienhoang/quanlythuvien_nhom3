@@ -10,4 +10,5 @@ public class TacGia
     public DateTime? NgaySinh { get; set; } 
     public string? QuocTich { get; set; } 
     public string? MoTa { get; set; }
+    public ICollection<Sach>? Sachs { get; set; }
 }

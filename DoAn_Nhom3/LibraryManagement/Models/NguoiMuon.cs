@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using LibraryManagement.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace LibraryManagement.Models;
 
@@ -12,8 +13,10 @@ public class NguoiMuon
     public string? DiaChi { get; set; }
     public string? SoDienThoai { get; set; }
     public string? Email { get; set; }
-    public string LoaiDocGia { get; set; }
+    public ReaderType LoaiDocGia { get; set; }
     public DateTime NgayDangKy { get; set; }
     public DateTime NgayHetHan { get; set; }
-    public string TrangThai { get; set; }
+    public MemberStatus TrangThai { get; set; }
+
+    public ICollection<PhieuMuon>? PhieuMuons { get; set; }
 }

@@ -1,0 +1,67 @@
+﻿@model LibraryManagement.Models.Sach
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="MaSach" class="form-label"></label>
+        <input asp-for="MaSach" class="form-control" />
+        <span asp-validation-for="MaSach" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="TenSach" class="form-label"></label>
+        <input asp-for="TenSach" class="form-control" />
+        <span asp-validation-for="TenSach" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="ISBN" class="form-label"></label>
+        <input asp-for="ISBN" class="form-control" />
+        <span asp-validation-for="ISBN" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NamXuatBan" class="form-label"></label>
+        <input asp-for="NamXuatBan" class="form-control" />
+        <span asp-validation-for="NamXuatBan" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SoTrang" class="form-label"></label>
+        <input asp-for="SoTrang" class="form-control" />
+        <span asp-validation-for="SoTrang" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="NhaXuatBan" class="form-label"></label>
+        <input asp-for="NhaXuatBan" class="form-control" />
+        <span asp-validation-for="NhaXuatBan" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="NgonNgu" class="form-label"></label>
+        <input asp-for="NgonNgu" class="form-control" />
+        <span asp-validation-for="NgonNgu" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="MaTacGia" class="form-label"></label>
+        <select asp-for="MaTacGia" asp-items="ViewBag.MaTacGia" class="form-select">
+            <option value="">-- Chọn tác giả --</option>
+        </select>
+        <span asp-validation-for="MaTacGia" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="MoTa" class="form-label"></label>
+        <textarea asp-for="MoTa" rows="3" class="form-control"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-3">
+        <label asp-for="SoLuong" class="form-label"></label>
+        <input asp-for="SoLuong" class="form-control" />
+        <span asp-validation-for="SoLuong" class="text-danger"></span>
+    </div>
+</div>
