@@ -1,0 +1,24 @@
+# --- .NET build outputs ---
+bin/
+obj/
+
+# Rider / VS cache
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.user
+*.suo
+*.rsuser
+*.sln.docstates
+
+# ASP.NET Core
+appsettings.*.json
+appsettings.Development.json
+
+# Logs
+*.log
+
+# Environment
+.env
