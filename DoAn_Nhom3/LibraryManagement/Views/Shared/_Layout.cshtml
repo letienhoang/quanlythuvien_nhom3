@@ -3,44 +3,41 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LibraryManagement</title>
+    <title>@ViewData["Title"] - Quản lý thư viện</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/twitter-bootstrap/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/LibraryManagement.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">Library</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Sachs" asp-action="Index">Sách</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="CuonSach" asp-action="Index">Cuốn sách</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="NguoiMuon" asp-action="Index">Độc giả</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    @await Html.PartialAsync("_ColorSection")
+    @await Html.PartialAsync("_Header")
+
+    <div class="container-fluid">
+        <div class="row">
+            @await Html.PartialAsync("_Sidebar")
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted">
-        © @DateTime.Now.Year - LibraryManagement
+        © @DateTime.Now.Year - Nhóm 3
     </footer>
 
     <script src="~/lib/twitter-bootstrap/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/color-modes.js" asp-append-version="true"></script>
+
     <script src="~/lib/jquery/jquery.min.js" asp-append-version="true"></script>
     <script src="~/lib/jquery-validate/jquery.validate.min.js" asp-append-version="true"></script>
     <script src="~/lib/jquery-validate-unobtrusive/jquery.validate.unobtrusive.min.js" asp-append-version="true"></script>
+    <script src="~/lib/Chartjs/chart.umd.js" asp-append-version="true"></script>
+
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
