@@ -20,7 +20,7 @@ namespace LibraryManagement.Controllers
 
         private void PopulateTacGiaDropDown(object selectedTacGia = null)
         {
-            var list = _context.TacGia
+            var list = _context.TacGias
                         .OrderBy(t => t.TenTacGia)
                         .Select(t => new { t.MaTacGia, t.TenTacGia })
                         .ToList();
@@ -30,7 +30,7 @@ namespace LibraryManagement.Controllers
         // GET: Sachs
         public async Task<IActionResult> Index()
         {
-            var books = await _context.Sach
+            var books = await _context.Sachs
                  .Include(s => s.TacGia)
                  .ToListAsync();
             return View(books);
@@ -44,7 +44,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach
+            var sach = await _context.Sachs
                 .FirstOrDefaultAsync(m => m.MaSach == id);
             if (sach == null)
             {
@@ -73,7 +73,7 @@ namespace LibraryManagement.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            PopulateTacGiaDropDown(sach.MaTacGia);
+            PopulateTacGiaDropDown(sach.TacGiaId);
             return View(sach);
         }
 
@@ -85,12 +85,12 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach.FindAsync(id);
+            var sach = await _context.Sachs.FindAsync(id);
             if (sach == null)
             {
                 return NotFound();
             }
-            PopulateTacGiaDropDown(sach.MaTacGia);
+            PopulateTacGiaDropDown(sach.TacGiaId);
             return View(sach);
         }
 
@@ -126,7 +126,7 @@ namespace LibraryManagement.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            PopulateTacGiaDropDown(sach.MaTacGia);
+            PopulateTacGiaDropDown(sach.TacGiaId);
             return View(sach);
         }
 
@@ -138,7 +138,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach
+            var sach = await _context.Sachs
                 .FirstOrDefaultAsync(m => m.MaSach == id);
             if (sach == null)
             {
@@ -153,10 +153,10 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var sach = await _context.Sach.FindAsync(id);
+            var sach = await _context.Sachs.FindAsync(id);
             if (sach != null)
             {
-                _context.Sach.Remove(sach);
+                _context.Sachs.Remove(sach);
             }
 
             await _context.SaveChangesAsync();
@@ -165,7 +165,7 @@ namespace LibraryManagement.Controllers
 
         private bool SachExists(string id)
         {
-            return _context.Sach.Any(e => e.MaSach == id);
+            return _context.Sachs.Any(e => e.MaSach == id);
         }
     }
 }

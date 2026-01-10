@@ -1,4 +1,5 @@
 using LibraryManagement.Models;
+using LibraryManagement.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,8 @@ var conString = builder.Configuration.GetConnectionString("LibraryDb")
                 ?? throw new InvalidOperationException("Connection string 'LibraryDb' not found.");
 
 builder.Services.AddDbContext<LibraryDbContext>(options => options.UseSqlServer(conString));
+builder.Services.AddScoped<LibraryDbContext>();
+builder.Services.AddScoped<ILibraryCodeGenerator, LibraryCodeGenerator>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

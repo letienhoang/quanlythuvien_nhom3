@@ -21,7 +21,7 @@ namespace LibraryManagement.Controllers
         // GET: PhieuMuons
         public async Task<IActionResult> Index()
         {
-            return View(await _context.PhieuMuon.ToListAsync());
+            return View(await _context.PhieuMuons.ToListAsync());
         }
 
         // GET: PhieuMuons/Details/5
@@ -32,7 +32,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuMuon = await _context.PhieuMuon
+            var phieuMuon = await _context.PhieuMuons
                 .FirstOrDefaultAsync(m => m.MaPhieuMuon == id);
             if (phieuMuon == null)
             {
@@ -72,7 +72,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuMuon = await _context.PhieuMuon.FindAsync(id);
+            var phieuMuon = await _context.PhieuMuons.FindAsync(id);
             if (phieuMuon == null)
             {
                 return NotFound();
@@ -123,7 +123,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuMuon = await _context.PhieuMuon
+            var phieuMuon = await _context.PhieuMuons
                 .FirstOrDefaultAsync(m => m.MaPhieuMuon == id);
             if (phieuMuon == null)
             {
@@ -138,10 +138,10 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var phieuMuon = await _context.PhieuMuon.FindAsync(id);
+            var phieuMuon = await _context.PhieuMuons.FindAsync(id);
             if (phieuMuon != null)
             {
-                _context.PhieuMuon.Remove(phieuMuon);
+                _context.PhieuMuons.Remove(phieuMuon);
             }
 
             await _context.SaveChangesAsync();
@@ -150,7 +150,7 @@ namespace LibraryManagement.Controllers
 
         private bool PhieuMuonExists(string id)
         {
-            return _context.PhieuMuon.Any(e => e.MaPhieuMuon == id);
+            return _context.PhieuMuons.Any(e => e.MaPhieuMuon == id);
         }
     }
 }

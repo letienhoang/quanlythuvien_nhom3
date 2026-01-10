@@ -21,7 +21,7 @@ namespace LibraryManagement.Controllers
         // GET: CuonSachs
         public async Task<IActionResult> Index()
         {
-            return View(await _context.CuonSach.ToListAsync());
+            return View(await _context.CuonSachs.ToListAsync());
         }
 
         // GET: CuonSachs/Details/5
@@ -32,7 +32,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var cuonSach = await _context.CuonSach
+            var cuonSach = await _context.CuonSachs
                 .FirstOrDefaultAsync(m => m.MaCuon == id);
             if (cuonSach == null)
             {
@@ -53,7 +53,7 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaCuon,MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
+        public async Task<IActionResult> Create([Bind("MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
             if (ModelState.IsValid)
             {
@@ -72,7 +72,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var cuonSach = await _context.CuonSach.FindAsync(id);
+            var cuonSach = await _context.CuonSachs.FindAsync(id);
             if (cuonSach == null)
             {
                 return NotFound();
@@ -85,7 +85,7 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaCuon,MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
+        public async Task<IActionResult> Edit(string id, [Bind("MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
             if (id != cuonSach.MaCuon)
             {
@@ -123,7 +123,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var cuonSach = await _context.CuonSach
+            var cuonSach = await _context.CuonSachs
                 .FirstOrDefaultAsync(m => m.MaCuon == id);
             if (cuonSach == null)
             {
@@ -138,10 +138,10 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var cuonSach = await _context.CuonSach.FindAsync(id);
+            var cuonSach = await _context.CuonSachs.FindAsync(id);
             if (cuonSach != null)
             {
-                _context.CuonSach.Remove(cuonSach);
+                _context.CuonSachs.Remove(cuonSach);
             }
 
             await _context.SaveChangesAsync();
@@ -150,7 +150,7 @@ namespace LibraryManagement.Controllers
 
         private bool CuonSachExists(string id)
         {
-            return _context.CuonSach.Any(e => e.MaCuon == id);
+            return _context.CuonSachs.Any(e => e.MaCuon == id);
         }
     }
 }

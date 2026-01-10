@@ -24,50 +24,44 @@ namespace LibraryManagement.Migrations
 
             modelBuilder.Entity("LibraryManagement.Models.ChiTietPhieuMuon", b =>
                 {
-                    b.Property<string>("MaPhieuMuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PhieuMuonId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("MaCuon")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("CuonSachMaCuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("CuonSachId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("NgayTra")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("PhieuMuonMaPhieuMuon")
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("TinhTrangTra")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("MaPhieuMuon", "MaCuon");
+                    b.HasKey("PhieuMuonId", "CuonSachId");
 
-                    b.HasIndex("CuonSachMaCuon");
+                    b.HasIndex("CuonSachId");
 
-                    b.HasIndex("MaCuon");
-
-                    b.HasIndex("PhieuMuonMaPhieuMuon");
-
-                    b.ToTable("ChiTietPhieuMuon");
+                    b.ToTable("ChiTietPhieuMuons");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.CuonSach", b =>
                 {
-                    b.Property<string>("MaCuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Property<string>("MaSach")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("MaCuon")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("NgayNhap")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("SachMaSach")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("SachId")
+                        .HasColumnType("int");
 
                     b.Property<string>("TinhTrang")
                         .IsRequired()
@@ -82,46 +76,59 @@ namespace LibraryManagement.Migrations
                     b.Property<string>("ViTriKe")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("MaCuon");
+                    b.HasKey("Id");
 
-                    b.HasIndex("MaSach");
+                    b.HasIndex("SachId");
 
-                    b.HasIndex("SachMaSach");
-
-                    b.ToTable("CuonSach");
+                    b.ToTable("CuonSachs");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.DanhMuc", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("MaDanhMuc")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TenDanhMuc")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
-                    b.HasKey("MaDanhMuc");
+                    b.HasKey("Id");
 
-                    b.ToTable("DanhMuc");
+                    b.HasIndex("MaDanhMuc")
+                        .IsUnique();
+
+                    b.ToTable("DanhMucs");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.HoaDonPhat", b =>
                 {
-                    b.Property<string>("MaHoaDon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Property<string>("MaPhat")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("MaHoaDon")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("NgayThanhToan")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PhieuPhatMaPhat")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PhieuPhatId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PhuongThuc")
                         .IsRequired()
@@ -131,23 +138,25 @@ namespace LibraryManagement.Migrations
                     b.Property<decimal>("SoTien")
                         .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("MaHoaDon");
+                    b.HasKey("Id");
 
-                    b.HasIndex("MaPhat");
+                    b.HasIndex("PhieuPhatId");
 
-                    b.HasIndex("PhieuPhatMaPhat");
-
-                    b.ToTable("HoaDonPhat");
+                    b.ToTable("HoaDonPhats");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NguoiMuon", b =>
                 {
-                    b.Property<string>("MaNguoiMuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CCCD")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("DiaChi")
                         .HasColumnType("nvarchar(max)");
@@ -156,13 +165,18 @@ namespace LibraryManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HoTen")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("LoaiDocGia")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("MaNguoiMuon")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("NgayDangKy")
                         .HasColumnType("datetime2");
@@ -181,21 +195,25 @@ namespace LibraryManagement.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("MaNguoiMuon");
+                    b.HasKey("Id");
 
                     b.HasIndex("CCCD")
                         .IsUnique();
 
-                    b.ToTable("NguoiMuon");
+                    b.ToTable("NguoiMuons");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NhanVien", b =>
                 {
-                    b.Property<string>("MaNhanVien")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CCCD")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("ChucVu")
                         .HasMaxLength(20)
@@ -205,8 +223,13 @@ namespace LibraryManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("HoTen")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("MaNhanVien")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("MatKhau")
                         .IsRequired()
@@ -216,69 +239,61 @@ namespace LibraryManagement.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SoDienThoai")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("TaiKhoan")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("MaNhanVien");
+                    b.HasKey("Id");
 
                     b.HasIndex("TaiKhoan")
                         .IsUnique();
 
-                    b.ToTable("NhanVien");
+                    b.ToTable("NhanViens");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhanLoai", b =>
                 {
-                    b.Property<string>("MaSach")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("SachId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("MaDanhMuc")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("DanhMucId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("DanhMucMaDanhMuc")
-                        .HasColumnType("nvarchar(450)");
+                    b.HasKey("SachId", "DanhMucId");
 
-                    b.Property<string>("SachMaSach")
-                        .HasColumnType("nvarchar(450)");
+                    b.HasIndex("DanhMucId");
 
-                    b.HasKey("MaSach", "MaDanhMuc");
-
-                    b.HasIndex("DanhMucMaDanhMuc");
-
-                    b.HasIndex("MaDanhMuc");
-
-                    b.HasIndex("SachMaSach");
-
-                    b.ToTable("PhanLoai");
+                    b.ToTable("PhanLoais");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuMuon", b =>
                 {
-                    b.Property<string>("MaPhieuMuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("HanTra")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("MaNguoiMuon")
+                    b.Property<string>("MaPhieuMuon")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("MaNhanVien")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("NgayMuon")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("NguoiMuonMaNguoiMuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("NguoiMuonId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("NhanVienMaNhanVien")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("NhanVienId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("SoNgayTre")
                         .HasColumnType("int");
@@ -288,33 +303,33 @@ namespace LibraryManagement.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("MaPhieuMuon");
+                    b.HasKey("Id");
 
-                    b.HasIndex("MaNguoiMuon");
+                    b.HasIndex("NguoiMuonId");
 
-                    b.HasIndex("MaNhanVien");
+                    b.HasIndex("NhanVienId");
 
-                    b.HasIndex("NguoiMuonMaNguoiMuon");
-
-                    b.HasIndex("NhanVienMaNhanVien");
-
-                    b.ToTable("PhieuMuon");
+                    b.ToTable("PhieuMuons");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuPhat", b =>
                 {
-                    b.Property<string>("MaPhat")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("LyDo")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MaPhieuMuon")
+                    b.Property<string>("MaPhat")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("PhieuMuonMaPhieuMuon")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("PhieuMuonId")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("SoTienPhat")
                         .HasColumnType("decimal(18,2)");
@@ -324,27 +339,30 @@ namespace LibraryManagement.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.HasKey("MaPhat");
+                    b.HasKey("Id");
 
-                    b.HasIndex("MaPhieuMuon");
+                    b.HasIndex("PhieuMuonId");
 
-                    b.HasIndex("PhieuMuonMaPhieuMuon");
-
-                    b.ToTable("PhieuPhat");
+                    b.ToTable("PhieuPhats");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.Sach", b =>
                 {
-                    b.Property<string>("MaSach")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ISBN")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("MaTacGia")
+                    b.Property<string>("MaSach")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
@@ -353,7 +371,8 @@ namespace LibraryManagement.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("NgonNgu")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("NhaXuatBan")
                         .HasMaxLength(200)
@@ -365,30 +384,39 @@ namespace LibraryManagement.Migrations
                     b.Property<int?>("SoTrang")
                         .HasColumnType("int");
 
-                    b.Property<string>("TacGiaMaTacGia")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("TacGiaId")
+                        .HasColumnType("int");
 
                     b.Property<string>("TenSach")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.HasKey("MaSach");
+                    b.HasKey("Id");
 
                     b.HasIndex("ISBN")
                         .IsUnique();
 
-                    b.HasIndex("MaTacGia");
+                    b.HasIndex("MaSach")
+                        .IsUnique();
 
-                    b.HasIndex("TacGiaMaTacGia");
+                    b.HasIndex("TacGiaId");
 
-                    b.ToTable("Sach");
+                    b.ToTable("Sachs");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.TacGia", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("MaTacGia")
-                        .HasColumnType("nvarchar(450)");
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("MoTa")
                         .HasColumnType("nvarchar(max)");
@@ -397,38 +425,35 @@ namespace LibraryManagement.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("QuocTich")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("TenTacGia")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
-                    b.HasKey("MaTacGia");
+                    b.HasKey("Id");
 
-                    b.ToTable("TacGia");
+                    b.HasIndex("MaTacGia")
+                        .IsUnique();
+
+                    b.ToTable("TacGias");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.ChiTietPhieuMuon", b =>
                 {
                     b.HasOne("LibraryManagement.Models.CuonSach", "CuonSach")
                         .WithMany("ChiTietPhieuMuons")
-                        .HasForeignKey("CuonSachMaCuon");
-
-                    b.HasOne("LibraryManagement.Models.CuonSach", null)
-                        .WithMany()
-                        .HasForeignKey("MaCuon")
+                        .HasForeignKey("CuonSachId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LibraryManagement.Models.PhieuMuon", null)
-                        .WithMany()
-                        .HasForeignKey("MaPhieuMuon")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.PhieuMuon", "PhieuMuon")
                         .WithMany("ChiTietPhieuMuons")
-                        .HasForeignKey("PhieuMuonMaPhieuMuon");
+                        .HasForeignKey("PhieuMuonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("CuonSach");
 
@@ -437,30 +462,22 @@ namespace LibraryManagement.Migrations
 
             modelBuilder.Entity("LibraryManagement.Models.CuonSach", b =>
                 {
-                    b.HasOne("LibraryManagement.Models.Sach", null)
-                        .WithMany()
-                        .HasForeignKey("MaSach")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("LibraryManagement.Models.Sach", "Sach")
                         .WithMany("CuonSachs")
-                        .HasForeignKey("SachMaSach");
+                        .HasForeignKey("SachId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Sach");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.HoaDonPhat", b =>
                 {
-                    b.HasOne("LibraryManagement.Models.PhieuPhat", null)
-                        .WithMany()
-                        .HasForeignKey("MaPhat")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("LibraryManagement.Models.PhieuPhat", "PhieuPhat")
                         .WithMany("HoaDonPhats")
-                        .HasForeignKey("PhieuPhatMaPhat");
+                        .HasForeignKey("PhieuPhatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PhieuPhat");
                 });
@@ -469,23 +486,15 @@ namespace LibraryManagement.Migrations
                 {
                     b.HasOne("LibraryManagement.Models.DanhMuc", "DanhMuc")
                         .WithMany("PhanLoais")
-                        .HasForeignKey("DanhMucMaDanhMuc");
-
-                    b.HasOne("LibraryManagement.Models.DanhMuc", null)
-                        .WithMany()
-                        .HasForeignKey("MaDanhMuc")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("LibraryManagement.Models.Sach", null)
-                        .WithMany()
-                        .HasForeignKey("MaSach")
+                        .HasForeignKey("DanhMucId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.Sach", "Sach")
                         .WithMany("PhanLoais")
-                        .HasForeignKey("SachMaSach");
+                        .HasForeignKey("SachId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("DanhMuc");
 
@@ -494,25 +503,17 @@ namespace LibraryManagement.Migrations
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuMuon", b =>
                 {
-                    b.HasOne("LibraryManagement.Models.NguoiMuon", null)
-                        .WithMany()
-                        .HasForeignKey("MaNguoiMuon")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("LibraryManagement.Models.NhanVien", null)
-                        .WithMany()
-                        .HasForeignKey("MaNhanVien")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LibraryManagement.Models.NguoiMuon", "NguoiMuon")
                         .WithMany("PhieuMuons")
-                        .HasForeignKey("NguoiMuonMaNguoiMuon");
+                        .HasForeignKey("NguoiMuonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.NhanVien", "NhanVien")
                         .WithMany("PhieuMuons")
-                        .HasForeignKey("NhanVienMaNhanVien");
+                        .HasForeignKey("NhanVienId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("NguoiMuon");
 
@@ -521,30 +522,22 @@ namespace LibraryManagement.Migrations
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuPhat", b =>
                 {
-                    b.HasOne("LibraryManagement.Models.PhieuMuon", null)
-                        .WithMany()
-                        .HasForeignKey("MaPhieuMuon")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("LibraryManagement.Models.PhieuMuon", "PhieuMuon")
                         .WithMany("PhieuPhats")
-                        .HasForeignKey("PhieuMuonMaPhieuMuon");
+                        .HasForeignKey("PhieuMuonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.Sach", b =>
                 {
-                    b.HasOne("LibraryManagement.Models.TacGia", null)
-                        .WithMany()
-                        .HasForeignKey("MaTacGia")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("LibraryManagement.Models.TacGia", "TacGia")
                         .WithMany("Sachs")
-                        .HasForeignKey("TacGiaMaTacGia");
+                        .HasForeignKey("TacGiaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("TacGia");
                 });

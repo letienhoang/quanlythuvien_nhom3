@@ -21,7 +21,7 @@ namespace LibraryManagement.Controllers
         // GET: NguoiMuons
         public async Task<IActionResult> Index()
         {
-            return View(await _context.NguoiMuon.ToListAsync());
+            return View(await _context.NguoiMuons.ToListAsync());
         }
 
         // GET: NguoiMuons/Details/5
@@ -32,7 +32,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var nguoiMuon = await _context.NguoiMuon
+            var nguoiMuon = await _context.NguoiMuons
                 .FirstOrDefaultAsync(m => m.MaNguoiMuon == id);
             if (nguoiMuon == null)
             {
@@ -72,7 +72,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var nguoiMuon = await _context.NguoiMuon.FindAsync(id);
+            var nguoiMuon = await _context.NguoiMuons.FindAsync(id);
             if (nguoiMuon == null)
             {
                 return NotFound();
@@ -123,7 +123,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var nguoiMuon = await _context.NguoiMuon
+            var nguoiMuon = await _context.NguoiMuons
                 .FirstOrDefaultAsync(m => m.MaNguoiMuon == id);
             if (nguoiMuon == null)
             {
@@ -138,10 +138,10 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var nguoiMuon = await _context.NguoiMuon.FindAsync(id);
+            var nguoiMuon = await _context.NguoiMuons.FindAsync(id);
             if (nguoiMuon != null)
             {
-                _context.NguoiMuon.Remove(nguoiMuon);
+                _context.NguoiMuons.Remove(nguoiMuon);
             }
 
             await _context.SaveChangesAsync();
@@ -150,7 +150,7 @@ namespace LibraryManagement.Controllers
 
         private bool NguoiMuonExists(string id)
         {
-            return _context.NguoiMuon.Any(e => e.MaNguoiMuon == id);
+            return _context.NguoiMuons.Any(e => e.MaNguoiMuon == id);
         }
     }
 }

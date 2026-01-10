@@ -5,39 +5,26 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
+<h1>Chi tiết</h1>
 
-<div>
-    <h4>TacGia</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TenTacGia)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TenTacGia)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NgaySinh)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NgaySinh)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.QuocTich)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.QuocTich)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MoTa)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MoTa)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.MaTacGia">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.TenTacGia</h5>
+        <p class="text-muted mb-3">
+            @if (Model.NgaySinh != null)
+            {
+                <span>Ngày sinh: @Model.NgaySinh.Value.ToString("dd/MM/yyyy")</span>
+                <span class="mx-2">|</span>
+            }
+            <span>Quốc tịch: @Model.QuocTich</span>
+        </p>
+
+        <h6 class="card-subtitle mb-2 text-body-secondary">Mô tả</h6>
+        <p class="card-text">@Model.MoTa</p>
+
+        <div class="mt-3">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Sửa</a>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
+        </div>
+    </div>
 </div>

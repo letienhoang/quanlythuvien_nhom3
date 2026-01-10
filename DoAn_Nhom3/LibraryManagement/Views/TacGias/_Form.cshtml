@@ -1,0 +1,35 @@
+﻿@model LibraryManagement.Models.TacGia
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="MaTacGia" class="form-label"></label>
+        <input asp-for="MaTacGia" class="form-control" readonly />
+        <span asp-validation-for="MaTacGia" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="TenTacGia" class="form-label"></label>
+        <input asp-for="TenTacGia" class="form-control" />
+        <span asp-validation-for="TenTacGia" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NgaySinh" class="form-label"></label>
+        <input asp-for="NgaySinh" type="date" class="form-control" />
+        <span asp-validation-for="NgaySinh" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="QuocTich" class="form-label"></label>
+        <input asp-for="QuocTich" class="form-control" />
+        <span asp-validation-for="QuocTich" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="MoTa" class="form-label"></label>
+        <textarea asp-for="MoTa" rows="3" class="form-control"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+</div>

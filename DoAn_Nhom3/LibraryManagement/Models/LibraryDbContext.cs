@@ -8,138 +8,151 @@ public class LibraryDbContext : DbContext
     {
     }
     
-    public DbSet<TacGia> TacGia { get; set; }
-    public DbSet<DanhMuc> DanhMuc { get; set; }
-    public DbSet<Sach> Sach { get; set; }
-    public DbSet<PhanLoai> PhanLoai { get; set; }
-    public DbSet<CuonSach> CuonSach { get; set; }
-    public DbSet<NguoiMuon> NguoiMuon { get; set; }
-    public DbSet<NhanVien> NhanVien { get; set; }
-    public DbSet<PhieuMuon> PhieuMuon { get; set; }
-    public DbSet<ChiTietPhieuMuon> ChiTietPhieuMuon { get; set; }
-    public DbSet<PhieuPhat> PhieuPhat { get; set; }
-    public DbSet<HoaDonPhat> HoaDonPhat { get; set; }
+    public DbSet<TacGia> TacGias { get; set; }
+    public DbSet<DanhMuc> DanhMucs { get; set; }
+    public DbSet<Sach> Sachs { get; set; }
+    public DbSet<PhanLoai> PhanLoais { get; set; }
+    public DbSet<CuonSach> CuonSachs { get; set; }
+    public DbSet<NguoiMuon> NguoiMuons { get; set; }
+    public DbSet<NhanVien> NhanViens { get; set; }
+    public DbSet<PhieuMuon> PhieuMuons { get; set; }
+    public DbSet<ChiTietPhieuMuon> ChiTietPhieuMuons { get; set; }
+    public DbSet<PhieuPhat> PhieuPhats { get; set; }
+    public DbSet<HoaDonPhat> HoaDonPhats { get; set; }
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
-        mb.Entity<PhanLoai>().HasKey(x => new { x.MaSach, x.MaDanhMuc });
-        mb.Entity<ChiTietPhieuMuon>().HasKey(x => new { x.MaPhieuMuon, x.MaCuon });
-        
-        mb.Entity<Sach>().HasIndex(x => x.ISBN).IsUnique();
-        mb.Entity<NguoiMuon>().HasIndex(x => x.CCCD).IsUnique();
-        mb.Entity<NhanVien>().HasIndex(x => x.TaiKhoan).IsUnique();
-        
-        mb.Entity<PhanLoai>()
-          .HasOne<Sach>()
-          .WithMany()
-          .HasForeignKey(x => x.MaSach)
-          .OnDelete(DeleteBehavior.Cascade);
+        base.OnModelCreating(mb);
+
+        /* =========================
+         *  COMPOSITE KEYS
+         * ========================= */
 
         mb.Entity<PhanLoai>()
-          .HasOne<DanhMuc>()
-          .WithMany()
-          .HasForeignKey(x => x.MaDanhMuc)
-          .OnDelete(DeleteBehavior.Cascade);
+            .HasKey(x => new { x.SachId, x.DanhMucId });
+
+        mb.Entity<ChiTietPhieuMuon>()
+            .HasKey(x => new { x.PhieuMuonId, x.CuonSachId });
+
+        /* =========================
+         *  UNIQUE BUSINESS KEYS
+         * ========================= */
+
+        mb.Entity<TacGia>()
+            .HasIndex(x => x.MaTacGia)
+            .IsUnique();
 
         mb.Entity<Sach>()
-          .HasOne<TacGia>()
-          .WithMany()
-          .HasForeignKey(x => x.MaTacGia)
-          .OnDelete(DeleteBehavior.Restrict);
+            .HasIndex(x => x.MaSach)
+            .IsUnique();
 
-        mb.Entity<CuonSach>()
-          .HasOne<Sach>()
-          .WithMany()
-          .HasForeignKey(x => x.MaSach)
-          .OnDelete(DeleteBehavior.Cascade);
-
-        mb.Entity<PhieuMuon>()
-          .HasOne<NguoiMuon>()
-          .WithMany()
-          .HasForeignKey(x => x.MaNguoiMuon)
-          .OnDelete(DeleteBehavior.Restrict);
-
-        mb.Entity<PhieuMuon>()
-          .HasOne<NhanVien>()
-          .WithMany()
-          .HasForeignKey(x => x.MaNhanVien)
-          .OnDelete(DeleteBehavior.Restrict);
-
-        mb.Entity<ChiTietPhieuMuon>()
-          .HasOne<PhieuMuon>()
-          .WithMany()
-          .HasForeignKey(x => x.MaPhieuMuon)
-          .OnDelete(DeleteBehavior.Cascade);
-
-        mb.Entity<ChiTietPhieuMuon>()
-          .HasOne<CuonSach>()
-          .WithMany()
-          .HasForeignKey(x => x.MaCuon)
-          .OnDelete(DeleteBehavior.Restrict);
-
-        mb.Entity<PhieuPhat>()
-          .HasOne<PhieuMuon>()
-          .WithMany()
-          .HasForeignKey(x => x.MaPhieuMuon)
-          .OnDelete(DeleteBehavior.Cascade);
-
-        mb.Entity<HoaDonPhat>()
-          .HasOne<PhieuPhat>()
-          .WithMany()
-          .HasForeignKey(x => x.MaPhat)
-          .OnDelete(DeleteBehavior.Cascade);
-
-        mb.Entity<HoaDonPhat>()
-          .Property(x => x.SoTien)
-          .HasColumnType("decimal(18,2)");
-
-        mb.Entity<PhieuPhat>()
-          .Property(x => x.SoTienPhat)
-          .HasColumnType("decimal(18,2)");
-
-        mb.Entity<CuonSach>()
-          .Property(c => c.TinhTrang)
-          .HasConversion<string>()
-          .HasMaxLength(20);
-
-        mb.Entity<CuonSach>()
-          .Property(c => c.TrangThai)
-          .HasConversion<string>()
-          .HasMaxLength(20);
+        mb.Entity<Sach>()
+            .HasIndex(x => x.ISBN)
+            .IsUnique();
 
         mb.Entity<NguoiMuon>()
-          .Property(c => c.LoaiDocGia)
-          .HasConversion<string>()
-          .HasMaxLength(20);
-
-        mb.Entity<NguoiMuon>()
-          .Property(c => c.TrangThai)
-          .HasConversion<string>()
-          .HasMaxLength(20);
-
-        mb.Entity<PhieuMuon>()
-          .Property(c => c.TrangThai)
-          .HasConversion<string>()
-          .HasMaxLength(20);
-
-        mb.Entity<PhieuPhat>()
-          .Property(c => c.TrangThaiThanhToan)
-          .HasConversion<string>()
-          .HasMaxLength(20);
-
-        mb.Entity<ChiTietPhieuMuon>()
-          .Property(c => c.TinhTrangTra)
-          .HasConversion<string>()
-          .HasMaxLength(20);
+            .HasIndex(x => x.CCCD)
+            .IsUnique();
 
         mb.Entity<NhanVien>()
-          .Property(c => c.ChucVu)
-          .HasConversion<string>()
-          .HasMaxLength(20);
+            .HasIndex(x => x.TaiKhoan)
+            .IsUnique();
+
+        mb.Entity<DanhMuc>()
+            .HasIndex(x => x.MaDanhMuc)
+            .IsUnique();
+
+        /* =========================
+         *  RELATIONSHIPS
+         * ========================= */
+
+        // Sach - TacGia (N-1)
+        mb.Entity<Sach>()
+            .HasOne(s => s.TacGia)
+            .WithMany(t => t.Sachs)
+            .HasForeignKey(s => s.TacGiaId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Sach - DanhMuc (N-N)
+        mb.Entity<PhanLoai>()
+            .HasOne(p => p.Sach)
+            .WithMany(s => s.PhanLoais)
+            .HasForeignKey(p => p.SachId);
+
+        mb.Entity<PhanLoai>()
+            .HasOne(p => p.DanhMuc)
+            .WithMany(d => d.PhanLoais)
+            .HasForeignKey(p => p.DanhMucId);
+
+        // CuonSach - Sach (N-1)
+        mb.Entity<CuonSach>()
+            .HasOne(c => c.Sach)
+            .WithMany(s => s.CuonSachs)
+            .HasForeignKey(c => c.SachId);
+
+        // PhieuMuon - NguoiMuon
+        mb.Entity<PhieuMuon>()
+            .HasOne(p => p.NguoiMuon)
+            .WithMany(n => n.PhieuMuons)
+            .HasForeignKey(p => p.NguoiMuonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // PhieuMuon - NhanVien
+        mb.Entity<PhieuMuon>()
+            .HasOne(p => p.NhanVien)
+            .WithMany(nv => nv.PhieuMuons)
+            .HasForeignKey(p => p.NhanVienId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ChiTietPhieuMuon
+        mb.Entity<ChiTietPhieuMuon>()
+            .HasOne(c => c.PhieuMuon)
+            .WithMany(p => p.ChiTietPhieuMuons)
+            .HasForeignKey(c => c.PhieuMuonId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        mb.Entity<ChiTietPhieuMuon>()
+            .HasOne(c => c.CuonSach)
+            .WithMany(cs => cs.ChiTietPhieuMuons)
+            .HasForeignKey(c => c.CuonSachId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // PhieuPhat - PhieuMuon
+        mb.Entity<PhieuPhat>()
+            .HasOne(pp => pp.PhieuMuon)
+            .WithMany(pm => pm.PhieuPhats)
+            .HasForeignKey(pp => pp.PhieuMuonId);
+
+        // HoaDonPhat - PhieuPhat
+        mb.Entity<HoaDonPhat>()
+            .HasOne(h => h.PhieuPhat)
+            .WithMany(p => p.HoaDonPhats)
+            .HasForeignKey(h => h.PhieuPhatId);
+
+        /* =========================
+         *  ENUM → STRING
+         * ========================= */
+
+        mb.Entity<CuonSach>().Property(x => x.TinhTrang).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<CuonSach>().Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<NguoiMuon>().Property(x => x.LoaiDocGia).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<NguoiMuon>().Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<PhieuMuon>().Property(x => x.TrangThai).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<PhieuPhat>().Property(x => x.TrangThaiThanhToan).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<ChiTietPhieuMuon>().Property(x => x.TinhTrangTra).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<NhanVien>().Property(x => x.ChucVu).HasConversion<string>().HasMaxLength(20);
+        mb.Entity<HoaDonPhat>().Property(x => x.PhuongThuc).HasConversion<string>().HasMaxLength(20);
+
+        /* =========================
+         *  DECIMAL CONFIG
+         * ========================= */
 
         mb.Entity<HoaDonPhat>()
-          .Property(c => c.PhuongThuc)
-          .HasConversion<string>()
-          .HasMaxLength(20);
+            .Property(x => x.SoTien)
+            .HasColumnType("decimal(18,2)");
+
+        mb.Entity<PhieuPhat>()
+            .Property(x => x.SoTienPhat)
+            .HasColumnType("decimal(18,2)");
     }
 }

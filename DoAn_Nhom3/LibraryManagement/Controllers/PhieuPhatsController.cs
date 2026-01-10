@@ -21,7 +21,7 @@ namespace LibraryManagement.Controllers
         // GET: PhieuPhats
         public async Task<IActionResult> Index()
         {
-            return View(await _context.PhieuPhat.ToListAsync());
+            return View(await _context.PhieuPhats.ToListAsync());
         }
 
         // GET: PhieuPhats/Details/5
@@ -32,7 +32,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuPhat = await _context.PhieuPhat
+            var phieuPhat = await _context.PhieuPhats
                 .FirstOrDefaultAsync(m => m.MaPhat == id);
             if (phieuPhat == null)
             {
@@ -72,7 +72,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuPhat = await _context.PhieuPhat.FindAsync(id);
+            var phieuPhat = await _context.PhieuPhats.FindAsync(id);
             if (phieuPhat == null)
             {
                 return NotFound();
@@ -123,7 +123,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var phieuPhat = await _context.PhieuPhat
+            var phieuPhat = await _context.PhieuPhats
                 .FirstOrDefaultAsync(m => m.MaPhat == id);
             if (phieuPhat == null)
             {
@@ -138,10 +138,10 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var phieuPhat = await _context.PhieuPhat.FindAsync(id);
+            var phieuPhat = await _context.PhieuPhats.FindAsync(id);
             if (phieuPhat != null)
             {
-                _context.PhieuPhat.Remove(phieuPhat);
+                _context.PhieuPhats.Remove(phieuPhat);
             }
 
             await _context.SaveChangesAsync();
@@ -150,7 +150,7 @@ namespace LibraryManagement.Controllers
 
         private bool PhieuPhatExists(string id)
         {
-            return _context.PhieuPhat.Any(e => e.MaPhat == id);
+            return _context.PhieuPhats.Any(e => e.MaPhat == id);
         }
     }
 }

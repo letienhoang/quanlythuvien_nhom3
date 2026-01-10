@@ -1,13 +1,19 @@
-﻿namespace LibraryManagement.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace LibraryManagement.Models;
 
 public class PhanLoai
 {
-    public string MaSach { get; set; } 
-    public string MaDanhMuc { get; set; }
+    [Display(Name = "Sách")]
+    public int SachId { get; set; }
 
-    [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(MaSach))]
+    [Display(Name = "Danh mục")]
+    public int DanhMucId { get; set; }
+
+    [ForeignKey(nameof(SachId))]
     public Sach? Sach { get; set; }
 
-    [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(MaDanhMuc))]
+    [ForeignKey(nameof(DanhMucId))]
     public DanhMuc? DanhMuc { get; set; }
 }
