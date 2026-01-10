@@ -9,22 +9,22 @@ using LibraryManagement.Models;
 
 namespace LibraryManagement.Controllers
 {
-    public class SachesController : Controller
+    public class PhieuMuonsController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public SachesController(LibraryDbContext context)
+        public PhieuMuonsController(LibraryDbContext context)
         {
             _context = context;
         }
 
-        // GET: Saches
+        // GET: PhieuMuons
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Sach.ToListAsync());
+            return View(await _context.PhieuMuon.ToListAsync());
         }
 
-        // GET: Saches/Details/5
+        // GET: PhieuMuons/Details/5
         public async Task<IActionResult> Details(string id)
         {
             if (id == null)
@@ -32,39 +32,39 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach
-                .FirstOrDefaultAsync(m => m.MaSach == id);
-            if (sach == null)
+            var phieuMuon = await _context.PhieuMuon
+                .FirstOrDefaultAsync(m => m.MaPhieuMuon == id);
+            if (phieuMuon == null)
             {
                 return NotFound();
             }
 
-            return View(sach);
+            return View(phieuMuon);
         }
 
-        // GET: Saches/Create
+        // GET: PhieuMuons/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Saches/Create
+        // POST: PhieuMuons/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaSach,TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,MaTacGia,SoLuong")] Sach sach)
+        public async Task<IActionResult> Create([Bind("MaPhieuMuon,MaNguoiMuon,MaNhanVien,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(sach);
+                _context.Add(phieuMuon);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(sach);
+            return View(phieuMuon);
         }
 
-        // GET: Saches/Edit/5
+        // GET: PhieuMuons/Edit/5
         public async Task<IActionResult> Edit(string id)
         {
             if (id == null)
@@ -72,22 +72,22 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach.FindAsync(id);
-            if (sach == null)
+            var phieuMuon = await _context.PhieuMuon.FindAsync(id);
+            if (phieuMuon == null)
             {
                 return NotFound();
             }
-            return View(sach);
+            return View(phieuMuon);
         }
 
-        // POST: Saches/Edit/5
+        // POST: PhieuMuons/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaSach,TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,MaTacGia,SoLuong")] Sach sach)
+        public async Task<IActionResult> Edit(string id, [Bind("MaPhieuMuon,MaNguoiMuon,MaNhanVien,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon)
         {
-            if (id != sach.MaSach)
+            if (id != phieuMuon.MaPhieuMuon)
             {
                 return NotFound();
             }
@@ -96,12 +96,12 @@ namespace LibraryManagement.Controllers
             {
                 try
                 {
-                    _context.Update(sach);
+                    _context.Update(phieuMuon);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SachExists(sach.MaSach))
+                    if (!PhieuMuonExists(phieuMuon.MaPhieuMuon))
                     {
                         return NotFound();
                     }
@@ -112,10 +112,10 @@ namespace LibraryManagement.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(sach);
+            return View(phieuMuon);
         }
 
-        // GET: Saches/Delete/5
+        // GET: PhieuMuons/Delete/5
         public async Task<IActionResult> Delete(string id)
         {
             if (id == null)
@@ -123,34 +123,34 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sach
-                .FirstOrDefaultAsync(m => m.MaSach == id);
-            if (sach == null)
+            var phieuMuon = await _context.PhieuMuon
+                .FirstOrDefaultAsync(m => m.MaPhieuMuon == id);
+            if (phieuMuon == null)
             {
                 return NotFound();
             }
 
-            return View(sach);
+            return View(phieuMuon);
         }
 
-        // POST: Saches/Delete/5
+        // POST: PhieuMuons/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var sach = await _context.Sach.FindAsync(id);
-            if (sach != null)
+            var phieuMuon = await _context.PhieuMuon.FindAsync(id);
+            if (phieuMuon != null)
             {
-                _context.Sach.Remove(sach);
+                _context.PhieuMuon.Remove(phieuMuon);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SachExists(string id)
+        private bool PhieuMuonExists(string id)
         {
-            return _context.Sach.Any(e => e.MaSach == id);
+            return _context.PhieuMuon.Any(e => e.MaPhieuMuon == id);
         }
     }
 }
