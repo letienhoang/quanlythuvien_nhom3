@@ -1,0 +1,54 @@
+﻿@model LibraryManagement.Models.NhanVien
+@using LibraryManagement.Enums
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="MaNhanVien" class="form-label"></label>
+        <input asp-for="MaNhanVien" class="form-control" readonly />
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="HoTen" class="form-label"></label>
+        <input asp-for="HoTen" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NgaySinh" class="form-label"></label>
+        <input asp-for="NgaySinh" type="date" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="CCCD" class="form-label"></label>
+        <input asp-for="CCCD" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="ChucVu" class="form-label"></label>
+        <select asp-for="ChucVu"
+                asp-items="Html.GetEnumSelectList<UserRole>()"
+                class="form-select">
+        </select>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SoDienThoai" class="form-label"></label>
+        <input asp-for="SoDienThoai" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="TaiKhoan" class="form-label"></label>
+        <input asp-for="TaiKhoan" class="form-control" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="MatKhau" class="form-label"></label>
+        <input asp-for="MatKhau" type="password" class="form-control" />
+    </div>
+</div>

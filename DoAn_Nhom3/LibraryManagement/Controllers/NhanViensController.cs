@@ -1,110 +1,98 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class NhanViensController : Controller
     {
         private readonly LibraryDbContext _context;
+        private readonly ILibraryCodeGenerator _codeGen;
 
-        public NhanViensController(LibraryDbContext context)
+        public NhanViensController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
         {
             _context = context;
+            _codeGen = codeGen;
         }
 
         // GET: NhanViens
         public async Task<IActionResult> Index()
         {
-            return View(await _context.NhanViens.ToListAsync());
+            return View(await _context.NhanViens.AsNoTracking().ToListAsync());
         }
 
         // GET: NhanViens/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var nhanVien = await _context.NhanViens
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (nhanVien == null)
-            {
-                return NotFound();
-            }
+
+            if (nhanVien == null) return NotFound();
 
             return View(nhanVien);
         }
 
         // GET: NhanViens/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var model = new NhanVien
+            {
+                MaNhanVien = await _codeGen.GenerateNextAsync<NhanVien>(x => x.MaNhanVien, "NV", 4)
+            };
+            return View(model);
         }
 
         // POST: NhanViens/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")] NhanVien nhanVien)
+        public async Task<IActionResult> Create([Bind(
+            "MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")]
+            NhanVien nhanVien)
         {
+            nhanVien.MaNhanVien =
+                await _codeGen.GenerateNextWithRetriesAsync<NhanVien>(x => x.MaNhanVien, "NV", 4);
+
             if (ModelState.IsValid)
             {
                 _context.Add(nhanVien);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            nhanVien.MaNhanVien =
+                await _codeGen.GenerateNextAsync<NhanVien>(x => x.MaNhanVien, "NV", 4);
+
             return View(nhanVien);
         }
 
         // GET: NhanViens/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var nhanVien = await _context.NhanViens.FindAsync(id);
-            if (nhanVien == null)
-            {
-                return NotFound();
-            }
+            if (nhanVien == null) return NotFound();
+
             return View(nhanVien);
         }
 
         // POST: NhanViens/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")] NhanVien nhanVien)
+        public async Task<IActionResult> Edit(int id, [Bind(
+            "Id,MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")]
+            NhanVien nhanVien)
         {
-            if (id != nhanVien.Id)
-            {
-                return NotFound();
-            }
+            if (id != nhanVien.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(nhanVien);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!NhanVienExists(nhanVien.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                _context.Update(nhanVien);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(nhanVien);
@@ -113,17 +101,13 @@ namespace LibraryManagement.Controllers
         // GET: NhanViens/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var nhanVien = await _context.NhanViens
+                .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (nhanVien == null)
-            {
-                return NotFound();
-            }
+
+            if (nhanVien == null) return NotFound();
 
             return View(nhanVien);
         }
@@ -137,15 +121,9 @@ namespace LibraryManagement.Controllers
             if (nhanVien != null)
             {
                 _context.NhanViens.Remove(nhanVien);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool NhanVienExists(int id)
-        {
-            return _context.NhanViens.Any(e => e.Id == id);
         }
     }
 }
