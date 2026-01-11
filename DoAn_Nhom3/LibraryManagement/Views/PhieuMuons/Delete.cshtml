@@ -5,42 +5,28 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Delete</h1>
+<h1>Xóa phiếu mượn</h1>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>PhieuMuon</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NgayMuon)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NgayMuon)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.HanTra)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.HanTra)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TrangThai)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TrangThai)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SoNgayTre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SoNgayTre)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="MaPhieuMuon" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Xóa: @Model.MaPhieuMuon</h5>
+        <p class="text-body-secondary">Bạn có chắc muốn xóa phiếu mượn này? Hành động có thể ảnh hưởng tới các phạt / lịch sử.</p>
+
+        <dl class="row">
+            <dt class="col-sm-3">Người mượn</dt>
+            <dd class="col-sm-9">@Model.NguoiMuon?.HoTen</dd>
+
+            <dt class="col-sm-3">Ngày mượn</dt>
+            <dd class="col-sm-9">@Model.NgayMuon.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Hạn trả</dt>
+            <dd class="col-sm-9">@Model.HanTra.ToString("dd/MM/yyyy")</dd>
+        </dl>
+
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Xóa</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Hủy</a>
+        </form>
+    </div>
 </div>

@@ -1,0 +1,47 @@
+﻿@model LibraryManagement.Models.PhieuMuon
+@using LibraryManagement.Enums
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="MaPhieuMuon" class="form-label"></label>
+        <input asp-for="MaPhieuMuon" class="form-control" readonly value="@ViewBag.GeneratedMaPhieuMuon" />
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NguoiMuonId" class="form-label"></label>
+        <select asp-for="NguoiMuonId" class="form-select" asp-items="ViewBag.NguoiMuonId"></select>
+        <span asp-validation-for="NguoiMuonId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NhanVienId" class="form-label"></label>
+        <select asp-for="NhanVienId" class="form-select" asp-items="ViewBag.NhanVienId"></select>
+        <span asp-validation-for="NhanVienId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="NgayMuon" class="form-label"></label>
+        <input asp-for="NgayMuon" type="date" class="form-control" />
+        <span asp-validation-for="NgayMuon" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="HanTra" class="form-label"></label>
+        <input asp-for="HanTra" type="date" class="form-control" />
+        <span asp-validation-for="HanTra" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="TrangThai" class="form-label"></label>
+        <select asp-for="TrangThai" class="form-select" asp-items="Html.GetEnumSelectList<LoanStatus>()"></select>
+        <span asp-validation-for="TrangThai" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SoNgayTre" class="form-label"></label>
+        <input asp-for="SoNgayTre" class="form-control" />
+        <span asp-validation-for="SoNgayTre" class="text-danger"></span>
+    </div>
+</div>

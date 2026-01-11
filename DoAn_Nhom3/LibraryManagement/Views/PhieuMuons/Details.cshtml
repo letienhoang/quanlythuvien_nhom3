@@ -1,43 +1,44 @@
-﻿@model LibraryManagement.Models.PhieuMuon
+﻿@using LibraryManagement.Extensions
+@model LibraryManagement.Models.PhieuMuon
 
 @{
     ViewData["Title"] = "Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>PhieuMuon</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NgayMuon)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NgayMuon)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.HanTra)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.HanTra)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TrangThai)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TrangThai)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SoNgayTre)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SoNgayTre)
-        </dd>
-    </dl>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Chi tiết phiếu mượn</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+        <a asp-action="Index" class="btn btn-sm btn-secondary ms-2">Quay lại</a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.MaPhieuMuon">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.MaPhieuMuon</h5>
+
+        <dl class="row">
+            <dt class="col-sm-3">Người mượn</dt>
+            <dd class="col-sm-9">@Model.NguoiMuon?.HoTen (@Model.NguoiMuon?.MaNguoiMuon)</dd>
+
+            <dt class="col-sm-3">Nhân viên</dt>
+            <dd class="col-sm-9">@Model.NhanVien?.HoTen (@Model.NhanVien?.MaNhanVien)</dd>
+
+            <dt class="col-sm-3">Ngày mượn</dt>
+            <dd class="col-sm-9">@Model.NgayMuon.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Hạn trả</dt>
+            <dd class="col-sm-9">@Model.HanTra.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Trạng thái</dt>
+            <dd class="col-sm-9">@Model.TrangThai.GetDisplayName()</dd>
+
+            <dt class="col-sm-3">Số ngày trễ</dt>
+            <dd class="col-sm-9">@Model.SoNgayTre</dd>
+        </dl>
+
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Sửa</a>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
+    </div>
 </div>
