@@ -1,96 +1,101 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class NguoiMuonsController : Controller
     {
         private readonly LibraryDbContext _context;
+        private readonly ILibraryCodeGenerator _codeGen;
 
-        public NguoiMuonsController(LibraryDbContext context)
+        public NguoiMuonsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
         {
             _context = context;
+            _codeGen = codeGen;
         }
 
         // GET: NguoiMuons
         public async Task<IActionResult> Index()
         {
-            return View(await _context.NguoiMuons.ToListAsync());
+            var list = await _context.NguoiMuons.AsNoTracking().ToListAsync();
+            return View(list);
         }
 
         // GET: NguoiMuons/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var nguoiMuon = await _context.NguoiMuons
-                .FirstOrDefaultAsync(m => m.MaNguoiMuon == id);
-            if (nguoiMuon == null)
-            {
-                return NotFound();
-            }
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id.Value);
+
+            if (nguoiMuon == null) return NotFound();
 
             return View(nguoiMuon);
         }
 
         // GET: NguoiMuons/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var generated = await _codeGen.GenerateNextAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
+            var model = new NguoiMuon
+            {
+                MaNguoiMuon = generated,
+                NgayDangKy = DateTime.Today,
+                NgayHetHan = DateTime.Today.AddYears(1),
+                LoaiDocGia = LibraryManagement.Enums.ReaderType.SinhVien, // mặc định, bạn đổi nếu muốn
+                TrangThai = LibraryManagement.Enums.MemberStatus.HoatDong
+            };
+            return View(model);
         }
 
         // POST: NguoiMuons/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("MaNguoiMuon,HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
         {
+            // luôn generate server-side
+            nguoiMuon.MaNguoiMuon = await _codeGen.GenerateNextWithRetriesAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
+
             if (ModelState.IsValid)
             {
-                _context.Add(nguoiMuon);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(nguoiMuon);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException)
+                {
+                    ModelState.AddModelError("", "Không thể lưu người mượn do xung đột mã; vui lòng thử lại.");
+                }
             }
+
+            // nếu lỗi, gợi ý mã mới
+            nguoiMuon.MaNguoiMuon = await _codeGen.GenerateNextAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
             return View(nguoiMuon);
         }
 
         // GET: NguoiMuons/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var nguoiMuon = await _context.NguoiMuons.FindAsync(id);
-            if (nguoiMuon == null)
-            {
-                return NotFound();
-            }
+            var nguoiMuon = await _context.NguoiMuons.FindAsync(id.Value);
+            if (nguoiMuon == null) return NotFound();
+
             return View(nguoiMuon);
         }
 
         // POST: NguoiMuons/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaNguoiMuon,HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MaNguoiMuon,HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
         {
-            if (id != nguoiMuon.MaNguoiMuon)
-            {
-                return NotFound();
-            }
+            if (id != nguoiMuon.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -98,37 +103,27 @@ namespace LibraryManagement.Controllers
                 {
                     _context.Update(nguoiMuon);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!NguoiMuonExists(nguoiMuon.MaNguoiMuon))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!NguoiMuonExistsById(nguoiMuon.Id)) return NotFound();
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
             return View(nguoiMuon);
         }
 
         // GET: NguoiMuons/Delete/5
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var nguoiMuon = await _context.NguoiMuons
-                .FirstOrDefaultAsync(m => m.MaNguoiMuon == id);
-            if (nguoiMuon == null)
-            {
-                return NotFound();
-            }
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id.Value);
+
+            if (nguoiMuon == null) return NotFound();
 
             return View(nguoiMuon);
         }
@@ -136,21 +131,20 @@ namespace LibraryManagement.Controllers
         // POST: NguoiMuons/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var nguoiMuon = await _context.NguoiMuons.FindAsync(id);
             if (nguoiMuon != null)
             {
                 _context.NguoiMuons.Remove(nguoiMuon);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool NguoiMuonExists(string id)
+        private bool NguoiMuonExistsById(int id)
         {
-            return _context.NguoiMuons.Any(e => e.MaNguoiMuon == id);
+            return _context.NguoiMuons.Any(e => e.Id == id);
         }
     }
 }
