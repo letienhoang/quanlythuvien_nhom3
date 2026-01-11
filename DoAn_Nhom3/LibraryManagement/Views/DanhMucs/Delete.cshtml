@@ -1,0 +1,32 @@
+﻿@model LibraryManagement.Models.DanhMuc
+
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Xóa danh mục</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Xóa: @Model.TenDanhMuc</h5>
+        <p class="text-body-secondary">Bạn có chắc chắn muốn xóa danh mục này? Hành động này có thể ảnh hưởng tới các phân loại liên quan.</p>
+
+        <dl class="row">
+            <dt class="col-sm-3">Mã</dt>
+            <dd class="col-sm-9">@Model.MaDanhMuc</dd>
+
+            <dt class="col-sm-3">Tên</dt>
+            <dd class="col-sm-9">@Model.TenDanhMuc</dd>
+
+            <dt class="col-sm-3">Mô tả</dt>
+            <dd class="col-sm-9">@Model.MoTa</dd>
+        </dl>
+
+        <form asp-action="Delete" method="post" class="d-inline">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Xóa</button>
+        </form>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Hủy</a>
+    </div>
+</div>
