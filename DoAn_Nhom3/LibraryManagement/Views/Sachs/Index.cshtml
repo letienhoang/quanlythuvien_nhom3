@@ -13,33 +13,35 @@
 <div class="table-responsive">
     <table class="table table-striped table-hover align-middle">
         <thead class="table-light">
-            <tr>
-                <th>Tên</th>
-                <th>ISBN</th>
-                <th>Năm</th>
-                <th>NXB</th>
-                <th>Tác giả</th>
-                <th>Số lượng</th>
-                <th></th>
-            </tr>
+        <tr>
+            <th>Mã</th>
+            <th>Tên</th>
+            <th>ISBN</th>
+            <th>Năm</th>
+            <th>NXB</th>
+            <th>Tác giả</th>
+            <th>Số lượng</th>
+            <th></th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.TenSach</td>
-                    <td>@item.ISBN</td>
-                    <td>@item.NamXuatBan</td>
-                    <td>@item.NhaXuatBan</td>
-                    <td>@(@item.TacGia?.TenTacGia)</td>
-                    <td>@item.SoLuong</td>
-                    <td class="text-end">
-                        <a asp-action="Details" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                        <a asp-action="Edit" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                        <a asp-action="Delete" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-danger">Xóa</a>
-                    </td>
-                </tr>
-            }
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.MaSach</td>
+                <td>@item.TenSach</td>
+                <td>@item.ISBN</td>
+                <td>@item.NamXuatBan</td>
+                <td>@item.NhaXuatBan</td>
+                <td>@item.TacGia?.TenTacGia</td>
+                <td>@item.SoLuong</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                </td>
+            </tr>
+        }
         </tbody>
     </table>
 </div>

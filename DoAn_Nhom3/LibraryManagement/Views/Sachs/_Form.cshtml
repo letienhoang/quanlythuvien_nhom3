@@ -5,7 +5,7 @@
 <div class="row g-3">
     <div class="col-md-6">
         <label asp-for="MaSach" class="form-label"></label>
-        <input asp-for="MaSach" class="form-control" />
+        <input asp-for="MaSach" class="form-control" readonly />
         <span asp-validation-for="MaSach" class="text-danger"></span>
     </div>
 
@@ -47,7 +47,7 @@
 
     <div class="col-md-6">
         <label asp-for="TacGiaId" class="form-label"></label>
-        <select asp-for="TacGiaId" asp-items="ViewBag.MaTacGia" class="form-select">
+        <select asp-for="TacGiaId" asp-items="ViewBag.TacGiaId" class="form-select">
             <option value="">-- Chọn tác giả --</option>
         </select>
         <span asp-validation-for="TacGiaId" class="text-danger"></span>

@@ -5,63 +5,46 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Sach</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TenSach)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TenSach)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ISBN)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ISBN)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NamXuatBan)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NamXuatBan)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NhaXuatBan)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NhaXuatBan)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NgonNgu)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NgonNgu)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SoTrang)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SoTrang)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MoTa)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MoTa)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SoLuong)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SoLuong)
-        </dd>
-    </dl>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Chi tiết sách</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+        <a asp-action="Index" class="btn btn-sm btn-secondary ms-2">Quay lại</a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.MaSach">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Mã sách</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.MaSach)</dd>
+
+            <dt class="col-sm-3">Tên sách</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.TenSach)</dd>
+
+            <dt class="col-sm-3">ISBN</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.ISBN)</dd>
+
+            <dt class="col-sm-3">Năm xuất bản</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.NamXuatBan)</dd>
+
+            <dt class="col-sm-3">Nhà xuất bản</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.NhaXuatBan)</dd>
+
+            <dt class="col-sm-3">Ngôn ngữ</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.NgonNgu)</dd>
+
+            <dt class="col-sm-3">Số trang</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.SoTrang)</dd>
+
+            <dt class="col-sm-3">Tác giả</dt>
+            <dd class="col-sm-9">@Model?.TacGia?.TenTacGia</dd>
+
+            <dt class="col-sm-3">Số lượng</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.SoLuong)</dd>
+
+            <dt class="col-sm-3">Mô tả</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(m => m.MoTa)</dd>
+        </dl>
+    </div>
 </div>
