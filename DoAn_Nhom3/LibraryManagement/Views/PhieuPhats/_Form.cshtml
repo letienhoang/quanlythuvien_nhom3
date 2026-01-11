@@ -1,0 +1,36 @@
+﻿@model LibraryManagement.Models.PhieuPhat
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <label asp-for="MaPhat" class="form-label"></label>
+        <input asp-for="MaPhat" class="form-control" readonly />
+        <span asp-validation-for="MaPhat" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6">
+        <label asp-for="PhieuMuonId" class="form-label"></label>
+        <select asp-for="PhieuMuonId" class="form-select" asp-items="ViewBag.PhieuMuonId"></select>
+        <span asp-validation-for="PhieuMuonId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="SoTienPhat" class="form-label"></label>
+        <input asp-for="SoTienPhat" class="form-control" />
+        <span asp-validation-for="SoTienPhat" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-8">
+        <label asp-for="LyDo" class="form-label"></label>
+        <input asp-for="LyDo" class="form-control" />
+        <span asp-validation-for="LyDo" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="TrangThaiThanhToan" class="form-label"></label>
+        <select asp-for="TrangThaiThanhToan" class="form-select"
+                asp-items="Html.GetEnumSelectList<LibraryManagement.Enums.PaymentStatus>()"></select>
+        <span asp-validation-for="TrangThaiThanhToan" class="text-danger"></span>
+    </div>
+</div>

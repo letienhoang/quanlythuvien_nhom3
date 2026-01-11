@@ -1,96 +1,109 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.Services;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LibraryManagement.Controllers
 {
     public class PhieuPhatsController : Controller
     {
         private readonly LibraryDbContext _context;
+        private readonly ILibraryCodeGenerator _codeGen;
 
-        public PhieuPhatsController(LibraryDbContext context)
+        public PhieuPhatsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
         {
             _context = context;
+            _codeGen = codeGen;
         }
 
         // GET: PhieuPhats
         public async Task<IActionResult> Index()
         {
-            return View(await _context.PhieuPhats.ToListAsync());
+            var list = await _context.PhieuPhats
+                .Include(p => p.PhieuMuon)
+                .ThenInclude(pm => pm.NguoiMuon)
+                .ToListAsync();
+            return View(list);
         }
 
         // GET: PhieuPhats/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var phieuPhat = await _context.PhieuPhats
-                .FirstOrDefaultAsync(m => m.MaPhat == id);
-            if (phieuPhat == null)
-            {
-                return NotFound();
-            }
+                .Include(p => p.PhieuMuon)
+                .ThenInclude(pm => pm.NguoiMuon)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (phieuPhat == null) return NotFound();
 
             return View(phieuPhat);
         }
 
         // GET: PhieuPhats/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            var model = new PhieuPhat
+            {
+                MaPhat = await _codeGen.GenerateNextAsync<PhieuPhat>(p => p.MaPhat, "PP", 4)
+            };
+            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
+                                                .Include(pm => pm.NguoiMuon)
+                                                .ToListAsync(), "Id", "MaPhieuMuon");
+            return View(model);
         }
 
         // POST: PhieuPhats/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaPhat,MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
+        public async Task<IActionResult> Create([Bind("MaPhat,PhieuMuonId,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
         {
+            // Generate server-side (to avoid collisions / user spoofing)
+            phieuPhat.MaPhat = await _codeGen.GenerateNextWithRetriesAsync<PhieuPhat>(p => p.MaPhat, "PP", 4);
+
             if (ModelState.IsValid)
             {
-                _context.Add(phieuPhat);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(phieuPhat);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException)
+                {
+                    ModelState.AddModelError("", "Không thể lưu phiếu phạt do xung đột mã. Vui lòng thử lại.");
+                }
             }
+
+            ViewBag.GeneratedMaPhat = phieuPhat.MaPhat;
+            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
+                                                .Include(pm => pm.NguoiMuon)
+                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
             return View(phieuPhat);
         }
 
         // GET: PhieuPhats/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var phieuPhat = await _context.PhieuPhats.FindAsync(id);
-            if (phieuPhat == null)
-            {
-                return NotFound();
-            }
+            if (phieuPhat == null) return NotFound();
+
+            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
+                                                .Include(pm => pm.NguoiMuon)
+                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
             return View(phieuPhat);
         }
 
         // POST: PhieuPhats/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaPhat,MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MaPhat,PhieuMuonId,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
         {
-            if (id != phieuPhat.MaPhat)
-            {
-                return NotFound();
-            }
+            if (id != phieuPhat.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -98,37 +111,32 @@ namespace LibraryManagement.Controllers
                 {
                     _context.Update(phieuPhat);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PhieuPhatExists(phieuPhat.MaPhat))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!_context.PhieuPhats.Any(e => e.Id == id)) return NotFound();
+                    throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
+
+            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
+                                                .Include(pm => pm.NguoiMuon)
+                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
             return View(phieuPhat);
         }
 
         // GET: PhieuPhats/Delete/5
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var phieuPhat = await _context.PhieuPhats
-                .FirstOrDefaultAsync(m => m.MaPhat == id);
-            if (phieuPhat == null)
-            {
-                return NotFound();
-            }
+                .Include(p => p.PhieuMuon)
+                .ThenInclude(pm => pm.NguoiMuon)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (phieuPhat == null) return NotFound();
 
             return View(phieuPhat);
         }
@@ -136,21 +144,20 @@ namespace LibraryManagement.Controllers
         // POST: PhieuPhats/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var phieuPhat = await _context.PhieuPhats.FindAsync(id);
             if (phieuPhat != null)
             {
                 _context.PhieuPhats.Remove(phieuPhat);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool PhieuPhatExists(string id)
+        private bool PhieuPhatExists(int id)
         {
-            return _context.PhieuPhats.Any(e => e.MaPhat == id);
+            return _context.PhieuPhats.Any(e => e.Id == id);
         }
     }
 }

@@ -5,33 +5,34 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>PhieuPhat</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SoTienPhat)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SoTienPhat)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LyDo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LyDo)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TrangThaiThanhToan)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TrangThaiThanhToan)
-        </dd>
-    </dl>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Chi tiết phiếu phạt</h1>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
+        <a asp-action="Index" class="btn btn-sm btn-secondary ms-2">Quay lại</a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.MaPhat">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.MaPhat</h5>
+        <dl class="row">
+            <dt class="col-sm-3">Phiếu mượn</dt>
+            <dd class="col-sm-9">@Model.PhieuMuon?.MaPhieuMuon - @Model.PhieuMuon?.NguoiMuon?.HoTen</dd>
+
+            <dt class="col-sm-3">Số tiền</dt>
+            <dd class="col-sm-9">@Model.SoTienPhat.ToString("N2")</dd>
+
+            <dt class="col-sm-3">Lý do</dt>
+            <dd class="col-sm-9">@Model.LyDo</dd>
+
+            <dt class="col-sm-3">Trạng thái thanh toán</dt>
+            <dd class="col-sm-9">@Model.TrangThaiThanhToan</dd>
+        </dl>
+
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Sửa</a>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
+        </div>
+    </div>
 </div>

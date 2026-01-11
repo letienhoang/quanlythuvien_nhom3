@@ -6,7 +6,8 @@
 <div class="row g-3">
     <div class="col-md-4">
         <label asp-for="MaPhieuMuon" class="form-label"></label>
-        <input asp-for="MaPhieuMuon" class="form-control" readonly value="@ViewBag.GeneratedMaPhieuMuon" />
+        <input asp-for="MaPhieuMuon" class="form-control" readonly/>
+        <span asp-validation-for="MaPhieuMuon" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
