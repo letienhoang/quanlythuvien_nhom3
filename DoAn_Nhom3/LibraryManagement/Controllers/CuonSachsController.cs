@@ -1,95 +1,115 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class CuonSachsController : Controller
     {
         private readonly LibraryDbContext _context;
+        private readonly ILibraryCodeGenerator _codeGen;
 
-        public CuonSachsController(LibraryDbContext context)
+        public CuonSachsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
         {
             _context = context;
+            _codeGen = codeGen;
+        }
+
+        private void PopulateSachDropDown(object? selectedSach = null)
+        {
+            var list = _context.Sachs
+                        .OrderBy(s => s.TenSach)
+                        .Select(s => new { s.Id, s.TenSach })
+                        .ToList();
+
+            ViewBag.SachId = new SelectList(list, "Id", "TenSach", selectedSach);
         }
 
         // GET: CuonSachs
         public async Task<IActionResult> Index()
         {
-            return View(await _context.CuonSachs.ToListAsync());
+            var cuonSachs = await _context.CuonSachs
+                                .Include(c => c.Sach)
+                                .ToListAsync();
+            return View(cuonSachs);
         }
 
         // GET: CuonSachs/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var cuonSach = await _context.CuonSachs
-                .FirstOrDefaultAsync(m => m.MaCuon == id);
-            if (cuonSach == null)
-            {
-                return NotFound();
-            }
+                                .Include(c => c.Sach)
+                                .FirstOrDefaultAsync(m => m.Id == id);
+            if (cuonSach == null) return NotFound();
 
             return View(cuonSach);
         }
 
         // GET: CuonSachs/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View();
+            // generate suggestion for MaCuon
+            var generated = await _codeGen.GenerateNextAsync<CuonSach>(c => c.MaCuon, "C", 6);
+            var model = new CuonSach { MaCuon = generated, NgayNhap = DateTime.Now };
+            PopulateSachDropDown();
+            ViewBag.GeneratedMaCuon = generated;
+            return View(model);
         }
 
         // POST: CuonSachs/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
+            // ensure unique/generated MaCuon (with retries)
+            cuonSach.MaCuon = await _codeGen.GenerateNextWithRetriesAsync<CuonSach>(c => c.MaCuon, "C", 6);
+
+            // server-side: ensure SachId exists
+            if (!_context.Sachs.Any(s => s.Id == cuonSach.SachId))
+            {
+                ModelState.AddModelError(nameof(cuonSach.SachId), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(cuonSach);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            // repopulate dropdown and keep suggestion
+            PopulateSachDropDown(cuonSach.SachId);
+            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
             return View(cuonSach);
         }
 
         // GET: CuonSachs/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var cuonSach = await _context.CuonSachs.FindAsync(id);
-            if (cuonSach == null)
-            {
-                return NotFound();
-            }
+            if (cuonSach == null) return NotFound();
+
+            PopulateSachDropDown(cuonSach.SachId);
+            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
             return View(cuonSach);
         }
 
         // POST: CuonSachs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
-            if (id != cuonSach.MaCuon)
+            if (id != cuonSach.Id) return NotFound();
+
+            if (!_context.Sachs.Any(s => s.Id == cuonSach.SachId))
             {
-                return NotFound();
+                ModelState.AddModelError(nameof(cuonSach.SachId), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
             }
 
             if (ModelState.IsValid)
@@ -101,34 +121,25 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CuonSachExists(cuonSach.MaCuon))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!CuonSachExists(cuonSach.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
+            PopulateSachDropDown(cuonSach.SachId);
+            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
             return View(cuonSach);
         }
 
         // GET: CuonSachs/Delete/5
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var cuonSach = await _context.CuonSachs
-                .FirstOrDefaultAsync(m => m.MaCuon == id);
-            if (cuonSach == null)
-            {
-                return NotFound();
-            }
+                                .Include(c => c.Sach)
+                                .FirstOrDefaultAsync(m => m.Id == id);
+            if (cuonSach == null) return NotFound();
 
             return View(cuonSach);
         }
@@ -136,21 +147,20 @@ namespace LibraryManagement.Controllers
         // POST: CuonSachs/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var cuonSach = await _context.CuonSachs.FindAsync(id);
             if (cuonSach != null)
             {
                 _context.CuonSachs.Remove(cuonSach);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CuonSachExists(string id)
+        private bool CuonSachExists(int id)
         {
-            return _context.CuonSachs.Any(e => e.MaCuon == id);
+            return _context.CuonSachs.Any(e => e.Id == id);
         }
     }
 }
