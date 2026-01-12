@@ -14,23 +14,33 @@ namespace LibraryManagement.Controllers
         }
 
         // GET: /ThongKe/MuonTheoThang
-        public IActionResult Index(int? thang, int? nam)
+        public async Task<IActionResult> Index(int? thang, int? nam)
         {
-            int month = thang ?? DateTime.Now.Month;
-            int year = nam ?? DateTime.Now.Year;
-            // ngày bắt đầu mượn
-            var phieuMuons = _context.PhieuMuons
+            var query = _context.PhieuMuons
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.ChiTietPhieuMuons)
-                .Where(p => p.NgayMuon.Month == month &&
-                            p.NgayMuon.Year == year)
+                .AsQueryable();
+
+            // 🔥 CHỈ lọc khi người dùng bấm thống kê
+            if (thang.HasValue && nam.HasValue)
+            {
+                query = query.Where(p =>
+                    p.NgayMuon.Month == thang.Value &&
+                    p.NgayMuon.Year == nam.Value);
+            }
+
+            var data = await query
                 .OrderByDescending(p => p.NgayMuon)
-                .ToList();
+                .ToListAsync();
 
-            ViewBag.Thang = month;
-            ViewBag.Nam = year;
+            // Tổng số lượt mượn & tổng sách
+            ViewBag.TongLuotMuon = data.Count;
+            ViewBag.TongSachMuon = data.Sum(p => p.ChiTietPhieuMuons.Count);
 
-            return View(phieuMuons);
+            ViewBag.Thang = thang;
+            ViewBag.Nam = nam;
+
+            return View(data);
         }
     }
 }

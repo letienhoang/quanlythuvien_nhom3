@@ -18,30 +18,45 @@ namespace LibraryManagement.Controllers
             _fineCalculatorService = fineCalculatorService;
         }
 
-        public IActionResult Index(int? thang, int? nam)
+        public async Task<IActionResult> Index(int? thang, int? nam)
         {
-            int month = thang ?? DateTime.Now.Month;
-            int year = nam ?? DateTime.Now.Year;
+            var query = _context.PhieuMuons
+                .Include(p => p.NguoiMuon)
+                .Include(p => p.ChiTietPhieuMuons)
+                .Where(p => p.HanTra < DateTime.Now)
+                .AsQueryable();
 
-            var phieuMuons = _context.PhieuMuons
-           .Include(p => p.NguoiMuon)
-           .Include(p => p.ChiTietPhieuMuons)
-           .Where(p =>
-               p.NgayMuon.Month == month &&
-               p.NgayMuon.Year == year &&
-               p.HanTra < DateTime.Now
-           )
-           .OrderByDescending(p => p.HanTra)
-           .ToList();
+            // Nếu có lọc tháng / năm
+            if (thang.HasValue && nam.HasValue)
+            {
+                query = query.Where(p =>
+                    p.HanTra.Month == thang &&
+                    p.HanTra.Year == nam);
+            }
 
-            decimal tongTienPhat = phieuMuons
-                .Sum(pm => _fineCalculatorService.CalculateTotalFine(pm));
+            var data = await query.ToListAsync();
 
-            ViewBag.Thang = month;
-            ViewBag.Nam = year;
-            ViewBag.TongTienPhat = tongTienPhat;
+            // Tổng tiền phạt
+            decimal tongTien = data.Sum(p => _fineCalculatorService.CalculateTotalFine(p));
 
-            return View(phieuMuons);
+            // Dữ liệu biểu đồ (group theo tháng)
+            var chartData = data
+                .GroupBy(p => p.HanTra.Month)
+                .Select(g => new
+                {
+                    Thang = g.Key,
+                    TongTien = g.Sum(p => _fineCalculatorService.CalculateTotalFine(p))
+                })
+                .OrderBy(x => x.Thang)
+                .ToList();
+
+            ViewBag.Thang = thang;
+            ViewBag.Nam = nam;
+            ViewBag.TongTienPhat = tongTien;
+            ViewBag.ChartLabels = chartData.Select(x => $"Tháng {x.Thang}").ToList();
+            ViewBag.ChartValues = chartData.Select(x => x.TongTien).ToList();
+
+            return View(data);
         }
     }
 }

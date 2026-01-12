@@ -1,61 +1,78 @@
 ﻿@model List<LibraryManagement.Models.PhieuMuon>
-@using LibraryManagement.Services
-
-@inject IFineCalculatorService FineCalculator
 
 @{
-    ViewData["Title"] = "Thống kê mượn theo tháng";
+    ViewData["Title"] = "Thống kê mượn sách theo tháng";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="mb-3">📊 Thống kê mượn sách theo tháng</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Thống kê mượn sách theo tháng</h2>
+</div>
 
-<form method="get" class="row g-3 mb-4">
+<!-- FORM LỌC -->
+<form asp-action="Index" method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-        <label>Tháng</label>
-        <input type="number" name="thang" class="form-control"
-               min="1" max="12" value="@ViewBag.Thang" />
+        <select name="thang" class="form-select">
+            <option value="">-- Chọn tháng --</option>
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i" selected="@(ViewBag.Thang == i)">
+                    Tháng @i
+                </option>
+            }
+        </select>
     </div>
 
     <div class="col-md-3">
-        <label>Năm</label>
-        <input type="number" name="nam" class="form-control"
-               value="@ViewBag.Nam" />
+        <select name="nam" class="form-select">
+            <option value="">-- Chọn năm --</option>
+            @for (int y = DateTime.Now.Year; y >= 2020; y--)
+            {
+                <option value="@y" selected="@(ViewBag.Nam == y)">
+                    @y
+                </option>
+            }
+        </select>
     </div>
 
-    <div class="col-md-3 d-flex align-items-end">
-        <button class="btn btn-primary">Thống kê</button>
+    <div class="col-md-6 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">🔍 Thống kê</button>
+        <a asp-action="Index" class="btn btn-secondary">❌ Clear</a>
     </div>
 </form>
 
 @if (Model == null || Model.Count == 0)
 {
     <div class="alert alert-info">
-        Không có phiếu mượn trong tháng này.
+        Không có dữ liệu.
     </div>
 }
 else
 {
+    <div class="alert alert-success fw-bold">
+        📚 Tổng lượt mượn: @ViewBag.TongLuotMuon |
+        📖 Tổng sách mượn: @ViewBag.TongSachMuon
+    </div>
+
     <div class="table-responsive">
         <table class="table table-striped table-hover align-middle">
             <thead class="table-light">
                 <tr>
                     <th>Mã phiếu</th>
+                    <th>ID Người mượn</th>
                     <th>Người mượn</th>
                     <th>Ngày mượn</th>
                     <th>Hạn trả</th>
                     <th>Số sách</th>
-                    <th>Tiền phạt (nếu có)</th>
-                    <th>Action</th>
+                    <th>Trạng thái</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model)
                 {
-                    var totalFine = FineCalculator.CalculateTotalFine(item);
-
                     <tr>
                         <td><strong>@item.MaPhieuMuon</strong></td>
+                        <td>@item.NguoiMuonId</td>
                         <td>@item.NguoiMuon?.HoTen</td>
                         <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td>@item.HanTra.ToString("dd/MM/yyyy")</td>
@@ -65,24 +82,9 @@ else
                             </span>
                         </td>
                         <td>
-                            @if (totalFine > 0)
-                            {
-                                <span class="badge bg-danger">
-                                    @totalFine.ToString("N0") VND
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">0</span>
-                            }
-                        </td>
-                        <td>
-                            <a asp-controller="PhieuMuon"
-                               asp-action="Details"
-                               asp-route-id="@item.Id"
-                               class="btn btn-sm btn-primary">
-                                Chi tiết
-                            </a>
+                            <span class="badge bg-secondary">
+                                @item.TrangThai
+                            </span>
                         </td>
                     </tr>
                 }

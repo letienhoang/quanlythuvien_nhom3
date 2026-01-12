@@ -4,43 +4,57 @@
 @inject IFineCalculatorService FineCalculator
 
 @{
-    ViewData["Title"] = "Thống kê tiền phạt theo tháng";
+    ViewData["Title"] = "Thống kê mượn sách quá hạn theo tháng";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="mb-3 text-danger">💰 Thống kê tiền phạt theo tháng</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Thống kê mượn sách quá hạn theo tháng</h2>
+</div>
 
-<form method="get" class="row g-3 mb-4">
+<!-- FORM LỌC -->
+<form asp-action="Index" method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-        <label>Tháng</label>
-        <input type="number" name="thang" class="form-control"
-               min="1" max="12" value="@ViewBag.Thang" />
+        <select name="thang" class="form-select">
+            <option value="">-- Chọn tháng --</option>
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i" selected="@(ViewBag.Thang == i)">
+                    Tháng @i
+                </option>
+            }
+        </select>
     </div>
 
     <div class="col-md-3">
-        <label>Năm</label>
-        <input type="number" name="nam" class="form-control"
-               value="@ViewBag.Nam" />
+        <select name="nam" class="form-select">
+            <option value="">-- Chọn năm --</option>
+            @for (int y = DateTime.Now.Year; y >= 2020; y--)
+            {
+                <option value="@y" selected="@(ViewBag.Nam == y)">
+                    @y
+                </option>
+            }
+        </select>
     </div>
 
-    <div class="col-md-3 d-flex align-items-end">
-        <button class="btn btn-danger">Thống kê</button>
+    <div class="col-md-6 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">🔍 Thống kê</button>
+        <a asp-action="Index" class="btn btn-secondary">❌ Clear</a>
     </div>
 </form>
 
 @if (Model == null || Model.Count == 0)
 {
-    <div class="alert alert-info">
-        Không có tiền phạt trong tháng này.
+    <div class="alert alert-info" role="alert">
+        Không có dữ liệu.
     </div>
 }
 else
 {
     <div class="alert alert-danger fw-bold">
-        👉 Tổng tiền phạt tháng @ViewBag.Thang/@ViewBag.Nam:
-        <span class="fs-5">
-            @ViewBag.TongTienPhat.ToString("N0") VND
-        </span>
+        💰 Tổng tiền phạt:
+        <span>@ViewBag.TongTienPhat.ToString("N0") VND</span>
     </div>
 
     <div class="table-responsive">
@@ -48,9 +62,11 @@ else
             <thead class="table-light">
                 <tr>
                     <th>Mã phiếu</th>
+                    <th>ID Người mượn</th>
                     <th>Người mượn</th>
+                    <th>Ngày mượn</th>
                     <th>Hạn trả</th>
-                    <th>Số ngày trễ</th>
+                    <th class="text-danger">Số ngày trễ</th>
                     <th>Số sách</th>
                     <th class="text-danger">Tiền phạt</th>
                     <th>Action</th>
@@ -60,11 +76,13 @@ else
                 @foreach (var item in Model)
                 {
                     var daysOverdue = (DateTime.Now.Date - item.HanTra.Date).Days;
-                    var fine = FineCalculator.CalculateTotalFine(item);
+                    var totalFine = FineCalculator.CalculateTotalFine(item);
 
                     <tr>
-                        <td>@item.MaPhieuMuon</td>
+                        <td><strong>@item.MaPhieuMuon</strong></td>
+                        <td>@item.NguoiMuonId</td>
                         <td>@item.NguoiMuon?.HoTen</td>
+                        <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td>
                             <span class="badge bg-danger">
                                 @item.HanTra.ToString("dd/MM/yyyy")
@@ -76,16 +94,17 @@ else
                             </span>
                         </td>
                         <td>
-                            @(item.ChiTietPhieuMuons?.Count ?? 0)
-                        </td>
-                        <td>
-                            <span class="badge bg-danger">
-                                @fine.ToString("N0") VND
+                            <span class="badge bg-info">
+                                @(item.ChiTietPhieuMuons?.Count ?? 0) cuốn
                             </span>
                         </td>
                         <td>
-                            <a asp-controller="PhieuMuon"
-                               asp-action="Details"
+                            <span class="badge bg-danger">
+                                @totalFine.ToString("N0") VND
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-action="Details"
                                asp-route-id="@item.Id"
                                class="btn btn-sm btn-primary">
                                 Chi tiết
