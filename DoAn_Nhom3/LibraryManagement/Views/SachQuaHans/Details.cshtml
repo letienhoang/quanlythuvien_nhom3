@@ -201,7 +201,8 @@
                                         }
                                     </td>
                                     <td>
-                                        <a href="#" class="btn btn-sm btn-primary">Chi tiết</a>
+                                        <a asp-controller="PhieuPhats" asp-action="Details" asp-route-id="@phat.Id" class="btn btn-sm btn-primary">Chi tiết</a>
+                                        <a asp-controller="PhieuPhats" asp-action="Edit" asp-route-id="@phat.Id" class="btn btn-sm btn-warning">Sửa</a>
                                     </td>
                                 </tr>
                             }
