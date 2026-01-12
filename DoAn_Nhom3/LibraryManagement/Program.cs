@@ -10,6 +10,7 @@ var conString = builder.Configuration.GetConnectionString("LibraryDb")
 builder.Services.AddDbContext<LibraryDbContext>(options => options.UseSqlServer(conString));
 builder.Services.AddScoped<LibraryDbContext>();
 builder.Services.AddScoped<ILibraryCodeGenerator, LibraryCodeGenerator>();
+builder.Services.AddScoped<IFineCalculatorService, FineCalculatorService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
