@@ -2,40 +2,316 @@
 @model LibraryManagement.Models.PhieuMuon
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết phiếu mượn";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var cuonSachCoSan = ViewBag.CuonSachCoSan as List<LibraryManagement.Models.CuonSach> ?? [];
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Chi tiết phiếu mượn</h1>
-    <div>
-        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
-        <a asp-action="Index" class="btn btn-sm btn-secondary ms-2">Quay lại</a>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Chi tiết phiếu mượn</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">← Quay lại</a>
+    </div>
+
+    <!-- Thông báo -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thông tin phiếu mượn -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Thông tin phiếu mượn</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Mã phiếu:</dt>
+                        <dd class="col-sm-8"><strong>@Model.MaPhieuMuon</strong></dd>
+
+                        <dt class="col-sm-4">Người mượn:</dt>
+                        <dd class="col-sm-8">@Model.NguoiMuon?.HoTen</dd>
+
+                        <dt class="col-sm-4">Nhân viên:</dt>
+                        <dd class="col-sm-8">@Model.NhanVien?.HoTen</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Ngày mượn:</dt>
+                        <dd class="col-sm-8">@Model.NgayMuon.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Hạn trả:</dt>
+                        <dd class="col-sm-8">@Model.HanTra.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4">Trạng thái:</dt>
+                        <dd class="col-sm-8">
+                            @{
+                                var statusClass = Model.TrangThai switch
+                                {
+                                    LibraryManagement.Enums.LoanStatus.DangMuon => "bg-warning",
+                                    LibraryManagement.Enums.LoanStatus.DaTraDu => "bg-success",
+                                    LibraryManagement.Enums.LoanStatus.QuaHan => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+                            }
+                            <span class="badge @statusClass">@Model.TrangThai.GetDisplayName()</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chi tiết sách mượn -->
+    <div class="card">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Danh sách sách mượn (@(Model.ChiTietPhieuMuons?.Count ?? 0) cuốn)</h5>
+            @if (Model.TrangThai == LibraryManagement.Enums.LoanStatus.DangMuon)
+            {
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#themSachModal">
+                    + Thêm sách
+                </button>
+            }
+        </div>
+        <div class="card-body p-0">
+            @if (Model.ChiTietPhieuMuons != null && Model.ChiTietPhieuMuons.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã cuốn</th>
+                                <th>Tên sách</th>
+                                <th>Tình trạng sách</th>
+                                <th>Ngày trả</th>
+                                <th>Tình trạng trả</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int stt = 1;
+                            }
+                            @foreach (var ct in Model.ChiTietPhieuMuons)
+                            {
+                                <tr>
+                                    <td>@(stt++)</td>
+                                    <td><code>@ct.CuonSach?.MaCuon</code></td>
+                                    <td>@ct.CuonSach?.Sach?.TenSach</td>
+                                    <td>
+                                        @if (ct.CuonSach != null)
+                                        {
+                                            var conditionClass = ct.CuonSach.TinhTrang switch
+                                            {
+                                                LibraryManagement.Enums.BookCondition.Moi => "text-success",
+                                                LibraryManagement.Enums.BookCondition.Cu => "text-secondary",
+                                                LibraryManagement.Enums.BookCondition.Hong => "text-warning",
+                                                LibraryManagement.Enums.BookCondition.Mat => "text-danger",
+                                                _ => ""
+                                            };
+                                            <span class="@conditionClass">@ct.CuonSach.TinhTrang.GetDisplayName()</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (ct.NgayTra.HasValue)
+                                        {
+                                            @ct.NgayTra.Value.ToString("dd/MM/yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Chưa trả</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (ct.TinhTrangTra.HasValue)
+                                        {
+                                            var returnClass = ct.TinhTrangTra switch
+                                            {
+                                                LibraryManagement.Enums.ReturnCondition.NguyenVen => "badge bg-success",
+                                                LibraryManagement.Enums.ReturnCondition.Hong => "badge bg-warning",
+                                                LibraryManagement.Enums.ReturnCondition.Mat => "badge bg-danger",
+                                                _ => "badge bg-secondary"
+                                            };
+                                            <span class="@returnClass">@ct.TinhTrangTra.GetDisplayName()</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (!ct.NgayTra.HasValue)
+                                        {
+                                            <form asp-action="XoaSach" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa sách này khỏi phiếu mượn?');">
+                                                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
+                                                <input type="hidden" name="cuonSachId" value="@ct.CuonSachId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <p class="mt-2">Chưa có sách nào trong phiếu mượn này</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#themSachModal">
+                       Thêm sách ngay
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Nút thao tác -->
+    <div class="mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm py-1 px-2 me-2">
+           Sửa phiếu
+        </a>
+        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger btn-sm py-1 px-2">
+             Xóa phiếu
+        </a>
     </div>
 </div>
 
-<div class="card mb-3">
-    <div class="card-body">
-        <h5 class="card-title">@Model.MaPhieuMuon</h5>
+<!-- Modal Thêm Sách -->
+<div class="modal fade" id="themSachModal" tabindex="-1" aria-labelledby="themSachModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="themSachModalLabel">
+                    Thêm sách vào phiếu mượn
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="ThemSach" method="post">
+                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
+                <div class="modal-body">
+                    <!-- Tìm kiếm -->
+                    <div class="mb-3">
+                        <input type="text" id="searchBook" class="form-control" 
+                               placeholder="🔍 Tìm kiếm theo mã cuốn hoặc tên sách...">
+                    </div>
 
-        <dl class="row">
-            <dt class="col-sm-3">Người mượn</dt>
-            <dd class="col-sm-9">@Model.NguoiMuon?.HoTen (@Model.NguoiMuon?.MaNguoiMuon)</dd>
-
-            <dt class="col-sm-3">Nhân viên</dt>
-            <dd class="col-sm-9">@Model.NhanVien?.HoTen (@Model.NhanVien?.MaNhanVien)</dd>
-
-            <dt class="col-sm-3">Ngày mượn</dt>
-            <dd class="col-sm-9">@Model.NgayMuon.ToString("dd/MM/yyyy")</dd>
-
-            <dt class="col-sm-3">Hạn trả</dt>
-            <dd class="col-sm-9">@Model.HanTra.ToString("dd/MM/yyyy")</dd>
-
-            <dt class="col-sm-3">Trạng thái</dt>
-            <dd class="col-sm-9">@Model.TrangThai.GetDisplayName()</dd>
-        </dl>
-
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Sửa</a>
-        <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
+                    @if (cuonSachCoSan.Any())
+                    {
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table class="table table-hover table-sm" id="bookTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th style="width: 40px;">
+                                            <input type="checkbox" id="selectAll" class="form-check-input">
+                                        </th>
+                                        <th>Mã cuốn</th>
+                                        <th>Tên sách</th>
+                                        <th>Tình trạng</th>
+                                        <th>Vị trí</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cuon in cuonSachCoSan)
+                                    {
+                                        <tr class="book-row">
+                                            <td>
+                                                <input type="checkbox" name="cuonSachIds" value="@cuon.Id" 
+                                                       class="form-check-input book-checkbox">
+                                            </td>
+                                            <td><code>@cuon.MaCuon</code></td>
+                                            <td>@cuon.Sach?.TenSach</td>
+                                            <td>
+                                                <span class="badge bg-secondary">@cuon.TinhTrang.GetDisplayName()</span>
+                                            </td>
+                                            <td>@(cuon.ViTriKe ?? "-")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2 text-muted">
+                            <small>Đã chọn: <span id="selectedCount">0</span> cuốn sách</small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Không có sách nào có sẵn để mượn.
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    @if (cuonSachCoSan.Any())
+                    {
+                        <button type="submit" class="btn btn-success">
+                            Thêm sách đã chọn
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tìm kiếm sách
+            const searchInput = document.getElementById('searchBook');
+            const bookRows = document.querySelectorAll('.book-row');
+            
+            searchInput?.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                bookRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+
+            // Chọn tất cả
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            const selectedCount = document.getElementById('selectedCount');
+
+            selectAll?.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    if (cb.closest('tr').style.display !== 'none') {
+                        cb.checked = this.checked;
+                    }
+                });
+                updateCount();
+            });
+
+            // Đếm số lượng đã chọn
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateCount);
+            });
+
+            function updateCount() {
+                const count = document.querySelectorAll('.book-checkbox:checked').length;
+                if (selectedCount) selectedCount.textContent = count;
+            }
+        });
+    </script>
+}
