@@ -39,10 +39,4 @@
         <select asp-for="TrangThai" class="form-select" asp-items="Html.GetEnumSelectList<LoanStatus>()"></select>
         <span asp-validation-for="TrangThai" class="text-danger"></span>
     </div>
-
-    <div class="col-md-4">
-        <label asp-for="SoNgayTre" class="form-label"></label>
-        <input asp-for="SoNgayTre" class="form-control" />
-        <span asp-validation-for="SoNgayTre" class="text-danger"></span>
-    </div>
 </div>

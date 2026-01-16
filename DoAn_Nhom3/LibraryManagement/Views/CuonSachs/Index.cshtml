@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<LibraryManagement.Models.CuonSach>
+@using LibraryManagement.Extensions
 
 @{
     ViewData["Title"] = "Index";
@@ -29,8 +30,8 @@
             <tr>
                 <td>@item.MaCuon</td>
                 <td>@item.Sach?.TenSach</td>
-                <td>@item.TinhTrang</td>
-                <td>@item.TrangThai</td>
+                <td>@item.TinhTrang.GetDisplayName()</td>
+                <td>@item.TrangThai.GetDisplayName()</td>
                 <td>@item.ViTriKe</td>
                 <td>@(item.NgayNhap?.ToString("yyyy-MM-dd") ?? "")</td>
                 <td class="text-end">
