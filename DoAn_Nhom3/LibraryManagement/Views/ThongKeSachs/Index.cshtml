@@ -1,0 +1,39 @@
+﻿@model IEnumerable<LibraryManagement.Models.SachThongKeDto>
+@{
+    ViewData["Title"] = "Thống kê sách";
+}
+
+<h2>Thống kê sách trong thư viện</h2>
+
+<table class="table table-striped table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Mã sách</th>
+            <th>Tên sách</th>
+            <th class="text-center">Tổng số cuốn</th>
+            <th class="text-center">Số cuốn còn</th>
+            <th class="text-center">Trạng thái</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sach in Model)
+        {
+            <tr>
+                <td>@sach.MaSach</td>
+                <td>@sach.TenSach</td>
+                <td class="text-center">@sach.TongSoCuon</td>
+                <td class="text-center">@sach.SoCuonCon</td>
+                <td class="text-center">
+                    @if (sach.SoCuonCon > 0)
+                    {
+                        <span class="badge bg-success">Còn sách</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Hết sách</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
