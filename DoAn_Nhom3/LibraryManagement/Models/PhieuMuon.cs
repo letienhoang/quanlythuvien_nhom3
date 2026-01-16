@@ -39,9 +39,6 @@ public class PhieuMuon
     [Display(Name = "Trạng thái")]
     public LoanStatus TrangThai { get; set; }
 
-    [Display(Name = "Số ngày trễ")]
-    public int? SoNgayTre { get; set; }
-
     public ICollection<ChiTietPhieuMuon>? ChiTietPhieuMuons { get; set; }
     public ICollection<PhieuPhat>? PhieuPhats { get; set; }
 }
