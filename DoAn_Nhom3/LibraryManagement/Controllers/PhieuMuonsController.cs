@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using LibraryManagement.Enums;
+using LibraryManagement.Extensions;
 using LibraryManagement.Models;
 using LibraryManagement.Services;
-using LibraryManagement.Enums;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Controllers
 {
@@ -148,20 +149,29 @@ namespace LibraryManagement.Controllers
         // GET: PhieuMuons/Create
         public async Task<IActionResult> Create()
         {
-            // Store Procedure usp_CreateBorrowRecord 
             var dto = new CreateBorrowRecordDto
             {
                 MaPhieuMuon = await _codeGen.GenerateNextAsync<PhieuMuon>(p => p.MaPhieuMuon, "PM", 4),
                 HanTra = DateTime.Now.AddDays(14)
             };
 
-            // Chuẩn bị dropdown cho NguoiMuon, NhanVien, CuonSach có sẵn
+            // Chuẩn bị dropdown cho NguoiMuon, NhanVien
             ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen");
             ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen");
-            ViewBag.CuonSachId = new SelectList(
-                await _context.CuonSachs.Where(c => c.TrangThai == CopyStatus.CoSan).Include(c => c.Sach).ToListAsync(),
-                "Id", "MaCuon"
-            );
+
+            // Dropdown cuốn sách: hiển thị cả mã cuốn và tên sách
+            var cuonSachList = await _context.CuonSachs
+                .Where(c => c.TrangThai == CopyStatus.CoSan)
+                .Include(c => c.Sach)
+                .Select(c => new
+                {
+                    c.Id,
+                    Display = c.MaCuon + " - " + (c.Sach != null ? c.Sach.TenSach : "" + 
+                    "[" + c.TinhTrang.GetDisplayName() + "]")  
+                })
+                .ToListAsync();
+
+            ViewBag.CuonSachId = new SelectList(cuonSachList, "Id", "Display");
 
             return View(dto);
 

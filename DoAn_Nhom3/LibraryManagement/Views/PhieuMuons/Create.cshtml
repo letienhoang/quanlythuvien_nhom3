@@ -4,29 +4,47 @@
     ViewData["Title"] = "Tạo phiếu mượn";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#CuonSachId').select2({
+                placeholder: "-- Chọn cuốn sách --",
+                allowClear: true,
+                width: '100%'
+            });
+        });
+    </script>
+}
 
 <h2>Tạo phiếu mượn</h2>
 <form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
     <div class="mb-3">
-        <label asp-for="MaPhieuMuon" class="form-label"></label>
+        <label asp-for="MaPhieuMuon" class="form-label">Mã phiếu mượn</label>
         <input asp-for="MaPhieuMuon" class="form-control" readonly />
     </div>
     <div class="mb-3">
-        <label asp-for="NguoiMuonId" class="form-label"></label>
+        <label asp-for="NguoiMuonId" class="form-label">Người mượn</label>
         <select asp-for="NguoiMuonId" asp-items="ViewBag.NguoiMuonId" class="form-select"></select>
     </div>
     <div class="mb-3">
-        <label asp-for="NhanVienId" class="form-label"></label>
+        <label asp-for="NhanVienId" class="form-label">Nhân viên lập phiếu</label>
         <select asp-for="NhanVienId" asp-items="ViewBag.NhanVienId" class="form-select"></select>
     </div>
     <div class="mb-3">
-        <label asp-for="CuonSachId" class="form-label"></label>
-        <select asp-for="CuonSachId" asp-items="ViewBag.CuonSachId" class="form-select"></select>
+        <label asp-for="CuonSachId" id="CuonSachId" class="form-label">Cuốn sách mượn</label>
+        <select asp-for="CuonSachId" asp-items="ViewBag.CuonSachId" class="form-select">
+            <option value="">-- Chọn cuốn sách --</option>
+        </select>
     </div>
     <div class="mb-3">
-        <label asp-for="HanTra" class="form-label"></label>
+        <label asp-for="HanTra" class="form-label">Hạn trả</label>
         <input asp-for="HanTra" type="date" class="form-control" />
     </div>
     <button type="submit" class="btn btn-success">Tạo phiếu mượn</button>
 </form>
+
+      
