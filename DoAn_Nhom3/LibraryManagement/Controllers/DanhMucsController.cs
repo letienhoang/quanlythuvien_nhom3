@@ -48,7 +48,7 @@ namespace LibraryManagement.Controllers
         // POST: DanhMucs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TenDanhMuc,MoTa")] DanhMuc danhMuc)
+        public async Task<IActionResult> Create([Bind("TenDanhMuc, MoTa, MaDanhMuc")] DanhMuc danhMuc)
         {
             // generate server-side
             danhMuc.MaDanhMuc = await _codeGen.GenerateNextWithRetriesAsync<DanhMuc>(d => d.MaDanhMuc, "DM", 4);

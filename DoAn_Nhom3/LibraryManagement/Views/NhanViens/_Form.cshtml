@@ -7,21 +7,25 @@
     <div class="col-md-4">
         <label asp-for="MaNhanVien" class="form-label"></label>
         <input asp-for="MaNhanVien" class="form-control" readonly />
+        <span asp-validation-for="MaNhanVien" class="text-danger"></span>
     </div>
 
     <div class="col-md-8">
         <label asp-for="HoTen" class="form-label"></label>
         <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="NgaySinh" class="form-label"></label>
         <input asp-for="NgaySinh" type="date" class="form-control" />
+        <span asp-validation-for="NgaySinh" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="CCCD" class="form-label"></label>
         <input asp-for="CCCD" class="form-control" />
+        <span asp-validation-for="CCCD" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
@@ -30,25 +34,30 @@
                 asp-items="Html.GetEnumSelectList<UserRole>()"
                 class="form-select">
         </select>
+        <span asp-validation-for="ChucVu" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="SoDienThoai" class="form-label"></label>
         <input asp-for="SoDienThoai" class="form-control" />
+        <span asp-validation-for="SoDienThoai" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="Email" class="form-label"></label>
         <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="TaiKhoan" class="form-label"></label>
         <input asp-for="TaiKhoan" class="form-control" />
+        <span asp-validation-for="TaiKhoan" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
         <label asp-for="MatKhau" class="form-label"></label>
         <input asp-for="MatKhau" type="password" class="form-control" />
+        <span asp-validation-for="MatKhau" class="text-danger"></span>
     </div>
 </div>
