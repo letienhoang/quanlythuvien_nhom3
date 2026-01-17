@@ -27,21 +27,7 @@ namespace LibraryManagement.Controllers
                 .Include(p => p.NhanVien)
                 .AsNoTracking()
                 .ToListAsync();
-            var soSachDangMuon = new Dictionary<int, int>();
-            foreach (var item in items)
-            {
-                if (!soSachDangMuon.ContainsKey(item.NguoiMuonId))
-                {
-                    //Funtion số sách đang mượn 
-                    var soSach = await _context.Database
-                        .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({item.NguoiMuonId}) AS Value")
-                        .FirstOrDefaultAsync();
-
-                    soSachDangMuon[item.NguoiMuonId] = soSach;
-                }
-            }
-            ViewBag.SoSachDangMuon = soSachDangMuon;
-
+            // Không join sang ChiTietPhieuMuons ở đây!
             return View(items);
         }
 
@@ -70,6 +56,14 @@ namespace LibraryManagement.Controllers
 
             ViewBag.CuonSachCoSan = cuonSachCoSan;
 
+            // Tính số sách đang mượn của độc giả (dùng hàm SQL) và số slot còn lại
+            var soSachDangMuon = await _context.Database
+                .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({phieuMuon.NguoiMuonId}) AS Value")
+                .FirstOrDefaultAsync();
+
+            var remainingSlots = Math.Max(0, 3 - soSachDangMuon);
+            ViewBag.RemainingSlots = remainingSlots;
+
             return View(phieuMuon);
         }
 
@@ -86,6 +80,24 @@ namespace LibraryManagement.Controllers
 
             var phieuMuon = await _context.PhieuMuons.FindAsync(phieuMuonId);
             if (phieuMuon == null) return NotFound();
+
+            // Kiểm tra số slot còn lại (server-side) bằng hàm fn_SoSachDangMuon
+            var soSachDangMuon = await _context.Database
+                .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({phieuMuon.NguoiMuonId}) AS Value")
+                .FirstOrDefaultAsync();
+
+            var remainingSlots = Math.Max(0, 3 - soSachDangMuon);
+            if (remainingSlots <= 0)
+            {
+                TempData["Error"] = "Độc giả đã mượn tối đa 3 cuốn.";
+                return RedirectToAction(nameof(Details), new { id = phieuMuonId });
+            }
+
+            if (cuonSachIds.Length > remainingSlots)
+            {
+                TempData["Error"] = $"Bạn chỉ có thể thêm tối đa {remainingSlots} cuốn nữa.";
+                return RedirectToAction(nameof(Details), new { id = phieuMuonId });
+            }
 
             foreach (var cuonSachId in cuonSachIds)
             {
@@ -361,7 +373,6 @@ namespace LibraryManagement.Controllers
 
             if (chiTiet == null) return NotFound();
 
-            // Cập nhật chi tiết phiếu mượn
             chiTiet.NgayTra = ngayTra;
             chiTiet.TinhTrangTra = tinhTrangTra;
 
@@ -369,10 +380,9 @@ namespace LibraryManagement.Controllers
             var cuonSach = await _context.CuonSachs.FindAsync(cuonSachId);
             if (cuonSach != null)
             {
-                // Nếu sách bị mất hoặc hỏng nặng
                 if (tinhTrangTra == ReturnCondition.Mat)
                 {
-                    cuonSach.TrangThai = CopyStatus.BaoTri; // Hoặc status khác
+                    cuonSach.TrangThai = CopyStatus.BaoTri;
                     cuonSach.TinhTrang = BookCondition.Mat;
                 }
                 else if (tinhTrangTra == ReturnCondition.Hong)
@@ -382,11 +392,11 @@ namespace LibraryManagement.Controllers
                 }
                 else
                 {
-                    cuonSach.TrangThai = CopyStatus.CoSan; // Trả về có sẵn
+                    cuonSach.TrangThai = CopyStatus.CoSan;
                 }
             }
 
-            // Kiểm tra nếu tất cả sách đã trả -> cập nhật trạng thái phiếu mượn
+            // Nếu tất cả sách đã trả -> cập nhật trạng thái phiếu mượn
             var phieuMuon = await _context.PhieuMuons
                 .Include(p => p.ChiTietPhieuMuons)
                 .FirstOrDefaultAsync(p => p.Id == phieuMuonId);

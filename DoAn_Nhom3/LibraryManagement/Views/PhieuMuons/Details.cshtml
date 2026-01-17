@@ -5,6 +5,7 @@
     ViewData["Title"] = "Chi tiết phiếu mượn";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var cuonSachCoSan = ViewBag.CuonSachCoSan as List<LibraryManagement.Models.CuonSach> ?? [];
+    var remainingSlots = (int?)(ViewBag.RemainingSlots) ?? 0;
 }
 
 <div class="container mt-4">
@@ -215,6 +216,21 @@
                                placeholder="🔍 Tìm kiếm theo mã cuốn hoặc tên sách...">
                     </div>
 
+                    <div class="mb-2">
+                        @if (remainingSlots > 0)
+                        {
+                            <div class="alert alert-info p-2">
+                                Bạn có thể thêm tối đa <strong>@remainingSlots</strong> cuốn sách nữa.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning p-2">
+                                Độc giả đã mượn đủ 3 cuốn. Không thể thêm sách.
+                            </div>
+                        }
+                    </div>
+
                     @if (cuonSachCoSan.Any())
                     {
                         <div class="table-responsive" style="max-height: 400px;">
@@ -222,7 +238,7 @@
                                 <thead class="table-light sticky-top">
                                     <tr>
                                         <th style="width: 40px;">
-                                            <input type="checkbox" id="selectAll" class="form-check-input">
+                                            <input type="checkbox" id="selectAll" class="form-check-input" @(remainingSlots==0 ? "disabled" : "")>
                                         </th>
                                         <th>Mã cuốn</th>
                                         <th>Tên sách</th>
@@ -236,7 +252,7 @@
                                         <tr class="book-row">
                                             <td>
                                                 <input type="checkbox" name="cuonSachIds" value="@cuon.Id" 
-                                                       class="form-check-input book-checkbox">
+                                                       class="form-check-input book-checkbox" @(remainingSlots==0 ? "disabled" : "")>
                                             </td>
                                             <td><code>@cuon.MaCuon</code></td>
                                             <td>@cuon.Sach?.TenSach</td>
@@ -262,7 +278,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                    @if (cuonSachCoSan.Any())
+                    @if (cuonSachCoSan.Any() && remainingSlots > 0)
                     {
                         <button type="submit" class="btn btn-success">
                             Thêm sách đã chọn
@@ -274,9 +290,58 @@
     </div>
 </div>
 
+<!-- Modal Trả Sách -->
+<div class="modal fade" id="traSachModal" tabindex="-1" aria-labelledby="traSachModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="traSachModalLabel">
+                    Trả sách
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="TraSach" method="post">
+                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
+                <input type="hidden" name="cuonSachId" value="" id="cuonSachIdInput" />
+                <div class="modal-body">
+                    <p>Bạn chắc chắn muốn trả cuốn sách <strong id="tenSachLabel"></strong>?</p>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="ngayTraInput">
+                            Ngày trả:
+                        </label>
+                        <input type="date" class="form-control" id="ngayTraInput" name="ngayTra" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="tinhTrangTraSelect">
+                            Tình trạng trả:
+                        </label>
+                        <select class="form-select" id="tinhTrangTraSelect" name="tinhTrangTra" required>
+                            <option value="">Chọn tình trạng</option>
+                            <option value="1">Nguyên Vẹn</option>
+                            <option value="2">Hỏng</option>
+                            <option value="3">Mất</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger">
+                        Xác nhận trả sách
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Remaining slots from server
+            const remainingSlots = @remainingSlots;
+
             // Tìm kiếm sách
             const searchInput = document.getElementById('searchBook');
             const bookRows = document.querySelectorAll('.book-row');
@@ -289,29 +354,68 @@
                 });
             });
 
-            // Chọn tất cả
+            // Chọn tất cả with limit
             const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.book-checkbox');
-            const selectedCount = document.getElementById('selectedCount');
-
-            selectAll?.addEventListener('change', function() {
-                checkboxes.forEach(cb => {
-                    if (cb.closest('tr').style.display !== 'none') {
-                        cb.checked = this.checked;
-                    }
-                });
-                updateCount();
-            });
-
-            // Đếm số lượng đã chọn
-            checkboxes.forEach(cb => {
-                cb.addEventListener('change', updateCount);
-            });
+            const checkboxes = Array.from(document.querySelectorAll('.book-checkbox'));
+            const selectedCountEl = document.getElementById('selectedCount');
 
             function updateCount() {
                 const count = document.querySelectorAll('.book-checkbox:checked').length;
-                if (selectedCount) selectedCount.textContent = count;
+                if (selectedCountEl) selectedCountEl.textContent = count;
             }
+
+            // Disable if no slot
+            if (remainingSlots <= 0) {
+                updateCount();
+            }
+
+            selectAll?.addEventListener('change', function() {
+                const visible = checkboxes.filter(cb => cb.closest('tr').style.display !== 'none' && !cb.disabled);
+                const currentlyChecked = document.querySelectorAll('.book-checkbox:checked').length;
+                if (this.checked) {
+                    const canSelect = remainingSlots - currentlyChecked;
+                    if (canSelect <= 0) {
+                        alert('Độc giả đã mượn tối đa 3 cuốn.');
+                        this.checked = false;
+                        return;
+                    }
+                    // select at most canSelect of visible unchecked checkboxes
+                    const uncheckedVisible = visible.filter(cb => !cb.checked);
+                    uncheckedVisible.slice(0, canSelect).forEach(cb => cb.checked = true);
+                    if (uncheckedVisible.length > canSelect) {
+                        alert('Chỉ có thể chọn tối đa ' + remainingSlots + ' cuốn cho độc giả này.');
+                    }
+                } else {
+                    visible.forEach(cb => cb.checked = false);
+                }
+                updateCount();
+            });
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', function () {
+                    const totalSelected = document.querySelectorAll('.book-checkbox:checked').length;
+                    if (totalSelected > remainingSlots) {
+                        this.checked = false;
+                        alert('Chỉ được chọn tối đa ' + remainingSlots + ' cuốn sách.');
+                    }
+                    updateCount();
+                });
+            });
+
+            // initialize count
+            updateCount();
+
+            // Xử lý sự kiện cho nút trả sách
+            document.querySelectorAll('.btn-tra-sach').forEach(button => {
+                button.addEventListener('click', function() {
+                    const cuonSachId = this.getAttribute('data-cuon-sach-id');
+                    const tenSach = this.getAttribute('data-ten-sach');
+                    document.getElementById('cuonSachIdInput').value = cuonSachId;
+                    document.getElementById('tenSachLabel').textContent = tenSach;
+                    var myModal = new bootstrap.Modal(document.getElementById('traSachModal'));
+                    myModal.show();
+                });
+            });
         });
     </script>
 }
