@@ -41,7 +41,7 @@ END;
 GO
 
 
--- 2. Đếm số sách đang mượn của độc giả
+-- 2. Đếm số sách đang mượn của độc giả -> (DONE)
 -- Đếm số bản ghi cuốn sách mà người mượn hiện đang mượn trong tất cả phiếu mượn
 CREATE FUNCTION dbo.fn_SoSachDangMuon
 (
@@ -62,7 +62,7 @@ BEGIN
 END;
 GO
 
--- 3. Đếm số cuốn sách còn sẵn
+-- 3. Đếm số cuốn sách còn sẵn 
 -- Trả số bản hiện có sẵn của một sách bằng cách đếm các cuốn sách của nó có trạng thái có sẵn
 CREATE FUNCTION dbo.fn_CountAvailableCopies
 (
@@ -87,7 +87,7 @@ GO
    STORED PROCEDURES
    ========================================================= */
 
--- 1. Thêm sách và nhập kho
+-- 1. Thêm sách và nhập kho -> (DONE)
 -- Thêm hoặc cập nhật đầu sách và chèn các bản ghi trong bảng cuốn sách
 CREATE PROCEDURE usp_InsertBookAndCopies
 (

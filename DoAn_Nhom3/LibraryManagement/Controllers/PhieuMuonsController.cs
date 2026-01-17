@@ -31,9 +31,9 @@ namespace LibraryManagement.Controllers
             {
                 if (!soSachDangMuon.ContainsKey(item.NguoiMuonId))
                 {
-                    //Funtion SQL -> chưa biết để đâu
+                    //Funtion số sách đang mượn 
                     var soSach = await _context.Database
-                        .SqlQuery<int>($"SELECT dbo.fn_TinhSoNgayTre({item.NguoiMuonId}) AS Value")
+                        .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({item.NguoiMuonId}) AS Value")
                         .FirstOrDefaultAsync();
 
                     soSachDangMuon[item.NguoiMuonId] = soSach;
@@ -148,36 +148,60 @@ namespace LibraryManagement.Controllers
         // GET: PhieuMuons/Create
         public async Task<IActionResult> Create()
         {
-            var model = new PhieuMuon
+            // Store Procedure usp_CreateBorrowRecord 
+            var dto = new CreateBorrowRecordDto
             {
                 MaPhieuMuon = await _codeGen.GenerateNextAsync<PhieuMuon>(p => p.MaPhieuMuon, "PM", 4),
-                NgayMuon = DateTime.Now,
                 HanTra = DateTime.Now.AddDays(14)
             };
 
-            await PopulateSelectsAsync();
-            ViewBag.GeneratedMaPhieuMuon = model.MaPhieuMuon;
-            return View(model);
+            // Chuẩn bị dropdown cho NguoiMuon, NhanVien, CuonSach có sẵn
+            ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen");
+            ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen");
+            ViewBag.CuonSachId = new SelectList(
+                await _context.CuonSachs.Where(c => c.TrangThai == CopyStatus.CoSan).Include(c => c.Sach).ToListAsync(),
+                "Id", "MaCuon"
+            );
+
+            return View(dto);
+
         }
 
         // POST: PhieuMuons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaPhieuMuon,NguoiMuonId,NhanVienId,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon)
+        public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
         {
-            // ensure unique code with retries
-            phieuMuon.MaPhieuMuon = await _codeGen.GenerateNextWithRetriesAsync<PhieuMuon>(p => p.MaPhieuMuon, "PM", 4);
-
+            // Store Procedure usp_CreateBorrowRecord 
             if (ModelState.IsValid)
             {
-                _context.Add(phieuMuon);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
+                        dto.MaPhieuMuon,
+                        dto.NguoiMuonId,
+                        dto.NhanVienId,
+                        dto.CuonSachId,
+                        dto.HanTra
+                    );
+                    TempData["Success"] = "Tạo phiếu mượn thành công!";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Lỗi: {ex.Message}");
+                }
             }
 
-            await PopulateSelectsAsync();
-            ViewBag.GeneratedMaPhieuMuon = phieuMuon.MaPhieuMuon;
-            return View(phieuMuon);
+            // Nếu lỗi, load lại dropdown
+            ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen", dto.NguoiMuonId);
+            ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen", dto.NhanVienId);
+            ViewBag.CuonSachId = new SelectList(
+                await _context.CuonSachs.Where(c => c.TrangThai == CopyStatus.CoSan).Include(c => c.Sach).ToListAsync(),
+                "Id", "MaCuon", dto.CuonSachId
+            );
+            return View(dto);
         }
 
         // GET: PhieuMuons/Edit/5
