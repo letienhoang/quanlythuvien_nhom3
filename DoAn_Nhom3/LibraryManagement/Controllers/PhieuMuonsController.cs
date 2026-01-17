@@ -155,23 +155,15 @@ namespace LibraryManagement.Controllers
                 HanTra = DateTime.Now.AddDays(14)
             };
 
-            // Chuẩn bị dropdown cho NguoiMuon, NhanVien
             ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen");
             ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen");
 
-            // Dropdown cuốn sách: hiển thị cả mã cuốn và tên sách
-            var cuonSachList = await _context.CuonSachs
+            var cuonSachCoSan = await _context.CuonSachs
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
-                .Select(c => new
-                {
-                    c.Id,
-                    Display = c.MaCuon + " - " + (c.Sach != null ? c.Sach.TenSach : "" + 
-                    "[" + c.TinhTrang.GetDisplayName() + "]")  
-                })
                 .ToListAsync();
 
-            ViewBag.CuonSachId = new SelectList(cuonSachList, "Id", "Display");
+            ViewBag.CuonSachCoSan = cuonSachCoSan;
 
             return View(dto);
 
@@ -180,37 +172,52 @@ namespace LibraryManagement.Controllers
         // POST: PhieuMuons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
+        public async Task<IActionResult> Create(CreateBorrowRecordDto dto, int[] cuonSachIds)
         {
-            // Store Procedure usp_CreateBorrowRecord 
+            if (cuonSachIds == null || cuonSachIds.Length == 0)
+            {
+                ModelState.AddModelError("", "Vui lòng chọn ít nhất một cuốn sách.");
+            }
+            if (cuonSachIds.Length > 3)
+            {
+                ModelState.AddModelError("", "Chỉ được mượn tối đa 3 cuốn sách.");
+            }
+
             if (ModelState.IsValid)
             {
-                try
+                int count = 0;
+                foreach (var cuonSachId in cuonSachIds)
                 {
-                    await _context.Database.ExecuteSqlRawAsync(
-                        "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
-                        dto.MaPhieuMuon,
-                        dto.NguoiMuonId,
-                        dto.NhanVienId,
-                        dto.CuonSachId,
-                        dto.HanTra
-                    );
-                    TempData["Success"] = "Tạo phiếu mượn thành công!";
-                    return RedirectToAction(nameof(Index));
+                    try
+                    {
+                        await _context.Database.ExecuteSqlRawAsync(
+                            "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
+                            dto.MaPhieuMuon,
+                            dto.NguoiMuonId,
+                            dto.NhanVienId,
+                            cuonSachId,
+                            dto.HanTra
+                        );
+                        count++;
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", $"Lỗi với sách ID {cuonSachId}: {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+                if (count > 0)
                 {
-                    ModelState.AddModelError("", $"Lỗi: {ex.Message}");
+                    TempData["Success"] = $"Đã tạo phiếu mượn với {count} cuốn sách.";
+                    return RedirectToAction(nameof(Index));
                 }
             }
 
-            // Nếu lỗi, load lại dropdown
-            ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen", dto.NguoiMuonId);
-            ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen", dto.NhanVienId);
-            ViewBag.CuonSachId = new SelectList(
-                await _context.CuonSachs.Where(c => c.TrangThai == CopyStatus.CoSan).Include(c => c.Sach).ToListAsync(),
-                "Id", "MaCuon", dto.CuonSachId
-            );
+            // Load lại danh sách nếu lỗi
+            await LoadDropdowns(dto.NguoiMuonId, dto.NhanVienId);
+            ViewBag.CuonSachCoSan = await _context.CuonSachs
+                .Where(c => c.TrangThai == CopyStatus.CoSan)
+                .Include(c => c.Sach)
+                .ToListAsync();
             return View(dto);
         }
 
@@ -316,6 +323,22 @@ namespace LibraryManagement.Controllers
 
             ViewBag.NguoiMuonId = new SelectList(nguoiList, "Value", "Text", selectedNguoiId?.ToString());
             ViewBag.NhanVienId = new SelectList(nhanvienList, "Value", "Text", selectedNhanVienId?.ToString());
+        }
+
+        // Add this helper near the other private helpers (e.g. below PopulateSelectsAsync)
+        private async Task LoadDropdowns(int? selectedNguoiId = null, int? selectedNhanVienId = null)
+        {
+            // Reuse existing PopulateSelectsAsync for người mượn / nhân viên
+            await PopulateSelectsAsync(selectedNguoiId, selectedNhanVienId);
+
+            // Load available copies for the view (same as used in Details)
+            var cuonSachCoSan = await _context.CuonSachs
+                .AsNoTracking()
+                .Where(c => c.TrangThai == CopyStatus.CoSan)
+                .Include(c => c.Sach)
+                .ToListAsync();
+
+            ViewBag.CuonSachCoSan = cuonSachCoSan;
         }
 
         // Function In SQL 

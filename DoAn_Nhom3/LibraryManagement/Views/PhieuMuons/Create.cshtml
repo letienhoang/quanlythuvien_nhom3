@@ -1,27 +1,15 @@
-﻿@model LibraryManagement.Models.CreateBorrowRecordDto
-
+﻿@using LibraryManagement.Extensions
+@model LibraryManagement.Models.CreateBorrowRecordDto
 @{
     ViewData["Title"] = "Tạo phiếu mượn";
     Layout = "~/Views/Shared/_Layout.cshtml";
-}
-@section Scripts {
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-            $('#CuonSachId').select2({
-                placeholder: "-- Chọn cuốn sách --",
-                allowClear: true,
-                width: '100%'
-            });
-        });
-    </script>
+    var cuonSachCoSan = ViewBag.CuonSachCoSan as List<LibraryManagement.Models.CuonSach> ?? [];
 }
 
 <h2>Tạo phiếu mượn</h2>
 <form asp-action="Create" method="post">
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <!-- Các trường thông tin phiếu mượn -->
     <div class="mb-3">
         <label asp-for="MaPhieuMuon" class="form-label">Mã phiếu mượn</label>
         <input asp-for="MaPhieuMuon" class="form-control" readonly />
@@ -35,16 +23,89 @@
         <select asp-for="NhanVienId" asp-items="ViewBag.NhanVienId" class="form-select"></select>
     </div>
     <div class="mb-3">
-        <label asp-for="CuonSachId" id="CuonSachId" class="form-label">Cuốn sách mượn</label>
-        <select asp-for="CuonSachId" asp-items="ViewBag.CuonSachId" class="form-select">
-            <option value="">-- Chọn cuốn sách --</option>
-        </select>
-    </div>
-    <div class="mb-3">
         <label asp-for="HanTra" class="form-label">Hạn trả</label>
         <input asp-for="HanTra" type="date" class="form-control" />
     </div>
-    <button type="submit" class="btn btn-success">Tạo phiếu mượn</button>
+
+    <!-- Bảng chọn sách giống chi tiết phiếu mượn -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Chọn sách mượn (tối đa 3 cuốn)</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (cuonSachCoSan.Any())
+            {
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-hover table-sm" id="bookTable">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Mã cuốn</th>
+                                <th>Tên sách</th>
+                                <th>Tình trạng</th>
+                                <th>Vị trí</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cuon in cuonSachCoSan)
+                            {
+                                <tr class="book-row">
+                                    <td>
+                                        <input type="checkbox" name="cuonSachIds" value="@cuon.Id"
+                                               class="form-check-input book-checkbox">
+                                    </td>
+                                    <td><code>@cuon.MaCuon</code></td>
+                                    <td>@cuon.Sach?.TenSach</td>
+                                    <td>
+                                        <span class="badge bg-secondary">@cuon.TinhTrang.GetDisplayName()</span>
+                                    </td>
+                                    <td>@(cuon.ViTriKe ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-2 text-muted">
+                    <small>Đã chọn: <span id="selectedCount">0</span> cuốn sách</small>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Không có sách nào có sẵn để mượn.
+                </div>
+            }
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success mt-3">Tạo phiếu mượn</button>
 </form>
 
-      
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chọn tất cả
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            const selectedCount = document.getElementById('selectedCount');
+
+            selectAll?.addEventListener('change', function() {
+                checkboxes.forEach(cb => {
+                    cb.checked = this.checked;
+                });
+                updateCount();
+            });
+
+            // Đếm số lượng đã chọn
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', updateCount);
+            });
+
+            function updateCount() {
+                const count = document.querySelectorAll('.book-checkbox:checked').length;
+                if (selectedCount) selectedCount.textContent = count;
+            }
+        });
+    </script>
+}
