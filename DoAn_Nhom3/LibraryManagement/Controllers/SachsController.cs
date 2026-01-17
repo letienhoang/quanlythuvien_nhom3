@@ -72,19 +72,27 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaSach,TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,TacGiaId,SoLuong")] Sach sach)
+        public async Task<IActionResult> Create(InsertBookDto dto)
         {
-            sach.MaSach = await _codeGen.GenerateNextWithRetriesAsync<Sach>(t => t.MaSach, "S", 6);
+            dto.MaSach = await _codeGen.GenerateNextWithRetriesAsync<Sach>(t => t.MaSach, "S", 6);
             if (ModelState.IsValid)
             {
-                _context.Add(sach);
-                await _context.SaveChangesAsync();
+                //Store procedure to insert book and its copies (*)
+                await _context.Database.ExecuteSqlRawAsync(
+                    "EXEC usp_InsertBookAndCopies {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}",
+                dto.MaSach, dto.TenSach, dto.ISBN, dto.NamXuatBan,
+                dto.NhaXuatBan ?? (object)DBNull.Value,
+                dto.NgonNgu ?? (object)DBNull.Value,
+                dto.SoTrang ?? (object)DBNull.Value,
+                dto.MoTa ?? (object)DBNull.Value,
+                dto.TacGiaId, dto.SoLuong);
+
+                TempData["Success"] = $"Đã thêm sách '{dto.TenSach}' với {dto.SoLuong} cuốn.";
                 return RedirectToAction(nameof(Index));
             }
-            PopulateTacGiaDropDown(sach.TacGiaId);
-            var suggestion = await _codeGen.GenerateNextAsync<Sach>(t => t.MaSach, "S", 6);
-            sach.MaSach = suggestion;
-            return View(sach);
+ 
+            PopulateTacGiaDropDown(dto.TacGiaId);
+            return View(dto);
         }
 
         // GET: Sachs/Edit/5

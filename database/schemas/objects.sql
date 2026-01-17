@@ -20,15 +20,23 @@ CREATE FUNCTION dbo.fn_TinhSoNgayTre
     RETURNS INT
 AS
 BEGIN
-    DECLARE @Count INT;
+    DECLARE @TotalDaysLate INT;
 
-    SELECT @Count = COUNT(*)
+    SELECT @TotalDaysLate =
+           SUM(
+                   CASE
+                       WHEN ct.NgayTra IS NULL AND p.HanTra < GETDATE()
+                           THEN DATEDIFF(day, p.HanTra, GETDATE())
+                       WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
+                           THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
+                       ELSE 0
+                       END
+           )
     FROM ChiTietPhieuMuons ct
              JOIN PhieuMuons p ON ct.PhieuMuonId = p.Id
-    WHERE p.NguoiMuonId = @NguoiMuonId
-      AND ct.NgayTra IS NULL;
-    
-    RETURN ISNULL(@Count, 0);
+    WHERE p.NguoiMuonId = @NguoiMuonId;
+
+    RETURN ISNULL(@TotalDaysLate, 0);
 END;
 GO
 
@@ -272,15 +280,46 @@ GO
 -- 5. Báo cáo phiếu quá hạn
 -- Trả các báo cáo cơ bản dùng các bảng đã liệt kê(danh sách nhiều lượt mượn trong khoảng, danh sách phiếu quá hạn, số sách đang mượn của từng độc giả)
 CREATE PROCEDURE usp_GenerateReport
+    @FromDate DATETIME = NULL,
+    @ToDate   DATETIME = NULL,
+    @OnlyOverdue BIT = 1
 AS
 BEGIN
+    SET NOCOUNT ON;
+
     SELECT
-        Id,
-        MaPhieuMuon,
-        dbo.fn_TinhSoNgayTre(NguoiMuonId) AS SoNgayTre
-    FROM PhieuMuons
-    WHERE TrangThai = 'DangMuon'
-      AND HanTra < GETDATE();
+        p.Id,
+        p.MaPhieuMuon,
+        p.NguoiMuonId,
+        n.MaNguoiMuon,
+        n.HoTen,
+        n.SoDienThoai,
+        n.Email,
+        p.NgayMuon,
+        p.HanTra,
+        DATEDIFF(day, p.HanTra, GETUTCDATE()) AS SoNgayTre,
+        ISNULL(ct.SoSachDangMuon, 0) AS SoSachDangMuon,
+        ISNULL(ph.TongTienPhatChuaTra, 0) AS TongTienPhatChuaTra
+    FROM PhieuMuons p
+             INNER JOIN NguoiMuons n ON n.Id = p.NguoiMuonId
+             LEFT JOIN (
+        SELECT PhieuMuonId, COUNT(*) AS SoSachDangMuon
+        FROM ChiTietPhieuMuons
+        WHERE NgayTra IS NULL
+        GROUP BY PhieuMuonId
+    ) ct ON ct.PhieuMuonId = p.Id
+             LEFT JOIN (
+        SELECT PhieuMuonId, SUM(SoTienPhat) AS TongTienPhatChuaTra
+        FROM PhieuPhats
+        WHERE TrangThaiThanhToan <> 'DaThanhToan' 
+        GROUP BY PhieuMuonId
+    ) ph ON ph.PhieuMuonId = p.Id
+    WHERE
+        p.TrangThai = 'DangMuon'
+      AND (@OnlyOverdue = 0 OR p.HanTra < GETUTCDATE())
+      AND (@FromDate IS NULL OR p.NgayMuon >= @FromDate)
+      AND (@ToDate   IS NULL OR p.NgayMuon <= @ToDate)
+    ORDER BY p.HanTra ASC, p.NgayMuon DESC;
 END;
 GO
 
@@ -380,28 +419,10 @@ GO
 CREATE PROCEDURE sp_ProcessOverdueLoans_Cursor
     AS
 BEGIN
-    DECLARE @PhieuMuonId INT;
-
-    DECLARE cur CURSOR FOR
-    SELECT Id
-    FROM PhieuMuons
-    WHERE TrangThai = 'DangMuon'
-      AND HanTra < GETDATE();
-    
-    OPEN cur;
-    FETCH NEXT FROM cur INTO @PhieuMuonId;
-    
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
     UPDATE PhieuMuons
     SET TrangThai = 'QuaHan'
-    WHERE Id = @PhieuMuonId;
-    
-    FETCH NEXT FROM cur INTO @PhieuMuonId;
-    END
-    
-    CLOSE cur;
-    DEALLOCATE cur;
+    WHERE TrangThai = 'DangMuon'
+      AND HanTra < GETDATE();
 END;
 GO
 
