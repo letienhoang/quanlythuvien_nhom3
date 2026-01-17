@@ -153,57 +153,58 @@ GO
 -- Tạo phiếu mượn và chi tiết mượn, cập nhật trạng thái cuốn sách
 CREATE PROCEDURE usp_CreateBorrowRecord
 (
-    @MaNguoiMuon INT,
-    @MaNhanVien INT,
-    @MaCuon INT,
-    @HanTra DATE
+    @MaPhieuMuon NVARCHAR(50),
+    @NguoiMuonId INT,
+    @NhanVienId INT,
+    @CuonSachId INT,
+    @HanTra DATETIME
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF dbo.fn_SoSachDangMuon(@MaNguoiMuon) >= 3
-    BEGIN
-        RAISERROR(N'Độc giả đã mượn tối đa 3 cuốn', 16, 1);
-        RETURN;
-    END
+    IF dbo.fn_SoSachDangMuon(@NguoiMuonId) >= 3
+        BEGIN
+            THROW 50001, N'Độc giả đã mượn tối đa 3 cuốn', 1;
+        END
 
     IF NOT EXISTS (
-        SELECT 1 FROM CUONSACH 
-        WHERE MaCuon = @MaCuon AND TrangThai = N'Có sẵn'
+        SELECT 1 FROM CuonSachs
+        WHERE Id = @CuonSachId AND TrangThai = 'CoSan'
     )
-    BEGIN
-        RAISERROR(N'Cuốn sách không sẵn sàng', 16, 1);
-        RETURN;
-    END
+        BEGIN
+            THROW 50002, N'Cuốn sách không có sẵn', 1;
+        END
 
     BEGIN TRANSACTION;
 
-    DECLARE @MaPhieuMuon INT;
+    DECLARE @PhieuMuonId INT;
 
-    INSERT INTO PHIEUMUON
+    INSERT INTO PhieuMuons
     (
-        MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai
+        MaPhieuMuon, NguoiMuonId, NhanVienId,
+        NgayMuon, HanTra, TrangThai
     )
     VALUES
-    (
-        @MaNguoiMuon, @MaNhanVien, GETDATE(), @HanTra, N'Đang mượn'
-    );
+        (
+            @MaPhieuMuon, @NguoiMuonId, @NhanVienId,
+            GETDATE(), @HanTra, 'DangMuon'
+        );
 
-    SET @MaPhieuMuon = SCOPE_IDENTITY();
+    SET @PhieuMuonId = SCOPE_IDENTITY();
 
-    INSERT INTO CHITIET_PHIEUMUON
+    INSERT INTO ChiTietPhieuMuons
     (
-        MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra
+        PhieuMuonId, CuonSachId, NgayTra, TinhTrangTra
     )
     VALUES
-    (
-        @MaPhieuMuon, @MaCuon, NULL, NULL
-    );
+        (
+            @PhieuMuonId, @CuonSachId, NULL, NULL
+        );
 
-    UPDATE CUONSACH
-    SET TrangThai = N'Đang mượn'
-    WHERE MaCuon = @MaCuon;
+    UPDATE CuonSachs
+    SET TrangThai = 'DangMuon'
+    WHERE Id = @CuonSachId;
 
     COMMIT;
 END;

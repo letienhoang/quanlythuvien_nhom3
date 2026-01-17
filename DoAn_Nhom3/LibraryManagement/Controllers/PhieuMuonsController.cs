@@ -31,6 +31,7 @@ namespace LibraryManagement.Controllers
             {
                 if (!soSachDangMuon.ContainsKey(item.NguoiMuonId))
                 {
+                    //Funtion SQL -> chưa biết để đâu
                     var soSach = await _context.Database
                         .SqlQuery<int>($"SELECT dbo.fn_TinhSoNgayTre({item.NguoiMuonId}) AS Value")
                         .FirstOrDefaultAsync();
