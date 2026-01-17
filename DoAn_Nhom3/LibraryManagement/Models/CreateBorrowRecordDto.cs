@@ -1,4 +1,5 @@
-﻿namespace LibraryManagement.Models
+﻿using System.ComponentModel.DataAnnotations;
+namespace LibraryManagement.Models
 {
     public class CreateBorrowRecordDto
     {
