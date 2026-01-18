@@ -90,10 +90,10 @@ else
     @section Scripts {
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                // Chọn tất cả
                 const selectAll = document.getElementById('selectAll');
                 const checkboxes = document.querySelectorAll('.book-checkbox');
                 const selectedCount = document.getElementById('selectedCount');
+                const maxBooks = 3;
 
                 selectAll?.addEventListener('change', function() {
                     checkboxes.forEach(cb => {
@@ -102,9 +102,15 @@ else
                     updateCount();
                 });
 
-                // Đếm số lượng đã chọn
                 checkboxes.forEach(cb => {
-                    cb.addEventListener('change', updateCount);
+                    cb.addEventListener('change', function(e) {
+                        const checkedCount = document.querySelectorAll('.book-checkbox:checked').length;
+                        if (checkedCount > maxBooks) {
+                            cb.checked = false;
+                            alert('Bạn chỉ được mượn tối đa 3 cuốn sách cho mỗi phiếu mượn.');
+                        }
+                        updateCount();
+                    });
                 });
 
                 function updateCount() {

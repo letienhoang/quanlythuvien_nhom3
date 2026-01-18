@@ -173,73 +173,73 @@ namespace LibraryManagement.Controllers
         }
 
         // GET: PhieuMuons/Create
-        public async Task<IActionResult> Create(int? nguoiMuonId)
+        public async Task<IActionResult> Create()
         {
             var dto = new CreateBorrowRecordDto
             {
                 MaPhieuMuon = await _codeGen.GenerateNextAsync<PhieuMuon>(p => p.MaPhieuMuon, "PM", 4),
-                HanTra = DateTime.Now.AddDays(14),
-                NguoiMuonId = nguoiMuonId ?? 0
+                HanTra = DateTime.Now.AddDays(14)
             };
 
-            ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen", dto.NguoiMuonId);
+            ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen");
             ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen");
 
             var cuonSachCoSan = await _context.CuonSachs
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
                 .ToListAsync();
+
             ViewBag.CuonSachCoSan = cuonSachCoSan;
 
-            int soSachDangMuon = 0;
-            if (dto.NguoiMuonId > 0)
-            {
-                soSachDangMuon = await _context.Database
-                    .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({dto.NguoiMuonId}) AS Value")
-                    .FirstOrDefaultAsync();
-            }
-            ViewBag.SoSachDangMuon = soSachDangMuon;
-
             return View(dto);
+
         }
 
         // POST: PhieuMuons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
+        public async Task<IActionResult> Create(CreateBorrowRecordDto dto, int[] cuonSachIds)
         {
-            if (dto.CuonSachIds == null || dto.CuonSachIds.Count == 0)
+            if (cuonSachIds == null || cuonSachIds.Length == 0)
+            {
                 ModelState.AddModelError("", "Vui lòng chọn ít nhất một cuốn sách.");
-            if (dto.CuonSachIds.Count > 3)
+            }
+            if (cuonSachIds.Length > 3)
+            {
                 ModelState.AddModelError("", "Chỉ được mượn tối đa 3 cuốn sách.");
+            }
 
             // Kiểm tra số sách đang mượn hiện tại của độc giả
             var soSachDangMuon = await _context.Database
                 .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({dto.NguoiMuonId}) AS Value")
                 .FirstOrDefaultAsync();
 
-            if (soSachDangMuon + dto.CuonSachIds.Count > 3)
+            if (soSachDangMuon + cuonSachIds.Length > 3)
             {
                 ModelState.AddModelError("", $"Độc giả đã mượn {soSachDangMuon} cuốn, chỉ được mượn tối đa 3 cuốn. Vui lòng trả bớt sách trước khi mượn thêm.");
             }
 
             if (ModelState.IsValid)
             {
-                // Chuyển List<int> thành chuỗi phân cách bằng dấu phẩy
-                var danhSachCuonSachId = string.Join(",", dto.CuonSachIds);
+                var danhSachCuonSachId = string.Join(",", cuonSachIds);
 
-                // Gọi stored procedure với chuỗi danh sách
-                var result = await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
-                    dto.MaPhieuMuon,
-                    dto.NguoiMuonId,
-                    dto.NhanVienId,
-                    danhSachCuonSachId,
-                    dto.HanTra
-                );
-
-                TempData["Success"] = $"Đã tạo phiếu mượn với {dto.CuonSachIds.Count} cuốn sách.";
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
+                        dto.MaPhieuMuon,
+                        dto.NguoiMuonId,
+                        dto.NhanVienId,
+                        danhSachCuonSachId,
+                        dto.HanTra
+                    );
+                    TempData["Success"] = $"Đã tạo phiếu mượn với {cuonSachIds.Length} cuốn sách.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Lỗi khi tạo phiếu mượn: {ex.Message}");
+                }
             }
 
             // Load lại danh sách nếu lỗi
