@@ -1,7 +1,4 @@
-﻿@model List<LibraryManagement.Models.PhieuMuon>
-@using LibraryManagement.Services
-
-@inject IFineCalculatorService FineCalculator
+﻿@model IEnumerable<SachQuaHanReportDto>
 
 @{
     ViewData["Title"] = "Danh sách sách mượn quá hạn";
@@ -14,7 +11,7 @@
     </div>
 </div>
 
-@if (Model == null || Model.Count == 0)
+@if (!Model.Any())
 {
     <div class="alert alert-info" role="alert">
         Không có sách mượn quá hạn.
@@ -27,7 +24,6 @@ else
             <thead class="table-light">
                 <tr>
                     <th>Mã phiếu</th>
-                    <th>ID Người mượn</th>
                     <th>Người mượn</th>
                     <th>Ngày mượn</th>
                     <th>Hạn trả</th>
@@ -40,19 +36,16 @@ else
             <tbody>
                 @foreach (var item in Model)
                 {
-                    var daysOverdue = (DateTime.Now.Date - item.HanTra.Date).Days;
-                    var totalFine = FineCalculator.CalculateTotalFine(item);
                     <tr>
                         <td><strong>@item.MaPhieuMuon</strong></td>
-                        <td><span>@item.NguoiMuonId</span></td>
-                        <td>@item.NguoiMuon?.HoTen</td>
+                        <td>@item.HoTen</td>
                         <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td><span class="badge bg-danger">@item.HanTra.ToString("dd/MM/yyyy")</span></td>
-                        <td><span class="badge bg-warning">@daysOverdue ngày</span></td>
-                        <td><span class="badge bg-info">@(item.ChiTietPhieuMuons?.Count ?? 0) cuốn</span></td>
-                        <td><span class="badge bg-danger">@totalFine.ToString("N0") VND</span></td>
+                        <td><span class="badge bg-warning">@item.SoNgayTre ngày</span></td>
+                        <td><span class="badge bg-info">@item.SoSachDangMuon cuốn </span></td>
+                        <td><span class="badge bg-danger">@item.TongTienPhatChuaTra.ToString("N0") VND</span></td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Chi tiết</a>
+                            <a asp-action="Details" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-primary">Chi tiết</a>
                         </td>
                     </tr>
                 }

@@ -20,24 +20,19 @@ namespace LibraryManagement.Controllers
         // GET: SachQuaHans
         public async Task<IActionResult> Index()
         {
-            var today = DateTime.Now.Date;
+            DateTime? fromDate = null;
+            DateTime? toDate = null;
 
-            var sachQuaHans = await _context.PhieuMuons
-                .Where(p => p.TrangThai == LoanStatus.DangMuon && p.HanTra.Date < today)
-                .Include(p => p.NguoiMuon)
-                .Include(p => p.NhanVien)
-                .Include(p => p.ChiTietPhieuMuons)
-                .ThenInclude(ct => ct.CuonSach)
-                .ThenInclude(cs => cs.Sach)
+            var reports = await _context.Database
+                .SqlQueryRaw<SachQuaHanReportDto>(
+                    "EXEC dbo.usp_GenerateReport @FromDate = {0}, @ToDate = {1}, @OnlyOverdue = {2}",
+                    fromDate, toDate, true
+                )
+                .AsNoTracking()
                 .ToListAsync();
-
-            // Sắp xếp theo số ngày trễ (client-side)
-            var sorted = sachQuaHans
-                .OrderByDescending(p => (today - p.HanTra.Date).Days)
-                .ToList();
-
-            return View(sorted);
+            return View(reports);
         }
+
         // GET: SachQuaHans/Details/5
         public async Task<IActionResult> Details(int? id)
         {
