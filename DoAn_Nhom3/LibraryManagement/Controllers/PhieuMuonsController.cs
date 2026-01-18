@@ -395,6 +395,7 @@ public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> TraSach(int phieuMuonId, int cuonSachId, DateTime ngayTra, ReturnCondition tinhTrangTra)
         {
+            // usp_ReturnBooks
             await _context.Database.ExecuteSqlRawAsync(
                 "EXEC usp_ReturnBooks @p0, @p1, @p2, @p3",
                 phieuMuonId,
@@ -405,6 +406,20 @@ public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
             TempData["Success"] = "Đã cập nhật tình trạng trả sách thành công.";
             return RedirectToAction(nameof(Edit), new { id = phieuMuonId });
  
+        }
+
+        [HttpPost]
+        public IActionResult GiaHan(int phieuMuonId, int soNgayGiaHan)
+        {
+            // usp_RenewLoan
+            _context.Database.ExecuteSqlRaw(
+                "EXEC usp_RenewLoan @p0, @p1",
+                phieuMuonId,
+                soNgayGiaHan
+            );
+
+            TempData["Success"] = "Gia hạn phiếu mượn thành công";
+            return RedirectToAction("Details", new { id = phieuMuonId });
         }
     }
 }
