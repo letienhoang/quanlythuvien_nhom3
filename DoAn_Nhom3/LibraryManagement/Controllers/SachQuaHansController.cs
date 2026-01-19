@@ -67,7 +67,7 @@ namespace LibraryManagement.Controllers
 
             if (phieuPhat != null)
             {
-                // ✅ ĐÃ CÓ → LUÔN LẤY DB
+                // ĐÃ CÓ → LUÔN LẤY DB
                 totalFine = phieuPhat.SoTienPhat;
                 ViewBag.FineSource = "DB";
             }

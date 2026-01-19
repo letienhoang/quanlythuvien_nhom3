@@ -11,10 +11,11 @@
 
         public DateTime NgayMuon { get; set; }
         public DateTime HanTra { get; set; }
+        public int TongSoNgayTre { get; set; }
 
         public int SoNgayTre { get; set; }
         public int SoSachDangMuon { get; set; }
-
         public decimal TongTienPhatChuaTra { get; set; }
+
     }
 }

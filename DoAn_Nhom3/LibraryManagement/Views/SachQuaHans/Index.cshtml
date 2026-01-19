@@ -1,5 +1,4 @@
 ﻿@model IEnumerable<SachQuaHanReportDto>
-
 @{
     ViewData["Title"] = "Danh sách sách mượn quá hạn";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -41,11 +40,11 @@ else
                         <td>@item.HoTen</td>
                         <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td><span class="badge bg-danger">@item.HanTra.ToString("dd/MM/yyyy")</span></td>
-                        <td><span class="badge bg-warning">@item.SoNgayTre ngày</span></td>
+                        <td><span class="badge bg-warning">@item.TongSoNgayTre ngày</span></td>
                         <td><span class="badge bg-info">@item.SoSachDangMuon cuốn </span></td>
                         <td><span class="badge bg-danger">@item.TongTienPhatChuaTra.ToString("N0") VND</span></td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-primary">Chi tiết</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Chi tiết</a>
                         </td>
                     </tr>
                 }
