@@ -35,22 +35,3 @@
     </div>
 </div>
 
-@foreach (var cuon in ViewBag.CuonSachCoSan as List<LibraryManagement.Models.CuonSach>)
-{
-    var sachCounts = ViewBag.SachCounts as Dictionary<int, int>;
-    <tr>
-        <td>
-            <input type="checkbox" name="CuonSachIds" value="@cuon.Id" />
-        </td>
-        <td>@cuon.MaCuon</td>
-        <td>@cuon.Sach?.TenSach</td>
-        <td>
-            @if (sachCounts != null && sachCounts.ContainsKey(cuon.SachId))
-            {
-                <span class="badge badge-info">Còn: @sachCounts[cuon.SachId] bản</span>
-            }
-        </td>
-        <td>@cuon.TinhTrang</td>
-        <td>@cuon.ViTriKe</td>
-    </tr>
-}

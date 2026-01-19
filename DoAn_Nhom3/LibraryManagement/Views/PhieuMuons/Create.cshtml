@@ -52,6 +52,7 @@
                                 </th>
                                 <th>Mã cuốn</th>
                                 <th>Tên sách</th>
+                                <th>Bản còn sẵn</th> <!-- Thêm cột này -->
                                 <th>Tình trạng</th>
                                 <th>Vị trí</th>
                             </tr>
@@ -69,11 +70,20 @@
                                     <td>
                                         @if (sachCounts != null && sachCounts.ContainsKey(cuon.SachId))
                                         {
-                                            <span class="badge badge-black">Còn: @sachCounts[cuon.SachId] bản</span>
+                                            <span class="badge badge-available">Còn lại: @sachCounts[cuon.SachId]</span>
                                         }
                                     </td>
-                                    <td>@cuon.TinhTrang</td>
-                                    <td>@(cuon.ViTriKe ?? "-")</td>
+                                    <td>@cuon.TinhTrang.GetDisplayName()</td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(cuon.ViTriKe))
+                                        {
+                                            <span style="color:#0d6efd;font-weight:bold">@cuon.ViTriKe</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Chưa đặt kệ</span>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
