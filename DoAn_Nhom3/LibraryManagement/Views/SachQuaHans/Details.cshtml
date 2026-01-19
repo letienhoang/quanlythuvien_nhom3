@@ -5,6 +5,7 @@
     ViewData["Title"] = "Chi tiết sách mượn quá hạn";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var bookFines = ViewBag.BookFines as Dictionary<int, decimal> ?? new();
+    var fineSource = ViewBag.FineSource as string ?? "CALCULATED";
 }
 
 <div class="container mt-4">
@@ -16,6 +17,7 @@
     <div class="card mb-4">
         <div class="card-header bg-danger text-white">
             <h5 class="mb-0">📋 Thông tin phiếu mượn quá hạn</h5>
+
         </div>
         <div class="card-body">
             <div class="row">
@@ -29,9 +31,23 @@
                     <p><strong>Ngày mượn:</strong> @Model.NgayMuon.ToString("dd/MM/yyyy")</p>
                     <p><strong>Hạn trả:</strong> <span class="badge bg-danger">@Model.HanTra.ToString("dd/MM/yyyy")</span></p>
                     <p><strong>Số ngày trễ:</strong> <span class="badge bg-warning text-dark">@ViewBag.DaysOverdue ngày</span></p>
-                    <p><strong>Tiền phạt quá hạn:</strong> <span class="badge bg-danger">@ViewBag.OverdayFine.ToString("N0") VND</span></p>
-                    <p><strong>Tiền phạt hư/mất:</strong> <span class="badge bg-danger">@ViewBag.DamageFine.ToString("N0") VND</span></p>
-                    <p><strong>Tổng tiền phạt:</strong> <span class="badge bg-danger fs-5">@ViewBag.TotalFine.ToString("N0") VND</span></p>
+                    @if (fineSource == "CALCULATED")
+                    {
+                        <p><strong>Tiền phạt quá hạn:</strong> <span class="badge bg-danger">@ViewBag.OverdayFine.ToString("N0") VND</span></p>
+                        <p><strong>Tiền phạt hư/mất:</strong> <span class="badge bg-danger">@ViewBag.DamageFine.ToString("N0") VND</span></p>
+                    }
+                    else
+                    {
+                        <p class="text-muted fst-italic">
+                            Số tiền phạt được lấy từ phiếu phạt đã lưu
+                        </p>
+                    }
+                    <p>
+                        <strong>Tổng tiền phạt:</strong>
+                        <span class="badge bg-danger fs-5">
+                            @ViewBag.TotalFine.ToString("N0") VND
+                        </span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -88,7 +104,7 @@
                                             }
                                         </td>
                                         <td>
-                                            @if (bookFines.ContainsKey(ct.CuonSachId))
+                                            @if (fineSource == "CALCULATED" && bookFines.ContainsKey(ct.CuonSachId))
                                             {
                                                 <span class="text-danger">@bookFines[ct.CuonSachId].ToString("N0")</span>
                                             }

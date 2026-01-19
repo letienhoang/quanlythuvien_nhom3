@@ -17,7 +17,7 @@ namespace LibraryManagement.Controllers
             _fineCalculator = fineCalculator;
         }
 
-        // GET: SachQuaHans
+        // GET: SachQuaHans     
         public async Task<IActionResult> Index()
         {
             DateTime? fromDate = null;
@@ -43,35 +43,60 @@ namespace LibraryManagement.Controllers
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.NhanVien)
                 .Include(p => p.ChiTietPhieuMuons)
-                .ThenInclude(ct => ct.CuonSach)
-                .ThenInclude(cs => cs.Sach)
+                    .ThenInclude(ct => ct.CuonSach)
+                        .ThenInclude(cs => cs.Sach)
                 .Include(p => p.PhieuPhats)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (phieuMuon == null)
                 return NotFound();
 
-            var today = DateTime.Now.Date;
+            var today = DateTime.Today;
             var daysOverdue = (today - phieuMuon.HanTra.Date).Days;
 
-            // Tính tiền phạt
-            decimal overdayFine = _fineCalculator.CalculateFine(phieuMuon);
+            decimal overdayFine = 0;
             decimal damageFine = 0;
+            decimal totalFine = 0;
+
             var bookFines = new Dictionary<int, decimal>();
-            if (phieuMuon.ChiTietPhieuMuons != null)
+
+            // 🔑 LẤY PHIẾU PHẠT (NẾU CÓ)
+            var phieuPhat = phieuMuon.PhieuPhats?
+                .OrderByDescending(p => p.Id)
+                .FirstOrDefault();
+
+            if (phieuPhat != null)
             {
-                foreach (var chiTiet in phieuMuon.ChiTietPhieuMuons)
+                // ✅ ĐÃ CÓ → LUÔN LẤY DB
+                totalFine = phieuPhat.SoTienPhat;
+                ViewBag.FineSource = "DB";
+            }
+            else
+            {
+                // ❗ CHƯA CÓ → TẠM TÍNH
+                overdayFine = _fineCalculator.CalculateFine(phieuMuon);
+
+                if (phieuMuon.ChiTietPhieuMuons != null)
                 {
-                    if (chiTiet.TinhTrangTra.HasValue && chiTiet.TinhTrangTra != ReturnCondition.NguyenVen)
+                    foreach (var chiTiet in phieuMuon.ChiTietPhieuMuons)
                     {
-                        decimal fine = _fineCalculator.CalculateDamageFine(chiTiet.CuonSach, chiTiet.TinhTrangTra.Value);
-                        bookFines[chiTiet.CuonSachId] = fine;
-                        damageFine += fine;
+                        if (chiTiet.TinhTrangTra.HasValue &&
+                            chiTiet.TinhTrangTra != ReturnCondition.NguyenVen)
+                        {
+                            decimal fine = _fineCalculator.CalculateDamageFine(
+                                chiTiet.CuonSach,
+                                chiTiet.TinhTrangTra.Value
+                            );
+
+                            bookFines[chiTiet.CuonSachId] = fine;
+                            damageFine += fine;
+                        }
                     }
                 }
-            }
 
-            decimal totalFine = overdayFine + damageFine;
+                totalFine = overdayFine + damageFine;
+                ViewBag.FineSource = "CALCULATED";
+            }
 
             ViewBag.DaysOverdue = daysOverdue;
             ViewBag.OverdayFine = overdayFine;
