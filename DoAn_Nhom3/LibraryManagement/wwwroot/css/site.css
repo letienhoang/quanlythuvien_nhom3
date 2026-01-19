@@ -132,3 +132,10 @@ body {
     .validation-box li {
         line-height: 1.5;
     }
+
+/*Create phieuMuons*/
+.badge-available {
+    background-color: #ffc107;
+    color: #212529;
+    font-weight: bold;
+}

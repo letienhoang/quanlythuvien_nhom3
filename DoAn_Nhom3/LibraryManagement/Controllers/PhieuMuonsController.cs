@@ -188,12 +188,24 @@ namespace LibraryManagement.Controllers
             ViewBag.NguoiMuonId = new SelectList(await _context.NguoiMuons.ToListAsync(), "Id", "HoTen");
             ViewBag.NhanVienId = new SelectList(await _context.NhanViens.ToListAsync(), "Id", "HoTen");
 
+            // Lấy danh sách cuốn sách có sẵn và số lượng bản còn sẵn cho từng đầu sách
             var cuonSachCoSan = await _context.CuonSachs
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
                 .ToListAsync();
 
+            // Tạo dictionary: SachId -> số lượng bản còn sẵn
+            var sachCounts = new Dictionary<int, int>();
+            foreach (var sachId in cuonSachCoSan.Select(c => c.SachId).Distinct())
+            {
+                var soConSan = await _context.Database
+                    .SqlQuery<int>($"SELECT dbo.fn_CountAvailableCopies({sachId}) AS Value")
+                    .FirstOrDefaultAsync();
+                sachCounts[sachId] = soConSan;
+            }
+
             ViewBag.CuonSachCoSan = cuonSachCoSan;
+            ViewBag.SachCounts = sachCounts;
 
             return View(dto);
 
