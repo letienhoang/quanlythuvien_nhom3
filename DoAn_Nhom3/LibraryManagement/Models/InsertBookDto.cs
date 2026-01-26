@@ -10,7 +10,7 @@
         public string? NgonNgu { get; set; }
         public int? SoTrang { get; set; }
         public string? MoTa { get; set; }
-        public int TacGiaId { get; set; }
+        public int MaTacGia { get; set; }
         public int SoLuong { get; set; } = 1;
     }
 }

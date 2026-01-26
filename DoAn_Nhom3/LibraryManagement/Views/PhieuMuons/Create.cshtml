@@ -20,13 +20,13 @@ else
     <form asp-action="Create" method="post">
         <input asp-for="MaPhieuMuon" />
         <div class="mb-3">
-            <label asp-for="NguoiMuonId" class="form-label">Người mượn</label>
-            <select asp-for="NguoiMuonId" asp-items="ViewBag.NguoiMuonId" class="form-select"
+            <label asp-for="MaNguoiMuon" class="form-label">Người mượn</label>
+            <select asp-for="MaNguoiMuon" asp-items="ViewBag.MaNguoiMuon" class="form-select"
                     onchange="this.form.submit()"></select>
         </div>
         <div class="mb-3">
-            <label asp-for="NhanVienId" class="form-label">Nhân viên lập phiếu</label>
-            <select asp-for="NhanVienId" asp-items="ViewBag.NhanVienId" class="form-select"></select>
+            <label asp-for="MaNhanVien" class="form-label">Nhân viên lập phiếu</label>
+            <select asp-for="MaNhanVien" asp-items="ViewBag.MaNhanVien" class="form-select"></select>
         </div>
         <div class="mb-3">
             <label asp-for="HanTra" class="form-label">Hạn trả</label>
@@ -59,7 +59,7 @@ else
                                 {
                                     <tr class="book-row">
                                         <td>
-                                            <input type="checkbox" name="CuonSachIds" value="@cuon.Id" class="form-check-input book-checkbox" />
+                                            <input type="checkbox" name="MaCuons" value="@cuon.MaCuon" class="form-check-input book-checkbox" />
                                         </td>
                                         <td><code>@cuon.MaCuon</code></td>
                                         <td>@cuon.Sach?.TenSach</td>

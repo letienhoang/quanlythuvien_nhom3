@@ -51,7 +51,7 @@ namespace LibraryManagement.Controllers
                 .ThenInclude(ct => ct.CuonSach)
                 .ThenInclude(cs => cs.Sach)
                 .Include(p => p.PhieuPhats)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.MaPhieuMuon == id);
 
             if (phieuMuon == null)
                 return NotFound();
@@ -70,7 +70,7 @@ namespace LibraryManagement.Controllers
                     if (chiTiet.TinhTrangTra.HasValue && chiTiet.TinhTrangTra != ReturnCondition.NguyenVen)
                     {
                         decimal fine = _fineCalculator.CalculateDamageFine(chiTiet.CuonSach, chiTiet.TinhTrangTra.Value);
-                        bookFines[chiTiet.CuonSachId] = fine;
+                        bookFines[chiTiet.MaCuon] = fine;
                         damageFine += fine;
                     }
                 }
@@ -102,13 +102,11 @@ namespace LibraryManagement.Controllers
                 TempData["Error"] = "Phiếu mượn này đã có phiếu phạt. Không thể tạo thêm!";
                 return RedirectToAction(nameof(Details), new { id });
             }
-
-
+            
             // Tạo phiếu phạt
             var phieuPhat = new PhieuPhat
             {
-                MaPhat = $"PP{DateTime.Now:yyyyMMddHHmmss}",
-                PhieuMuonId = id,
+                MaPhieuMuon = id,
                 SoTienPhat = soTienPhat,
                 LyDo = lyDo,
                 TrangThaiThanhToan = PaymentStatus.ChuaThanhToan

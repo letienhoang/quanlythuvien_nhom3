@@ -6,12 +6,9 @@ namespace LibraryManagement.Models;
 public class Sach
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã sách")]
-    [StringLength(50)]
-    public string MaSach { get; set; }
+    public int MaSach { get; set; }
 
     [Required, StringLength(250)]
     [Display(Name = "Tên sách")]
@@ -43,9 +40,9 @@ public class Sach
     // FK -> TacGia
     [Required]
     [Display(Name = "Tác giả")]
-    public int TacGiaId { get; set; }
+    public int MaTacGia { get; set; }
 
-    [ForeignKey(nameof(TacGiaId))]
+    [ForeignKey(nameof(MaTacGia))]
     public TacGia? TacGia { get; set; }
 
     [Display(Name = "Số lượng")]

@@ -1,19 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class DanhMucsController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public DanhMucsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public DanhMucsController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         // GET: DanhMucs
@@ -30,7 +27,7 @@ namespace LibraryManagement.Controllers
 
             var danhMuc = await _context.DanhMucs
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+                .FirstOrDefaultAsync(m => m.MaDanhMuc == id.Value);
 
             if (danhMuc == null) return NotFound();
 
@@ -40,19 +37,15 @@ namespace LibraryManagement.Controllers
         // GET: DanhMucs/Create
         public async Task<IActionResult> Create()
         {
-            var generated = await _codeGen.GenerateNextAsync<DanhMuc>(d => d.MaDanhMuc, "DM", 4);
-            var model = new DanhMuc { MaDanhMuc = generated };
+            var model = new DanhMuc { };
             return View(model);
         }
 
         // POST: DanhMucs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("TenDanhMuc, MoTa, MaDanhMuc")] DanhMuc danhMuc)
+        public async Task<IActionResult> Create([Bind("TenDanhMuc, MoTa")] DanhMuc danhMuc)
         {
-            // generate server-side
-            danhMuc.MaDanhMuc = await _codeGen.GenerateNextWithRetriesAsync<DanhMuc>(d => d.MaDanhMuc, "DM", 4);
-
             if (ModelState.IsValid)
             {
                 try
@@ -66,10 +59,7 @@ namespace LibraryManagement.Controllers
                     ModelState.AddModelError("", "Không thể lưu danh mục do xung đột mã; vui lòng thử lại.");
                 }
             }
-
-            // show suggestion if fail
-            var suggestion = await _codeGen.GenerateNextAsync<DanhMuc>(d => d.MaDanhMuc, "DM", 4);
-            danhMuc.MaDanhMuc = suggestion;
+            
             return View(danhMuc);
         }
 
@@ -87,9 +77,9 @@ namespace LibraryManagement.Controllers
         // POST: DanhMucs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaDanhMuc,TenDanhMuc,MoTa")] DanhMuc danhMuc)
+        public async Task<IActionResult> Edit(int maDanhMuc, [Bind("TenDanhMuc,MoTa")] DanhMuc danhMuc)
         {
-            if (id != danhMuc.Id) return NotFound();
+            if (maDanhMuc != danhMuc.MaDanhMuc) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -101,7 +91,7 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DanhMucExists(danhMuc.Id)) return NotFound();
+                    if (!DanhMucExists(danhMuc.MaDanhMuc)) return NotFound();
                     throw;
                 }
             }
@@ -115,7 +105,7 @@ namespace LibraryManagement.Controllers
 
             var danhMuc = await _context.DanhMucs
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+                .FirstOrDefaultAsync(m => m.MaDanhMuc == id.Value);
 
             if (danhMuc == null) return NotFound();
 
@@ -138,7 +128,7 @@ namespace LibraryManagement.Controllers
 
         private bool DanhMucExists(int id)
         {
-            return _context.DanhMucs.Any(e => e.Id == id);
+            return _context.DanhMucs.Any(e => e.MaDanhMuc == id);
         }
     }
 }

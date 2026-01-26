@@ -35,9 +35,9 @@
                 <td>@item.HanTra.ToString("dd/MM/yyyy")</td>
                 <td>@item.TrangThai.GetDisplayName()</td>
                 <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary ms-1">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger ms-1">Xóa</a>
+                    <a asp-action="Details" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-outline-secondary ms-1">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-outline-danger ms-1">Xóa</a>
                 </td>
             </tr>
         }

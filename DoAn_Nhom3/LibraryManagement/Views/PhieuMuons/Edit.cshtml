@@ -28,7 +28,7 @@
     </div>
     <div class="card-body">
         <form asp-action="Edit">
-            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="MaPhieuMuon" />
             @await Html.PartialAsync("_Form", Model)
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Lưu thông tin</button>
@@ -101,8 +101,8 @@
                                         <button type="button" class="btn btn-sm btn-success" 
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#traSachModal"
-                                                data-cuonsachid="@ct.CuonSachId"
-                                                data-macuon="@ct.CuonSach?.MaCuon"
+                                                data-MaCuon="@ct.MaCuon"
+                                                data-MaCuon="@ct.CuonSach?.MaCuon"
                                                 data-tensach="@ct.CuonSach?.Sach?.TenSach">
                                                 Trả sách
                                         </button>
@@ -132,8 +132,8 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="TraSach" method="post">
-                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
-                <input type="hidden" name="cuonSachId" id="modalCuonSachId" />
+                <input type="hidden" name="MaPhieuMuon" value="@Model.MaPhieuMuon" />
+                <input type="hidden" name="MaCuon" id="modalMaCuon" />
                 <div class="modal-body">
                     <div class="mb-3">
                         <strong>Mã cuốn:</strong> <code id="modalMaCuon"></code>
@@ -176,12 +176,12 @@
         const traSachModal = document.getElementById('traSachModal');
         traSachModal?.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-            const cuonSachId = button.getAttribute('data-cuonsachid');
-            const maCuon = button.getAttribute('data-macuon');
+            const MaCuon = button.getAttribute('data-MaCuon');
+            const MaCuon = button.getAttribute('data-MaCuon');
             const tenSach = button.getAttribute('data-tensach');
 
-            document.getElementById('modalCuonSachId').value = cuonSachId;
-            document.getElementById('modalMaCuon').textContent = maCuon;
+            document.getElementById('modalMaCuon').value = MaCuon;
+            document.getElementById('modalMaCuon').textContent = MaCuon;
             document.getElementById('modalTenSach').textContent = tenSach;
         });
     </script>

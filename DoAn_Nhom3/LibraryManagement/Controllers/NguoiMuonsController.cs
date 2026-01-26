@@ -1,19 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class NguoiMuonsController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public NguoiMuonsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public NguoiMuonsController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         // GET: NguoiMuons
@@ -30,7 +27,7 @@ namespace LibraryManagement.Controllers
 
             var nguoiMuon = await _context.NguoiMuons
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+                .FirstOrDefaultAsync(m => m.MaNguoiMuon == id.Value);
 
             if (nguoiMuon == null) return NotFound();
 
@@ -40,10 +37,8 @@ namespace LibraryManagement.Controllers
         // GET: NguoiMuons/Create
         public async Task<IActionResult> Create()
         {
-            var generated = await _codeGen.GenerateNextAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
             var model = new NguoiMuon
             {
-                MaNguoiMuon = generated,
                 NgayDangKy = DateTime.Today,
                 NgayHetHan = DateTime.Today.AddYears(1),
                 LoaiDocGia = LibraryManagement.Enums.ReaderType.SinhVien, // mặc định, bạn đổi nếu muốn
@@ -55,11 +50,8 @@ namespace LibraryManagement.Controllers
         // POST: NguoiMuons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaNguoiMuon,HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
+        public async Task<IActionResult> Create([Bind("HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
         {
-            // luôn generate server-side
-            nguoiMuon.MaNguoiMuon = await _codeGen.GenerateNextWithRetriesAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
-
             if (ModelState.IsValid)
             {
                 try
@@ -74,8 +66,6 @@ namespace LibraryManagement.Controllers
                 }
             }
 
-            // nếu lỗi, gợi ý mã mới
-            nguoiMuon.MaNguoiMuon = await _codeGen.GenerateNextAsync<NguoiMuon>(n => n.MaNguoiMuon, "NM", 4);
             return View(nguoiMuon);
         }
 
@@ -93,9 +83,9 @@ namespace LibraryManagement.Controllers
         // POST: NguoiMuons/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaNguoiMuon,HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
+        public async Task<IActionResult> Edit(int maNguoiMuon, [Bind("HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
         {
-            if (id != nguoiMuon.Id) return NotFound();
+            if (maNguoiMuon != nguoiMuon.MaNguoiMuon) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -107,7 +97,7 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!NguoiMuonExistsById(nguoiMuon.Id)) return NotFound();
+                    if (!NguoiMuonExistsById(nguoiMuon.MaNguoiMuon)) return NotFound();
                     throw;
                 }
             }
@@ -121,7 +111,7 @@ namespace LibraryManagement.Controllers
 
             var nguoiMuon = await _context.NguoiMuons
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id.Value);
+                .FirstOrDefaultAsync(m => m.MaNguoiMuon == id.Value);
 
             if (nguoiMuon == null) return NotFound();
 
@@ -144,7 +134,7 @@ namespace LibraryManagement.Controllers
 
         private bool NguoiMuonExistsById(int id)
         {
-            return _context.NguoiMuons.Any(e => e.Id == id);
+            return _context.NguoiMuons.Any(e => e.MaNguoiMuon == id);
         }
     }
 }

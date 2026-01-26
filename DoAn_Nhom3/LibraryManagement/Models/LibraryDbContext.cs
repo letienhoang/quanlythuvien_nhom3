@@ -28,106 +28,106 @@ public class LibraryDbContext : DbContext
          *  COMPOSITE KEYS
          * ========================= */
 
-        mb.Entity<PhanLoai>()
-            .HasKey(x => new { x.SachId, x.DanhMucId });
+        /* =========================
+         *  COMPOSITE KEYS
+         * ========================= */
 
+        // PhanLoai: composite key bằng MaSach + MaDanhMuc
+        mb.Entity<PhanLoai>()
+            .HasKey(x => new { MaSach = x.MaSach, x.MaDanhMuc });
+
+        // ChiTietPhieuMuon: composite key bằng MaPhieuMuon + MaCuon
         mb.Entity<ChiTietPhieuMuon>()
-            .HasKey(x => new { x.PhieuMuonId, x.CuonSachId });
+            .HasKey(x => new { x.MaPhieuMuon, x.MaCuon });
 
         /* =========================
          *  UNIQUE BUSINESS KEYS
          * ========================= */
 
-        mb.Entity<TacGia>()
-            .HasIndex(x => x.MaTacGia)
-            .IsUnique();
-
-        mb.Entity<Sach>()
-            .HasIndex(x => x.MaSach)
-            .IsUnique();
-
+        // Giữ các unique index hợp lý:
+        // ISBN vẫn là unique
         mb.Entity<Sach>()
             .HasIndex(x => x.ISBN)
             .IsUnique();
 
+        // CCCD của NguoiMuon là unique
         mb.Entity<NguoiMuon>()
             .HasIndex(x => x.CCCD)
             .IsUnique();
 
+        // TaiKhoan của NhanVien là unique
         mb.Entity<NhanVien>()
             .HasIndex(x => x.TaiKhoan)
             .IsUnique();
 
-        mb.Entity<DanhMuc>()
-            .HasIndex(x => x.MaDanhMuc)
-            .IsUnique();
-
         /* =========================
-         *  RELATIONSHIPS
+         *  RELATIONSHIPS (đã chuyển sang dùng các Ma... làm FK)
          * ========================= */
 
-        // Sach - TacGia (N-1)
+        // Sach - TacGia (N-1) : Sach.MaTacGia -> TacGia.MaTacGia
         mb.Entity<Sach>()
             .HasOne(s => s.TacGia)
             .WithMany(t => t.Sachs)
-            .HasForeignKey(s => s.TacGiaId)
+            .HasForeignKey(s => s.MaTacGia)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Sach - DanhMuc (N-N)
+        // Sach - DanhMuc (N-N) qua PhanLoai (PhanLoai.MaSach, PhanLoai.MaDanhMuc)
         mb.Entity<PhanLoai>()
             .HasOne(p => p.Sach)
             .WithMany(s => s.PhanLoais)
-            .HasForeignKey(p => p.SachId);
+            .HasForeignKey(p => p.MaSach);
 
         mb.Entity<PhanLoai>()
             .HasOne(p => p.DanhMuc)
             .WithMany(d => d.PhanLoais)
-            .HasForeignKey(p => p.DanhMucId);
+            .HasForeignKey(p => p.MaDanhMuc);
 
-        // CuonSach - Sach (N-1)
+        // CuonSach - Sach (N-1) : CuonSach.MaSach -> Sach.MaSach
         mb.Entity<CuonSach>()
             .HasOne(c => c.Sach)
             .WithMany(s => s.CuonSachs)
-            .HasForeignKey(c => c.SachId);
+            .HasForeignKey(c => c.MaSach);
 
-        // PhieuMuon - NguoiMuon
+        // PhieuMuon - NguoiMuon : PhieuMuon.MaNguoiMuon -> NguoiMuon.MaNguoiMuon
         mb.Entity<PhieuMuon>()
             .HasOne(p => p.NguoiMuon)
             .WithMany(n => n.PhieuMuons)
-            .HasForeignKey(p => p.NguoiMuonId)
+            .HasForeignKey(p => p.MaNguoiMuon)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // PhieuMuon - NhanVien
+        // PhieuMuon - NhanVien : PhieuMuon.MaNhanVien -> NhanVien.MaNhanVien
         mb.Entity<PhieuMuon>()
             .HasOne(p => p.NhanVien)
             .WithMany(nv => nv.PhieuMuons)
-            .HasForeignKey(p => p.NhanVienId)
+            .HasForeignKey(p => p.MaNhanVien)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ChiTietPhieuMuon
+        // FK -> PhieuMuon (MaPhieuMuon)
         mb.Entity<ChiTietPhieuMuon>()
             .HasOne(c => c.PhieuMuon)
             .WithMany(p => p.ChiTietPhieuMuons)
-            .HasForeignKey(c => c.PhieuMuonId)
+            .HasForeignKey(c => c.MaPhieuMuon)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // FK -> CuonSach (MaCuon)
         mb.Entity<ChiTietPhieuMuon>()
             .HasOne(c => c.CuonSach)
             .WithMany(cs => cs.ChiTietPhieuMuons)
-            .HasForeignKey(c => c.CuonSachId)
+            .HasForeignKey(c => c.MaCuon)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // PhieuPhat - PhieuMuon
+        // PhieuPhat - PhieuMuon : PhieuPhat.MaPhieuMuon -> PhieuMuon.MaPhieuMuon
         mb.Entity<PhieuPhat>()
             .HasOne(pp => pp.PhieuMuon)
             .WithMany(pm => pm.PhieuPhats)
-            .HasForeignKey(pp => pp.PhieuMuonId);
+            .HasForeignKey(pp => pp.MaPhieuMuon);
 
-        // HoaDonPhat - PhieuPhat
+        // HoaDonPhat - PhieuPhat : HoaDonPhat.MaPhat -> PhieuPhat.MaPhat
         mb.Entity<HoaDonPhat>()
             .HasOne(h => h.PhieuPhat)
             .WithMany(p => p.HoaDonPhats)
-            .HasForeignKey(h => h.PhieuPhatId);
+            .HasForeignKey(h => h.MaPhat);
 
         /* =========================
          *  ENUM → STRING

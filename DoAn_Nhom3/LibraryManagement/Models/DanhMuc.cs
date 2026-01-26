@@ -1,16 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LibraryManagement.Models;
 
 public class DanhMuc
 { 
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã danh mục")]
-    [StringLength(50)]
-    public string MaDanhMuc { get; set; }
+    public int MaDanhMuc { get; set; }
 
     [Display(Name = "Tên danh mục")]
     [StringLength(250)]

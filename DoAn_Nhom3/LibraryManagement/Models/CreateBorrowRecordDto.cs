@@ -6,19 +6,19 @@ namespace LibraryManagement.Models
     public class CreateBorrowRecordDto
     {
         [Required]
-        public string MaPhieuMuon { get; set; }
+        public int MaPhieuMuon { get; set; }
 
         [Required]
-        public int NguoiMuonId { get; set; }
+        public int MaNguoiMuon { get; set; }
 
         [Required]
-        public int NhanVienId { get; set; }
+        public int MaNhanVien { get; set; }
 
         [Required]
         public DateTime HanTra { get; set; }
 
         // Danh sách mã cuốn sách được chọn để mượn
         [Required(ErrorMessage = "Vui lòng chọn ít nhất một cuốn sách.")]
-        public List<int> CuonSachIds { get; set; } = new();
+        public List<int> MaCuons { get; set; } = new();
     }
 }

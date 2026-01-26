@@ -6,14 +6,14 @@ namespace LibraryManagement.Models;
 public class PhanLoai
 {
     [Display(Name = "Sách")]
-    public int SachId { get; set; }
+    public int MaSach { get; set; }
 
     [Display(Name = "Danh mục")]
-    public int DanhMucId { get; set; }
+    public int MaDanhMuc { get; set; }
 
-    [ForeignKey(nameof(SachId))]
+    [ForeignKey(nameof(MaSach))]
     public Sach? Sach { get; set; }
 
-    [ForeignKey(nameof(DanhMucId))]
+    [ForeignKey(nameof(MaDanhMuc))]
     public DanhMuc? DanhMuc { get; set; }
 }

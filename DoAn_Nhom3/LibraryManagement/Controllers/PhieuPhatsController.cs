@@ -1,20 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LibraryManagement.Controllers
 {
     public class PhieuPhatsController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public PhieuPhatsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public PhieuPhatsController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         // GET: PhieuPhats
@@ -35,7 +31,7 @@ namespace LibraryManagement.Controllers
             var phieuPhat = await _context.PhieuPhats
                 .Include(p => p.PhieuMuon)
                 .ThenInclude(pm => pm.NguoiMuon)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaPhat == id);
 
             if (phieuPhat == null) return NotFound();
 
@@ -45,24 +41,16 @@ namespace LibraryManagement.Controllers
         // GET: PhieuPhats/Create
         public async Task<IActionResult> Create()
         {
-            var model = new PhieuPhat
-            {
-                MaPhat = await _codeGen.GenerateNextAsync<PhieuPhat>(p => p.MaPhat, "PP", 4)
-            };
-            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
-                                                .Include(pm => pm.NguoiMuon)
-                                                .ToListAsync(), "Id", "MaPhieuMuon");
+            var model = new PhieuPhat { };
+            
             return View(model);
         }
 
         // POST: PhieuPhats/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaPhat,PhieuMuonId,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
+        public async Task<IActionResult> Create([Bind("MaPhat,MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
         {
-            // Generate server-side (to avoid collisions / user spoofing)
-            phieuPhat.MaPhat = await _codeGen.GenerateNextWithRetriesAsync<PhieuPhat>(p => p.MaPhat, "PP", 4);
-
             if (ModelState.IsValid)
             {
                 try
@@ -77,10 +65,6 @@ namespace LibraryManagement.Controllers
                 }
             }
 
-            ViewBag.GeneratedMaPhat = phieuPhat.MaPhat;
-            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
-                                                .Include(pm => pm.NguoiMuon)
-                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
             return View(phieuPhat);
         }
 
@@ -92,18 +76,15 @@ namespace LibraryManagement.Controllers
             var phieuPhat = await _context.PhieuPhats.FindAsync(id);
             if (phieuPhat == null) return NotFound();
 
-            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
-                                                .Include(pm => pm.NguoiMuon)
-                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
-            return View(phieuPhat);
+           return View(phieuPhat);
         }
 
         // POST: PhieuPhats/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaPhat,PhieuMuonId,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
+        public async Task<IActionResult> Edit(int maPhat, [Bind("MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
         {
-            if (id != phieuPhat.Id) return NotFound();
+            if (maPhat != phieuPhat.MaPhat) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -115,14 +96,11 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.PhieuPhats.Any(e => e.Id == id)) return NotFound();
+                    if (!_context.PhieuPhats.Any(e => e.MaPhat == maPhat)) return NotFound();
                     throw;
                 }
             }
 
-            ViewBag.PhieuMuonId = new SelectList(await _context.PhieuMuons
-                                                .Include(pm => pm.NguoiMuon)
-                                                .ToListAsync(), "Id", "MaPhieuMuon", phieuPhat.PhieuMuonId);
             return View(phieuPhat);
         }
 
@@ -134,7 +112,7 @@ namespace LibraryManagement.Controllers
             var phieuPhat = await _context.PhieuPhats
                 .Include(p => p.PhieuMuon)
                 .ThenInclude(pm => pm.NguoiMuon)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaPhat == id);
 
             if (phieuPhat == null) return NotFound();
 
@@ -157,7 +135,7 @@ namespace LibraryManagement.Controllers
 
         private bool PhieuPhatExists(int id)
         {
-            return _context.PhieuPhats.Any(e => e.Id == id);
+            return _context.PhieuPhats.Any(e => e.MaPhat == id);
         }
     }
 }

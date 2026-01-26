@@ -15,24 +15,22 @@ namespace LibraryManagement.Migrations
                 name: "DanhMucs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaDanhMuc = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaDanhMuc = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TenDanhMuc = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
                     MoTa = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DanhMucs", x => x.Id);
+                    table.PrimaryKey("PK_DanhMucs", x => x.MaDanhMuc);
                 });
 
             migrationBuilder.CreateTable(
                 name: "NguoiMuons",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaNguoiMuon = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaNguoiMuon = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     HoTen = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
                     NgaySinh = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CCCD = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
@@ -46,16 +44,15 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NguoiMuons", x => x.Id);
+                    table.PrimaryKey("PK_NguoiMuons", x => x.MaNguoiMuon);
                 });
 
             migrationBuilder.CreateTable(
                 name: "NhanViens",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaNhanVien = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaNhanVien = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     HoTen = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: true),
                     NgaySinh = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CCCD = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
@@ -67,16 +64,15 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NhanViens", x => x.Id);
+                    table.PrimaryKey("PK_NhanViens", x => x.MaNhanVien);
                 });
 
             migrationBuilder.CreateTable(
                 name: "TacGias",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaTacGia = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaTacGia = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TenTacGia = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     NgaySinh = table.Column<DateTime>(type: "datetime2", nullable: true),
                     QuocTich = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -84,37 +80,35 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TacGias", x => x.Id);
+                    table.PrimaryKey("PK_TacGias", x => x.MaTacGia);
                 });
 
             migrationBuilder.CreateTable(
                 name: "PhieuMuons",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaPhieuMuon = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaPhieuMuon = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    NguoiMuonId = table.Column<int>(type: "int", nullable: false),
-                    NhanVienId = table.Column<int>(type: "int", nullable: false),
+                    MaNguoiMuon = table.Column<int>(type: "int", nullable: false),
+                    MaNhanVien = table.Column<int>(type: "int", nullable: false),
                     NgayMuon = table.Column<DateTime>(type: "datetime2", nullable: false),
                     HanTra = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TrangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    SoNgayTre = table.Column<int>(type: "int", nullable: true)
+                    TrangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhieuMuons", x => x.Id);
+                    table.PrimaryKey("PK_PhieuMuons", x => x.MaPhieuMuon);
                     table.ForeignKey(
-                        name: "FK_PhieuMuons_NguoiMuons_NguoiMuonId",
-                        column: x => x.NguoiMuonId,
+                        name: "FK_PhieuMuons_NguoiMuons_MaNguoiMuon",
+                        column: x => x.MaNguoiMuon,
                         principalTable: "NguoiMuons",
-                        principalColumn: "Id",
+                        principalColumn: "MaNguoiMuon",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PhieuMuons_NhanViens_NhanVienId",
-                        column: x => x.NhanVienId,
+                        name: "FK_PhieuMuons_NhanViens_MaNhanVien",
+                        column: x => x.MaNhanVien,
                         principalTable: "NhanViens",
-                        principalColumn: "Id",
+                        principalColumn: "MaNhanVien",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -122,9 +116,8 @@ namespace LibraryManagement.Migrations
                 name: "Sachs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaSach = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaSach = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     TenSach = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     ISBN = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     NamXuatBan = table.Column<int>(type: "int", nullable: false),
@@ -132,17 +125,17 @@ namespace LibraryManagement.Migrations
                     NgonNgu = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     SoTrang = table.Column<int>(type: "int", nullable: true),
                     MoTa = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TacGiaId = table.Column<int>(type: "int", nullable: false),
+                    MaTacGia = table.Column<int>(type: "int", nullable: false),
                     SoLuong = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sachs", x => x.Id);
+                    table.PrimaryKey("PK_Sachs", x => x.MaSach);
                     table.ForeignKey(
-                        name: "FK_Sachs_TacGias_TacGiaId",
-                        column: x => x.TacGiaId,
+                        name: "FK_Sachs_TacGias_MaTacGia",
+                        column: x => x.MaTacGia,
                         principalTable: "TacGias",
-                        principalColumn: "Id",
+                        principalColumn: "MaTacGia",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -150,22 +143,21 @@ namespace LibraryManagement.Migrations
                 name: "PhieuPhats",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaPhat = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaPhat = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PhieuMuonId = table.Column<int>(type: "int", nullable: false),
+                    MaPhieuMuon = table.Column<int>(type: "int", nullable: false),
                     SoTienPhat = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     LyDo = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TrangThaiThanhToan = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhieuPhats", x => x.Id);
+                    table.PrimaryKey("PK_PhieuPhats", x => x.MaPhat);
                     table.ForeignKey(
-                        name: "FK_PhieuPhats_PhieuMuons_PhieuMuonId",
-                        column: x => x.PhieuMuonId,
+                        name: "FK_PhieuPhats_PhieuMuons_MaPhieuMuon",
+                        column: x => x.MaPhieuMuon,
                         principalTable: "PhieuMuons",
-                        principalColumn: "Id",
+                        principalColumn: "MaPhieuMuon",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -173,10 +165,9 @@ namespace LibraryManagement.Migrations
                 name: "CuonSachs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaCuon = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaCuon = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    SachId = table.Column<int>(type: "int", nullable: false),
+                    MaSach = table.Column<int>(type: "int", nullable: false),
                     TinhTrang = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     TrangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     ViTriKe = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -184,12 +175,12 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CuonSachs", x => x.Id);
+                    table.PrimaryKey("PK_CuonSachs", x => x.MaCuon);
                     table.ForeignKey(
-                        name: "FK_CuonSachs_Sachs_SachId",
-                        column: x => x.SachId,
+                        name: "FK_CuonSachs_Sachs_MaSach",
+                        column: x => x.MaSach,
                         principalTable: "Sachs",
-                        principalColumn: "Id",
+                        principalColumn: "MaSach",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -197,23 +188,23 @@ namespace LibraryManagement.Migrations
                 name: "PhanLoais",
                 columns: table => new
                 {
-                    SachId = table.Column<int>(type: "int", nullable: false),
-                    DanhMucId = table.Column<int>(type: "int", nullable: false)
+                    MaSach = table.Column<int>(type: "int", nullable: false),
+                    MaDanhMuc = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhanLoais", x => new { x.SachId, x.DanhMucId });
+                    table.PrimaryKey("PK_PhanLoais", x => new { x.MaSach, x.MaDanhMuc });
                     table.ForeignKey(
-                        name: "FK_PhanLoais_DanhMucs_DanhMucId",
-                        column: x => x.DanhMucId,
+                        name: "FK_PhanLoais_DanhMucs_MaDanhMuc",
+                        column: x => x.MaDanhMuc,
                         principalTable: "DanhMucs",
-                        principalColumn: "Id",
+                        principalColumn: "MaDanhMuc",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PhanLoais_Sachs_SachId",
-                        column: x => x.SachId,
+                        name: "FK_PhanLoais_Sachs_MaSach",
+                        column: x => x.MaSach,
                         principalTable: "Sachs",
-                        principalColumn: "Id",
+                        principalColumn: "MaSach",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -221,22 +212,21 @@ namespace LibraryManagement.Migrations
                 name: "HoaDonPhats",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    MaHoaDon = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MaHoaDon = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PhieuPhatId = table.Column<int>(type: "int", nullable: false),
+                    MaPhat = table.Column<int>(type: "int", nullable: false),
                     NgayThanhToan = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SoTien = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PhuongThuc = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HoaDonPhats", x => x.Id);
+                    table.PrimaryKey("PK_HoaDonPhats", x => x.MaHoaDon);
                     table.ForeignKey(
-                        name: "FK_HoaDonPhats_PhieuPhats_PhieuPhatId",
-                        column: x => x.PhieuPhatId,
+                        name: "FK_HoaDonPhats_PhieuPhats_MaPhat",
+                        column: x => x.MaPhat,
                         principalTable: "PhieuPhats",
-                        principalColumn: "Id",
+                        principalColumn: "MaPhat",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -244,48 +234,42 @@ namespace LibraryManagement.Migrations
                 name: "ChiTietPhieuMuons",
                 columns: table => new
                 {
-                    PhieuMuonId = table.Column<int>(type: "int", nullable: false),
-                    CuonSachId = table.Column<int>(type: "int", nullable: false),
+                    MaPhieuMuon = table.Column<int>(type: "int", nullable: false),
+                    MaCuon = table.Column<int>(type: "int", nullable: false),
                     NgayTra = table.Column<DateTime>(type: "datetime2", nullable: true),
                     TinhTrangTra = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChiTietPhieuMuons", x => new { x.PhieuMuonId, x.CuonSachId });
+                    table.PrimaryKey("PK_ChiTietPhieuMuons", x => new { x.MaPhieuMuon, x.MaCuon });
                     table.ForeignKey(
-                        name: "FK_ChiTietPhieuMuons_CuonSachs_CuonSachId",
-                        column: x => x.CuonSachId,
+                        name: "FK_ChiTietPhieuMuons_CuonSachs_MaCuon",
+                        column: x => x.MaCuon,
                         principalTable: "CuonSachs",
-                        principalColumn: "Id",
+                        principalColumn: "MaCuon",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ChiTietPhieuMuons_PhieuMuons_PhieuMuonId",
-                        column: x => x.PhieuMuonId,
+                        name: "FK_ChiTietPhieuMuons_PhieuMuons_MaPhieuMuon",
+                        column: x => x.MaPhieuMuon,
                         principalTable: "PhieuMuons",
-                        principalColumn: "Id",
+                        principalColumn: "MaPhieuMuon",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChiTietPhieuMuons_CuonSachId",
+                name: "IX_ChiTietPhieuMuons_MaCuon",
                 table: "ChiTietPhieuMuons",
-                column: "CuonSachId");
+                column: "MaCuon");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CuonSachs_SachId",
+                name: "IX_CuonSachs_MaSach",
                 table: "CuonSachs",
-                column: "SachId");
+                column: "MaSach");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DanhMucs_MaDanhMuc",
-                table: "DanhMucs",
-                column: "MaDanhMuc",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_HoaDonPhats_PhieuPhatId",
+                name: "IX_HoaDonPhats_MaPhat",
                 table: "HoaDonPhats",
-                column: "PhieuPhatId");
+                column: "MaPhat");
 
             migrationBuilder.CreateIndex(
                 name: "IX_NguoiMuons_CCCD",
@@ -300,24 +284,24 @@ namespace LibraryManagement.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhanLoais_DanhMucId",
+                name: "IX_PhanLoais_MaDanhMuc",
                 table: "PhanLoais",
-                column: "DanhMucId");
+                column: "MaDanhMuc");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuMuons_NguoiMuonId",
+                name: "IX_PhieuMuons_MaNguoiMuon",
                 table: "PhieuMuons",
-                column: "NguoiMuonId");
+                column: "MaNguoiMuon");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuMuons_NhanVienId",
+                name: "IX_PhieuMuons_MaNhanVien",
                 table: "PhieuMuons",
-                column: "NhanVienId");
+                column: "MaNhanVien");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuPhats_PhieuMuonId",
+                name: "IX_PhieuPhats_MaPhieuMuon",
                 table: "PhieuPhats",
-                column: "PhieuMuonId");
+                column: "MaPhieuMuon");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sachs_ISBN",
@@ -326,21 +310,9 @@ namespace LibraryManagement.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sachs_MaSach",
+                name: "IX_Sachs_MaTacGia",
                 table: "Sachs",
-                column: "MaSach",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Sachs_TacGiaId",
-                table: "Sachs",
-                column: "TacGiaId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TacGias_MaTacGia",
-                table: "TacGias",
-                column: "MaTacGia",
-                unique: true);
+                column: "MaTacGia");
         }
 
         /// <inheritdoc />

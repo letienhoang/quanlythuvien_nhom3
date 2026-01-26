@@ -2,33 +2,30 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class SachsController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public SachsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public SachsController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         private void PopulateTacGiaDropDown(object? selectedTacGia = null)
         {
             var list = _context.TacGias
                         .OrderBy(t => t.TenTacGia)
-                        .Select(t => new { t.Id, t.TenTacGia })
+                        .Select(t => new { t.MaTacGia, t.TenTacGia })
                         .ToList();
-            ViewBag.TacGiaId = new SelectList(list, "Id", "TenTacGia", selectedTacGia);
+            ViewBag.MaTacGia = new SelectList(list, "MaTacGia", "TenTacGia", selectedTacGia);
         }
         
         private bool SachExists(int id)
         {
-            return _context.Sachs.Any(e => e.Id == id);
+            return _context.Sachs.Any(e => e.MaSach == id);
         }
 
         // GET: Sachs
@@ -49,7 +46,7 @@ namespace LibraryManagement.Controllers
             }
 
             var sach = await _context.Sachs
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaSach == id);
             if (sach == null)
             {
                 return NotFound();
@@ -61,8 +58,7 @@ namespace LibraryManagement.Controllers
         // GET: Sachs/Create
         public async Task<IActionResult> Create()
         {
-            var generated = await _codeGen.GenerateNextAsync<Sach>(t => t.MaSach, "S", 6);
-            var model = new Sach { MaSach = generated };
+            var model = new Sach { };
             PopulateTacGiaDropDown();
             return View(model);
         }
@@ -74,7 +70,6 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(InsertBookDto dto)
         {
-            dto.MaSach = await _codeGen.GenerateNextWithRetriesAsync<Sach>(t => t.MaSach, "S", 6);
             if (ModelState.IsValid)
             {
                 //Store procedure to insert book and its copies (*)
@@ -85,13 +80,13 @@ namespace LibraryManagement.Controllers
                 dto.NgonNgu ?? (object)DBNull.Value,
                 dto.SoTrang ?? (object)DBNull.Value,
                 dto.MoTa ?? (object)DBNull.Value,
-                dto.TacGiaId, dto.SoLuong);
+                dto.MaTacGia, dto.SoLuong);
 
                 TempData["Success"] = $"Đã thêm sách '{dto.TenSach}' với {dto.SoLuong} cuốn.";
                 return RedirectToAction(nameof(Index));
             }
  
-            PopulateTacGiaDropDown(dto.TacGiaId);
+            PopulateTacGiaDropDown(dto.MaTacGia);
             return View(dto);
         }
 
@@ -108,8 +103,7 @@ namespace LibraryManagement.Controllers
             {
                 return NotFound();
             }
-            PopulateTacGiaDropDown(sach.TacGiaId);
-            ViewBag.GeneratedMaSach = sach.MaSach;
+            PopulateTacGiaDropDown(sach.MaTacGia);
             return View(sach);
         }
 
@@ -118,9 +112,9 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MaSach,TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,TacGiaId,SoLuong")] Sach sach)
+        public async Task<IActionResult> Edit(int maSach, [Bind("TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,MaTacGia,SoLuong")] Sach sach)
         {
-            if (id != sach.Id)
+            if (maSach != sach.MaSach)
             {
                 return NotFound();
             }
@@ -134,7 +128,7 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SachExists(sach.Id))
+                    if (!SachExists(sach.MaSach))
                     {
                         return NotFound();
                     }
@@ -145,7 +139,7 @@ namespace LibraryManagement.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            PopulateTacGiaDropDown(sach.TacGiaId);
+            PopulateTacGiaDropDown(sach.MaTacGia);
             return View(sach);
         }
 
@@ -158,7 +152,7 @@ namespace LibraryManagement.Controllers
             }
 
             var sach = await _context.Sachs
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaSach == id);
             if (sach == null)
             {
                 return NotFound();

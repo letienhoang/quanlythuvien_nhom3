@@ -44,7 +44,7 @@ else
                     var totalFine = FineCalculator.CalculateTotalFine(item);
                     <tr>
                         <td><strong>@item.MaPhieuMuon</strong></td>
-                        <td><span>@item.NguoiMuonId</span></td>
+                        <td><span>@item.MaNguoiMuon</span></td>
                         <td>@item.NguoiMuon?.HoTen</td>
                         <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td><span class="badge bg-danger">@item.HanTra.ToString("dd/MM/yyyy")</span></td>
@@ -52,7 +52,7 @@ else
                         <td><span class="badge bg-info">@(item.ChiTietPhieuMuons?.Count ?? 0) cuốn</span></td>
                         <td><span class="badge bg-danger">@totalFine.ToString("N0") VND</span></td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Chi tiết</a>
+                            <a asp-action="Details" asp-route-id="@item.MaPhieuMuon" class="btn btn-sm btn-primary">Chi tiết</a>
                         </td>
                     </tr>
                 }

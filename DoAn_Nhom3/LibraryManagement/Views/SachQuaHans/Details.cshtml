@@ -23,7 +23,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <p><strong>Mã phiếu:</strong> <span class="badge bg-dark">@Model.MaPhieuMuon</span></p>
-                    <p><strong>ID Người mượn:</strong> @Model.NguoiMuonId</p>
+                    <p><strong>ID Người mượn:</strong> @Model.MaNguoiMuon</p>
                     <p><strong>Người mượn:</strong> @Model.NguoiMuon?.HoTen</p>
                     <p><strong>CCCD:</strong> @Model.NguoiMuon?.CCCD</p>
                     <p><strong>Điện thoại:</strong> @Model.NguoiMuon?.SoDienThoai</p>
@@ -79,8 +79,8 @@
                                 int stt = 1;
                                 foreach (var item in Model.ChiTietPhieuMuons)
                                 {
-                                    var bookFine = ViewBag.BookFines.ContainsKey(item.CuonSachId)
-                                    ? ViewBag.BookFines[item.CuonSachId]
+                                    var bookFine = ViewBag.BookFines.ContainsKey(item.MaCuon)
+                                    ? ViewBag.BookFines[item.MaCuon]
                                     : 0;
                                     <tr>
                                         <td>@stt</td>
@@ -201,8 +201,8 @@
                                         }
                                     </td>
                                     <td>
-                                        <a asp-controller="PhieuPhats" asp-action="Details" asp-route-id="@phat.Id" class="btn btn-sm btn-primary">Chi tiết</a>
-                                        <a asp-controller="PhieuPhats" asp-action="Edit" asp-route-id="@phat.Id" class="btn btn-sm btn-warning">Sửa</a>
+                                        <a asp-controller="PhieuPhats" asp-action="Details" asp-route-id="@phat.MaPhat" class="btn btn-sm btn-primary">Chi tiết</a>
+                                        <a asp-controller="PhieuPhats" asp-action="Edit" asp-route-id="@phat.MaPhat" class="btn btn-sm btn-warning">Sửa</a>
                                     </td>
                                 </tr>
                             }
@@ -238,7 +238,7 @@
                 <h5 class="mb-0">➕ Tạo phiếu phạt</h5>
             </div>
             <div class="card-body">
-                <form method="post" asp-action="CreateFine" asp-route-id="@Model.Id">
+                <form method="post" asp-action="CreateFine" asp-route-id="@Model.MaPhieuMuon">
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Số tiền phạt (VND)</label>

@@ -4,22 +4,17 @@
 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
 <div class="row g-3">
+
     <div class="col-md-4">
-        <label asp-for="MaPhieuMuon" class="form-label"></label>
-        <input asp-for="MaPhieuMuon" class="form-control" readonly/>
-        <span asp-validation-for="MaPhieuMuon" class="text-danger"></span>
+        <label asp-for="MaNguoiMuon" class="form-label"></label>
+        <select asp-for="MaNguoiMuon" class="form-select" asp-items="ViewBag.MaNguoiMuon"></select>
+        <span asp-validation-for="MaNguoiMuon" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">
-        <label asp-for="NguoiMuonId" class="form-label"></label>
-        <select asp-for="NguoiMuonId" class="form-select" asp-items="ViewBag.NguoiMuonId"></select>
-        <span asp-validation-for="NguoiMuonId" class="text-danger"></span>
-    </div>
-
-    <div class="col-md-4">
-        <label asp-for="NhanVienId" class="form-label"></label>
-        <select asp-for="NhanVienId" class="form-select" asp-items="ViewBag.NhanVienId"></select>
-        <span asp-validation-for="NhanVienId" class="text-danger"></span>
+        <label asp-for="MaNhanVien" class="form-label"></label>
+        <select asp-for="MaNhanVien" class="form-select" asp-items="ViewBag.MaNhanVien"></select>
+        <span asp-validation-for="MaNhanVien" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">

@@ -1,16 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LibraryManagement.Models;
 
 public class TacGia
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã tác giả")]
-    [StringLength(50)]
-    public string MaTacGia { get; set; }
+    public int MaTacGia { get; set; }
 
     [Required]
     [Display(Name = "Tên tác giả")]
