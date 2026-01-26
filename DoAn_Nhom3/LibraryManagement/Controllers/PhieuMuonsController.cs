@@ -139,8 +139,8 @@ namespace LibraryManagement.Controllers
                         TempData["Error"] = "Có cuốn sách không còn khả dụng.";
                         return RedirectToAction(nameof(Details), new { id = phieuMuonId });
                     }
-
-                    cuonSach.TrangThai = CopyStatus.DangMuon;
+                    // Trigger trong database đã tự động cập nhật trạng thái cuốn sách thành 'DangMuon'
+                    //cuonSach.TrangThai = CopyStatus.DangMuon;
                 }
             }
 
@@ -212,82 +212,82 @@ namespace LibraryManagement.Controllers
         }
 
         // POST: PhieuMuons/Create
-       [HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
-{
-    var cuonSachIds = dto.CuonSachIds;
-
-    // 1️⃣ Validate chọn sách
-    if (cuonSachIds == null || !cuonSachIds.Any())
-    {
-        ModelState.AddModelError("", "Vui lòng chọn ít nhất một cuốn sách.");
-    }
-    else if (cuonSachIds.Count > 3)
-    {
-        ModelState.AddModelError("", "Chỉ được mượn tối đa 3 cuốn sách.");
-    }
-
-    // 2️⃣ Validate số sách đang mượn
-    if (ModelState.IsValid)
-    {
-        var soSachDangMuon = await _context.Database
-            .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({dto.NguoiMuonId}) AS Value")
-            .FirstOrDefaultAsync();
-
-        if (soSachDangMuon + cuonSachIds!.Count > 3)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateBorrowRecordDto dto)
         {
-            ModelState.AddModelError(
-                "",
-                $"Độc giả đã mượn {soSachDangMuon} cuốn, chỉ được mượn tối đa 3 cuốn."
-            );
+        var cuonSachIds = dto.CuonSachIds;
+
+        // Validate chọn sách
+        if (cuonSachIds == null || !cuonSachIds.Any())
+        {
+            ModelState.AddModelError("", "Vui lòng chọn ít nhất một cuốn sách.");
         }
-    }
-
-    // 3️⃣ Nếu có lỗi → trả view
-    if (!ModelState.IsValid)
-    {
-        await LoadDropdowns(dto.NguoiMuonId, dto.NhanVienId);
-        ViewBag.CuonSachCoSan = await _context.CuonSachs
-            .Where(c => c.TrangThai == CopyStatus.CoSan)
-            .Include(c => c.Sach)
-            .ToListAsync();
-
-        return View(dto);
-    }
-
-    // 4️⃣ Tạo phiếu mượn
-    var danhSachCuonSachId = string.Join(",", cuonSachIds!);
-
-    await _context.Database.ExecuteSqlRawAsync(
-        "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
-        dto.MaPhieuMuon,
-        dto.NguoiMuonId,
-        dto.NhanVienId,
-        danhSachCuonSachId,
-        dto.HanTra
-    );
-
-    TempData["Success"] = $"Đã tạo phiếu mượn với {cuonSachIds!.Count} cuốn sách.";
-    return RedirectToAction(nameof(Index));
-}
-
-        // GET: PhieuMuons/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        else if (cuonSachIds.Count > 3)
         {
-            if (id == null) return NotFound();
+            ModelState.AddModelError("", "Chỉ được mượn tối đa 3 cuốn sách.");
+        }
 
-            var phieuMuon = await _context.PhieuMuons
-                .Include(p => p.ChiTietPhieuMuons!)
-                    .ThenInclude(ct => ct.CuonSach)
-                        .ThenInclude(cs => cs!.Sach)
-                .FirstOrDefaultAsync(m => m.Id == id);
+        // Validate số sách đang mượn
+        if (ModelState.IsValid)
+        {
+            var soSachDangMuon = await _context.Database
+                .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({dto.NguoiMuonId}) AS Value")
+                .FirstOrDefaultAsync();
+
+            if (soSachDangMuon + cuonSachIds!.Count > 3)
+            {
+                ModelState.AddModelError(
+                    "",
+                    $"Độc giả đã mượn {soSachDangMuon} cuốn, chỉ được mượn tối đa 3 cuốn."
+                );
+            }
+        }
+
+        // Nếu có lỗi → trả view
+        if (!ModelState.IsValid)
+        {
+            await LoadDropdowns(dto.NguoiMuonId, dto.NhanVienId);
+            ViewBag.CuonSachCoSan = await _context.CuonSachs
+                .Where(c => c.TrangThai == CopyStatus.CoSan)
+                .Include(c => c.Sach)
+                .ToListAsync();
+
+            return View(dto);
+        }
+
+        // Tạo phiếu mượn
+        var danhSachCuonSachId = string.Join(",", cuonSachIds!);
+
+        await _context.Database.ExecuteSqlRawAsync(
+            "EXEC usp_CreateBorrowRecord {0}, {1}, {2}, {3}, {4}",
+            dto.MaPhieuMuon,
+            dto.NguoiMuonId,
+            dto.NhanVienId,
+            danhSachCuonSachId,
+            dto.HanTra
+        );
+
+        TempData["Success"] = $"Đã tạo phiếu mượn với {cuonSachIds!.Count} cuốn sách.";
+        return RedirectToAction(nameof(Index));
+        }
+
+            // GET: PhieuMuons/Edit/5
+            public async Task<IActionResult> Edit(int? id)
+            {
+                if (id == null) return NotFound();
+
+                var phieuMuon = await _context.PhieuMuons
+                    .Include(p => p.ChiTietPhieuMuons!)
+                        .ThenInclude(ct => ct.CuonSach)
+                            .ThenInclude(cs => cs!.Sach)
+                    .FirstOrDefaultAsync(m => m.Id == id);
                 
-            if (phieuMuon == null) return NotFound();
+                if (phieuMuon == null) return NotFound();
 
-            await PopulateSelectsAsync(phieuMuon.NguoiMuonId, phieuMuon.NhanVienId);
-            return View(phieuMuon);
-        }
+                await PopulateSelectsAsync(phieuMuon.NguoiMuonId, phieuMuon.NhanVienId);
+                return View(phieuMuon);
+            }
 
         // POST: PhieuMuons/Edit/5
         [HttpPost]
