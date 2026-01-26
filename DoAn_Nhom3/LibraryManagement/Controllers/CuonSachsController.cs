@@ -78,6 +78,10 @@ namespace LibraryManagement.Controllers
             {
                 _context.Add(cuonSach);
                 await _context.SaveChangesAsync();
+
+                // Gọi SP đồng bộ số lượng sách
+                await _context.Database.ExecuteSqlRawAsync("EXEC sp_RecalculateBookQuantities_Cursor");
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -118,6 +122,9 @@ namespace LibraryManagement.Controllers
                 {
                     _context.Update(cuonSach);
                     await _context.SaveChangesAsync();
+
+                    // Gọi SP đồng bộ số lượng sách
+                    await _context.Database.ExecuteSqlRawAsync("EXEC sp_RecalculateBookQuantities_Cursor");
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -154,6 +161,9 @@ namespace LibraryManagement.Controllers
             {
                 _context.CuonSachs.Remove(cuonSach);
                 await _context.SaveChangesAsync();
+
+                // Gọi SP đồng bộ số lượng sách
+                await _context.Database.ExecuteSqlRawAsync("EXEC sp_RecalculateBookQuantities_Cursor");
             }
             return RedirectToAction(nameof(Index));
         }
