@@ -23,6 +23,9 @@ namespace LibraryManagement.Controllers
         // GET: PhieuMuons
         public async Task<IActionResult> Index()
         {
+            // Gọi sp_ProcessOverdueLoans_Cursor cập nhật trạng thái quá hạn trước khi lấy danh sách
+            await _context.Database.ExecuteSqlRawAsync("EXEC sp_ProcessOverdueLoans_Cursor");
+
             var items = await _context.PhieuMuons
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.NhanVien)
@@ -140,7 +143,7 @@ namespace LibraryManagement.Controllers
                         return RedirectToAction(nameof(Details), new { id = phieuMuonId });
                     }
                     // Trigger trong database đã tự động cập nhật trạng thái cuốn sách thành 'DangMuon'
-                    //cuonSach.TrangThai = CopyStatus.DangMuon;
+                    // bỏ (cuonSach.TrangThai = CopyStatus.DangMuon;)
                 }
             }
 
