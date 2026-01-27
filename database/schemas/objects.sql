@@ -186,7 +186,6 @@ END;
 GO
 
 
-
 -- 2. Lập phiếu mượn
 -- Tạo phiếu mượn và chi tiết mượn, cập nhật trạng thái cuốn sách
 CREATE PROCEDURE usp_CreateBorrowRecord
@@ -201,19 +200,19 @@ BEGIN
     SET NOCOUNT ON;
 
     IF dbo.fn_SoSachDangMuon(@MaNguoiMuon) >= 3
-        BEGIN
-            RAISERROR(N'Độc giả đã mượn tối đa 3 cuốn', 16, 1);
-            RETURN;
-        END
+    BEGIN
+        RAISERROR(N'Độc giả đã mượn tối đa 3 cuốn', 16, 1);
+        RETURN;
+    END
 
     IF NOT EXISTS (
         SELECT 1 FROM CuonSachs
         WHERE MaCuon = @MaCuon AND TrangThai = N'CoSan'
     )
-        BEGIN
-            RAISERROR(N'Cuốn sách không có sẵn', 16, 1);
-            RETURN;
-        END
+    BEGIN
+        RAISERROR(N'Cuốn sách không có sẵn', 16, 1);
+        RETURN;
+    END
 
     BEGIN TRY
         BEGIN TRANSACTION;

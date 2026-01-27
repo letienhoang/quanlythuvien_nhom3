@@ -64,6 +64,10 @@ namespace LibraryManagement.Controllers
                 {
                     ModelState.AddModelError("", "Không thể lưu người mượn do xung đột mã; vui lòng thử lại.");
                 }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Đã xảy ra lỗi khi lưu người mượn: {ex.Message}");
+                }
             }
 
             return View(nguoiMuon);

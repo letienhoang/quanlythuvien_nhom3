@@ -4,6 +4,7 @@ using LibraryManagement.Models;
 using LibraryManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Controllers
@@ -232,6 +233,10 @@ namespace LibraryManagement.Controllers
                     );
                     TempData["Success"] = $"Đã tạo phiếu mượn với {maCuons.Length} cuốn sách.";
                     return RedirectToAction(nameof(Index));
+                }
+                catch (SqlException ex)
+                {
+                    
                 }
                 catch (Exception ex)
                 {
