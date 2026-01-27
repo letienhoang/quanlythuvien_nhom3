@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Data;
+using LibraryManagement.DtosModels;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.ViewModels;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LibraryManagement.Controllers
 {
@@ -23,6 +27,21 @@ namespace LibraryManagement.Controllers
             ViewBag.MaTacGia = new SelectList(list, "MaTacGia", "TenTacGia", selectedTacGia);
         }
         
+        private async Task PopulateCategoriesFor(SachEditViewModel vm)
+        {
+            var cats = await _context.DanhMucs
+                .AsNoTracking()
+                .OrderBy(d => d.TenDanhMuc)
+                .Select(d => new { d.MaDanhMuc, d.TenDanhMuc })
+                .ToListAsync();
+
+            vm.AvailableCategories = cats.Select(c => new SelectListItem
+            {
+                Value = c.MaDanhMuc.ToString(),
+                Text = c.TenDanhMuc
+            }).ToList();
+        }
+        
         private bool SachExists(int id)
         {
             return _context.Sachs.Any(e => e.MaSach == id);
@@ -40,17 +59,26 @@ namespace LibraryManagement.Controllers
         // GET: Sachs/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var sach = await _context.Sachs
-                .FirstOrDefaultAsync(m => m.MaSach == id);
-            if (sach == null)
-            {
-                return NotFound();
-            }
+                .AsNoTracking()
+                .Include(s => s.TacGia) // optional
+                .FirstOrDefaultAsync(m => m.MaSach == id.Value);
+
+            if (sach == null) return NotFound();
+
+            // lấy tên danh mục bằng query set-based
+            var categoryNames = await _context.PhanLoais
+                .AsNoTracking()
+                .Where(pl => pl.MaSach == id.Value)
+                .Join(_context.DanhMucs,
+                    pl => pl.MaDanhMuc,
+                    d => d.MaDanhMuc,
+                    (pl, d) => new { d.MaDanhMuc, d.TenDanhMuc })
+                .ToListAsync();
+
+            ViewBag.Categories = categoryNames; // list of {MaDanhMuc, TenDanhMuc}
 
             return View(sach);
         }
@@ -58,9 +86,10 @@ namespace LibraryManagement.Controllers
         // GET: Sachs/Create
         public async Task<IActionResult> Create()
         {
-            var model = new Sach { };
+            var vm = new SachEditViewModel();
             PopulateTacGiaDropDown();
-            return View(model);
+            await PopulateCategoriesFor(vm);
+            return View(vm);
         }
 
         // POST: Sachs/Create
@@ -68,43 +97,132 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(InsertBookDto dto)
+        public async Task<IActionResult> Create(SachEditViewModel vm)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                //Store procedure to insert book and its copies (*)
-                await _context.Database.ExecuteSqlRawAsync(
-                    "EXEC usp_InsertBookAndCopies {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}",
-                dto.MaSach, dto.TenSach, dto.ISBN, dto.NamXuatBan,
-                dto.NhaXuatBan ?? (object)DBNull.Value,
-                dto.NgonNgu ?? (object)DBNull.Value,
-                dto.SoTrang ?? (object)DBNull.Value,
-                dto.MoTa ?? (object)DBNull.Value,
-                dto.MaTacGia, dto.SoLuong);
+                PopulateTacGiaDropDown(vm.MaTacGia);
+                await PopulateCategoriesFor(vm);
+                return View(vm);
+            }
 
-                TempData["Success"] = $"Đã thêm sách '{dto.TenSach}' với {dto.SoLuong} cuốn.";
+            // Bắt đầu transaction EF
+            using var efTx = await _context.Database.BeginTransactionAsync();
+            var conn = _context.Database.GetDbConnection();
+            bool openedHere = false;
+
+            try
+            {
+                // Chỉ mở connection nếu nó đang đóng
+                if (conn.State != System.Data.ConnectionState.Open)
+                {
+                    await conn.OpenAsync();
+                    openedHere = true;
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.CommandText = "usp_InsertBookAndCopies";
+
+                // Tạo parameter helper
+                System.Data.Common.DbParameter MakeParam(string name, object? value, System.Data.DbType? dbType = null)
+                {
+                    var p = cmd.CreateParameter();
+                    p.ParameterName = name;
+                    p.Value = value ?? DBNull.Value;
+                    if (dbType.HasValue) p.DbType = dbType.Value;
+                    return p;
+                }
+
+                cmd.Parameters.Add(MakeParam("@TenSach", vm.TenSach));
+                cmd.Parameters.Add(MakeParam("@ISBN", vm.ISBN));
+                cmd.Parameters.Add(MakeParam("@NamXuatBan", vm.NamXuatBan, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@NhaXuatBan", vm.NhaXuatBan));
+                cmd.Parameters.Add(MakeParam("@NgonNgu", vm.NgonNgu));
+                cmd.Parameters.Add(MakeParam("@SoTrang", vm.SoTrang, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@MoTa", vm.MoTa));
+                cmd.Parameters.Add(MakeParam("@MaTacGia", vm.MaTacGia, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@SoLuong", vm.SoLuong ?? 0, System.Data.DbType.Int32));
+
+                // Gắn transaction hiện thời (EF transaction) vào command để command nằm trong cùng transaction
+                if (efTx.GetDbTransaction() is System.Data.Common.DbTransaction nativeTx)
+                {
+                    cmd.Transaction = nativeTx;
+                }
+
+                // ExecuteScalarAsync vì stored proc trả SELECT @MaSach AS MaSach
+                var scalar = await cmd.ExecuteScalarAsync();
+                if (scalar == null || scalar == DBNull.Value)
+                    throw new Exception("Stored procedure không trả về MaSach.");
+
+                var newMaSach = Convert.ToInt32(scalar);
+
+                // Thêm PhanLoais nếu có chọn danh mục
+                if (vm.SelectedCategoryIds != null && vm.SelectedCategoryIds.Any())
+                {
+                    var distinct = vm.SelectedCategoryIds.Distinct().ToList();
+                    var phanLoais = distinct.Select(cid => new PhanLoai { MaSach = newMaSach, MaDanhMuc = cid });
+                    _context.PhanLoais.AddRange(phanLoais);
+                    await _context.SaveChangesAsync(); // commit inserts of PhanLoai into same transaction/connection
+                }
+
+                await efTx.CommitAsync();
+                TempData["Success"] = $"Đã thêm sách '{vm.TenSach}' (ID {newMaSach}).";
                 return RedirectToAction(nameof(Index));
             }
- 
-            PopulateTacGiaDropDown(dto.MaTacGia);
-            return View(dto);
+            catch (Exception ex)
+            {
+                try { await efTx.RollbackAsync(); } catch { }
+                ModelState.AddModelError("", "Không thể lưu sách: " + ex.Message);
+                PopulateTacGiaDropDown(vm.MaTacGia);
+                await PopulateCategoriesFor(vm);
+                return View(vm);
+            }
+            finally
+            {
+                // Nếu chính ta mở connection thì đóng ở đây.
+                if (openedHere)
+                {
+                    try { await conn.CloseAsync(); } catch { }
+                }
+            }
         }
 
         // GET: Sachs/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var sach = await _context.Sachs.FindAsync(id);
-            if (sach == null)
+            var sach = await _context.Sachs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.MaSach == id.Value);
+
+            if (sach == null) return NotFound();
+
+            var vm = new SachEditViewModel
             {
-                return NotFound();
-            }
-            PopulateTacGiaDropDown(sach.MaTacGia);
-            return View(sach);
+                MaSach = sach.MaSach,
+                TenSach = sach.TenSach,
+                ISBN = sach.ISBN,
+                NamXuatBan = sach.NamXuatBan,
+                NhaXuatBan = sach.NhaXuatBan,
+                NgonNgu = sach.NgonNgu,
+                SoTrang = sach.SoTrang,
+                MoTa = sach.MoTa,
+                MaTacGia = sach.MaTacGia,
+                SoLuong = sach.SoLuong
+            };
+
+            // load selected categories
+            vm.SelectedCategoryIds = await _context.PhanLoais
+                .Where(p => p.MaSach == id.Value)
+                .Select(p => p.MaDanhMuc)
+                .ToListAsync();
+
+            PopulateTacGiaDropDown(vm.MaTacGia);
+            await PopulateCategoriesFor(vm);
+
+            return View(vm);
         }
 
         // POST: Sachs/Edit/5
@@ -112,35 +230,80 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int maSach, [Bind("TenSach,ISBN,NamXuatBan,NhaXuatBan,NgonNgu,SoTrang,MoTa,MaTacGia,SoLuong")] Sach sach)
+        public async Task<IActionResult> Edit(int maSach, SachEditViewModel vm)
         {
-            if (maSach != sach.MaSach)
+            if (maSach != vm.MaSach) return NotFound();
+
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                PopulateTacGiaDropDown(vm.MaTacGia);
+                await PopulateCategoriesFor(vm);
+                return View(vm);
             }
 
-            if (ModelState.IsValid)
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
             {
-                try
+                var existing = await _context.Sachs.FindAsync(maSach);
+                if (existing == null) return NotFound();
+
+                // update properties
+                existing.TenSach = vm.TenSach;
+                existing.ISBN = vm.ISBN;
+                existing.NamXuatBan = vm.NamXuatBan;
+                existing.NhaXuatBan = vm.NhaXuatBan;
+                existing.NgonNgu = vm.NgonNgu;
+                existing.SoTrang = vm.SoTrang;
+                existing.MoTa = vm.MoTa;
+                existing.MaTacGia = vm.MaTacGia;
+                existing.SoLuong = vm.SoLuong;
+
+                await _context.SaveChangesAsync();
+
+                // sync PhanLoais
+                var currentIds = await _context.PhanLoais
+                    .Where(p => p.MaSach == maSach)
+                    .Select(p => p.MaDanhMuc)
+                    .ToListAsync();
+
+                var newIds = (vm.SelectedCategoryIds ?? new List<int>()).Distinct().ToList();
+
+                var toAdd = newIds.Except(currentIds).ToList();
+                var toRemove = currentIds.Except(newIds).ToList();
+
+                if (toAdd.Any())
                 {
-                    _context.Update(sach);
-                    await _context.SaveChangesAsync();
+                    var adds = toAdd.Select(cid => new PhanLoai { MaSach = maSach, MaDanhMuc = cid });
+                    _context.PhanLoais.AddRange(adds);
                 }
-                catch (DbUpdateConcurrencyException)
+
+                if (toRemove.Any())
                 {
-                    if (!SachExists(sach.MaSach))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    var removes = await _context.PhanLoais
+                        .Where(p => p.MaSach == maSach && toRemove.Contains(p.MaDanhMuc))
+                        .ToListAsync();
+                    _context.PhanLoais.RemoveRange(removes);
                 }
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            PopulateTacGiaDropDown(sach.MaTacGia);
-            return View(sach);
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync();
+                if (!SachExists(vm.MaSach)) return NotFound();
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await tx.RollbackAsync();
+                ModelState.AddModelError("", "Không thể lưu: " + ex.Message);
+                PopulateTacGiaDropDown(vm.MaTacGia);
+                await PopulateCategoriesFor(vm);
+                return View(vm);
+            }
         }
 
         // GET: Sachs/Delete/5
@@ -169,10 +332,12 @@ namespace LibraryManagement.Controllers
             var sach = await _context.Sachs.FindAsync(id);
             if (sach != null)
             {
-                _context.Sachs.Remove(sach);
-            }
+                var phans = _context.PhanLoais.Where(p => p.MaSach == id);
+                _context.PhanLoais.RemoveRange(phans);
 
-            await _context.SaveChangesAsync();
+                _context.Sachs.Remove(sach);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
     }

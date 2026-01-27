@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
 
-namespace LibraryManagement.Models
+namespace LibraryManagement.DtosModels
 {
     public class CreateBorrowRecordDto
     {

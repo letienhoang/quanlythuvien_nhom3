@@ -1,18 +1,110 @@
-﻿@model LibraryManagement.Models.DanhMuc
+﻿@model LibraryManagement.ViewModels.DanhMucEditViewModel
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-
     <div class="col-md-6">
-        <label asp-for="TenDanhMuc" class="form-label"></label>
-        <input asp-for="TenDanhMuc" class="form-control" />
-        <span asp-validation-for="TenDanhMuc" class="text-danger"></span>
+        <label asp-for="DanhMuc.TenDanhMuc" class="form-label"></label>
+        <input asp-for="DanhMuc.TenDanhMuc" class="form-control" />
+        <span asp-validation-for="DanhMuc.TenDanhMuc" class="text-danger"></span>
     </div>
 
     <div class="col-12">
-        <label asp-for="MoTa" class="form-label"></label>
-        <textarea asp-for="MoTa" rows="3" class="form-control"></textarea>
-        <span asp-validation-for="MoTa" class="text-danger"></span>
+        <label asp-for="DanhMuc.MoTa" class="form-label"></label>
+        <textarea asp-for="DanhMuc.MoTa" rows="3" class="form-control"></textarea>
+        <span asp-validation-for="DanhMuc.MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <p class="form-label">Chọn sách thuộc danh mục</p>
+
+        <!-- input tìm kiếm để lọc option -->
+        <input id="bookSearch" class="form-control mb-2" placeholder="Tìm sách theo tên hoặc ISBN..." />
+
+        <select id="SelectedBookIds" name="SelectedBookIds" class="form-select" multiple size="10" aria-label="Chọn sách">
+            @foreach (var book in Model.AvailableBooks)
+            {
+                var isSelected = Model.SelectedBookIds?.Contains(int.Parse(book.Value)) == true;
+                if (isSelected)
+                {
+                    <option value="@book.Value" selected>@book.Text</option>
+                }
+                else
+                {
+                    <option value="@book.Value">@book.Text</option>
+                }
+            }
+        </select>
+
+        <small class="text-muted d-block mt-1">
+            Giữ Ctrl (Windows) / Cmd (Mac) để chọn nhiều. Bạn có thể gõ vào ô tìm kiếm để lọc nhanh.
+        </small>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const search = document.getElementById('bookSearch');
+            const select = document.getElementById('SelectedBookIds');
+            if (!search || !select) return;
+
+            // Lưu bản gốc các option (value, text, originallySelected)
+            const originalOptions = Array.from(select.options).map(o => ({
+                value: o.value,
+                text: o.text,
+                textLower: (o.text || '').toLowerCase(),
+                originallySelected: o.selected
+            }));
+
+            // Debounce helper
+            function debounce(fn, ms) {
+                let t;
+                return function (...args) {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn.apply(this, args), ms);
+                };
+            }
+
+            function rebuildOptions(query) {
+                const q = (query || '').trim().toLowerCase();
+
+                // Các giá trị đang selected hiện thời (giữ nguyên selection của user)
+                const currentSelected = new Set(Array.from(select.options).filter(o => o.selected).map(o => o.value));
+
+                // Lọc các option theo query; đồng thời luôn bao gồm các option đang được chọn
+                const filtered = originalOptions.filter(o =>
+                    currentSelected.has(o.value) ||
+                    q === '' ||
+                    o.textLower.indexOf(q) !== -1 ||
+                    o.value.indexOf(q) !== -1
+                );
+
+                // Xóa options hiện có
+                select.innerHTML = '';
+
+                // Tạo lại option nodes, giữ selected nếu người dùng đã chọn hoặc bản gốc có selected
+                for (const o of filtered) {
+                    const opt = document.createElement('option');
+                    opt.value = o.value;
+                    opt.text = o.text;
+                    // Nếu người dùng đang chọn giá trị này thì giữ selected
+                    if (currentSelected.has(o.value) || o.originallySelected) {
+                        opt.selected = true;
+                    }
+                    select.appendChild(opt);
+                }
+            }
+
+            // Debounced input handler
+            const onInput = debounce(function (e) {
+                rebuildOptions(e.target.value);
+            }, 200);
+
+            search.addEventListener('input', onInput);
+
+            // Nếu cần: khi form submit, đảm bảo các giá trị đang chọn được submit.
+            // (Không cần action đặc biệt — browser submit các <option selected> hiện có)
+        })();
+    </script>
+}

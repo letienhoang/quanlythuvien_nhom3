@@ -1,4 +1,4 @@
-﻿namespace LibraryManagement.Models
+﻿namespace LibraryManagement.DtosModels
 {
     public class SachThongKeDto
     {

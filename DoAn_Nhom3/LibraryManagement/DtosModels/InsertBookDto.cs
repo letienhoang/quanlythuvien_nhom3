@@ -1,8 +1,7 @@
-﻿namespace LibraryManagement.Models
+﻿namespace LibraryManagement.DtosModels
 {
     public class InsertBookDto
     {
-        public string MaSach { get; set; } = string.Empty;
         public string TenSach { get; set; } = string.Empty;
         public string ISBN { get; set; } = string.Empty;
         public int NamXuatBan { get; set; }

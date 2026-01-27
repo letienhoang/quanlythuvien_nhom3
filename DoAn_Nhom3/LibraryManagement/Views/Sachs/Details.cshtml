@@ -42,6 +42,26 @@
 
             <dt class="col-sm-3">Số lượng</dt>
             <dd class="col-sm-9">@Html.DisplayFor(m => m.SoLuong)</dd>
+            
+            <dt class="col-sm-3">Danh mục</dt>
+            <dd class="col-sm-9">
+                @{
+                    var cats = ViewBag.Categories as IEnumerable<dynamic>;
+                    if (cats != null && cats.Any())
+                    {
+                        foreach (var c in cats)
+                        {
+                            <a asp-controller="DanhMucs" asp-action="Details" asp-route-id="@c.MaDanhMuc" class="badge bg-secondary me-1 text-decoration-none">
+                                @c.TenDanhMuc
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">Chưa có danh mục</span>
+                    }
+                }
+            </dd>
 
             <dt class="col-sm-3">Mô tả</dt>
             <dd class="col-sm-9">@Html.DisplayFor(m => m.MoTa)</dd>
