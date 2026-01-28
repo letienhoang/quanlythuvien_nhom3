@@ -9,12 +9,10 @@ namespace LibraryManagement.Controllers
     public class TacGiasController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public TacGiasController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public TacGiasController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
         
         // GET: TacGias
@@ -34,7 +32,7 @@ namespace LibraryManagement.Controllers
 
             var tacGia = await _context.TacGias
                 .Include(t => t.Sachs)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaTacGia == id);
             if (tacGia == null)
             {
                 return NotFound();
@@ -46,8 +44,7 @@ namespace LibraryManagement.Controllers
         // GET: TacGias/Create
         public async Task<IActionResult> Create()
         {
-            var generated = await _codeGen.GenerateNextAsync<TacGia>(t => t.MaTacGia, "TG", 4);
-            var model = new TacGia { MaTacGia = generated };
+            var model = new TacGia { };
             return View(model);
         }
 
@@ -56,9 +53,8 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaTacGia,TenTacGia,NgaySinh,QuocTich,MoTa")] TacGia tacGia)
+        public async Task<IActionResult> Create([Bind("TenTacGia,NgaySinh,QuocTich,MoTa")] TacGia tacGia)
         {
-            tacGia.MaTacGia = await _codeGen.GenerateNextWithRetriesAsync<TacGia>(t => t.MaTacGia, "TG", 4);
             if (ModelState.IsValid)
             {
                 try
@@ -71,9 +67,7 @@ namespace LibraryManagement.Controllers
                     ModelState.AddModelError("", "Không thể lưu tác giả do xung đột mã; vui lòng thử lại.");
                 }
             }
-
-            var suggestion = await _codeGen.GenerateNextAsync<TacGia>(t => t.MaTacGia, "TG", 4);
-            tacGia.MaTacGia = suggestion;
+            
             return View(tacGia);
         }
 
@@ -99,9 +93,9 @@ namespace LibraryManagement.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaTacGia,TenTacGia,NgaySinh,QuocTich,MoTa")] TacGia tacGia)
+        public async Task<IActionResult> Edit(int maTacGia, [Bind("TenTacGia,NgaySinh,QuocTich,MoTa")] TacGia tacGia)
         {
-            if (id != tacGia.Id)
+            if (maTacGia != tacGia.MaTacGia)
             {
                 return NotFound();
             }
@@ -115,7 +109,7 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TacGiaExists(tacGia.Id))
+                    if (!TacGiaExists(tacGia.MaTacGia))
                     {
                         return NotFound();
                     }
@@ -138,7 +132,7 @@ namespace LibraryManagement.Controllers
             }
 
             var tacGia = await _context.TacGias
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaTacGia == id);
             if (tacGia == null)
             {
                 return NotFound();
@@ -164,7 +158,7 @@ namespace LibraryManagement.Controllers
 
         private bool TacGiaExists(int id)
         {
-            return _context.TacGias.Any(e => e.Id == id);
+            return _context.TacGias.Any(e => e.MaTacGia == id);
         }
     }
 }

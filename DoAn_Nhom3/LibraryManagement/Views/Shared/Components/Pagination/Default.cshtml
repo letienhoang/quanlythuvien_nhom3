@@ -1,0 +1,98 @@
+﻿@model LibraryManagement.ViewComponents.PaginationModel
+
+@{
+    var start = Math.Max(1, Model.PageNumber - 4);
+    var end = Math.Min(Model.TotalPages == 0 ? 1 : Model.TotalPages, Model.PageNumber + 4);
+    // ensure end at least show some pages
+    if (Model.TotalPages > 0 && (end - start) < 8)
+    {
+        start = Math.Max(1, Model.PageNumber - 4);
+        end = Math.Min(Model.TotalPages, start + 8);
+    }
+
+    RouteValueDictionary baseRoute = Model.BaseRouteValues ?? new RouteValueDictionary();
+    // helper to build url preserving baseRoute and overriding page & pageSize
+    string BuildUrl(int page, int pageSize)
+    {
+        var rv = new RouteValueDictionary(baseRoute);
+        rv["page"] = page;
+        rv["pageSize"] = pageSize;
+        return Url.Action(Model.ActionName, rv) ?? "#";
+    }
+}
+
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(Model.PageNumber > 1 ? "" : "disabled")">
+                <a class="page-link" href="@(Model.PageNumber > 1 ? BuildUrl(Model.PageNumber - 1, Model.PageSize) : "#")" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            @if (start > 1)
+            {
+                <li class="page-item"><a class="page-link" href="@BuildUrl(1, Model.PageSize)">1</a></li>
+                @if (start > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+            }
+
+            @for (int p = start; p <= end; p++)
+            {
+                <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                    <a class="page-link" href="@BuildUrl(p, Model.PageSize)">@p</a>
+                </li>
+            }
+
+            @if (end < Model.TotalPages)
+            {
+                if (end < Model.TotalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                <li class="page-item"><a class="page-link" href="@BuildUrl(Model.TotalPages, Model.PageSize)">@Model.TotalPages</a></li>
+            }
+
+            <li class="page-item @(Model.PageNumber < Model.TotalPages ? "" : "disabled")">
+                <a class="page-link" href="@(Model.PageNumber < Model.TotalPages ? BuildUrl(Model.PageNumber + 1, Model.PageSize) : "#")" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="d-flex justify-content-center mt-2">
+        <form method="get" class="row g-1 align-items-center" onsubmit="">
+            <div class="col-auto">
+                <label class="form-label small mb-0">Hiển thị</label>
+            </div>
+            <div class="col-auto">
+                <select id="paginationPageSize" name="pageSize" class="form-select form-select-sm" onchange="this.form.submit()">
+                    @foreach (var s in Model.PageSizeOptions)
+                    {
+                        if (s == Model.PageSize)
+                        {
+                            <option value="@s" selected>@s</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    }
+                </select>
+            </div>
+            <input type="hidden" name="page" value="1" />
+            @* Render hidden inputs for base route values so they are preserved on POST/get submit *@
+            @if (Model.BaseRouteValues != null)
+            {
+                foreach (var kv in Model.BaseRouteValues)
+                {
+                    <input type="hidden" name="@kv.Key" value="@kv.Value" />
+                }
+            }
+        </form>
+    </div>
+}

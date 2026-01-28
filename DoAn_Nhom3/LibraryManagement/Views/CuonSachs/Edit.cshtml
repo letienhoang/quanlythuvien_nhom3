@@ -13,10 +13,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form asp-action="Edit" class="needs-validation" novalidate>
-            <input type="hidden" asp-for="Id" />
-            <div class="mb-2">
-                <small class="text-muted">Mã cuốn: <strong>@ViewBag.GeneratedMaCuon</strong></small>
-            </div>
+            <input type="hidden" asp-for="MaCuon" />
 
             @await Html.PartialAsync("_Form", Model)
 

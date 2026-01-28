@@ -80,7 +80,7 @@ else
 
                     <tr>
                         <td><strong>@item.MaPhieuMuon</strong></td>
-                        <td>@item.NguoiMuonId</td>
+                        <td>@item.MaNguoiMuon</td>
                         <td>@item.NguoiMuon?.HoTen</td>
                         <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
                         <td>
@@ -105,7 +105,7 @@ else
                         </td>
                         <td>
                             <a asp-action="Details"
-                               asp-route-id="@item.Id"
+                               asp-route-id="@item.MaPhieuMuon"
                                class="btn btn-sm btn-primary">
                                 Chi tiết
                             </a>

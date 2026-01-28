@@ -13,9 +13,6 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form asp-action="Create" class="needs-validation" novalidate>
-            <div class="mb-2">
-                <small class="text-muted">Mã cuốn (gợi ý): <strong>@ViewBag.GeneratedMaCuon</strong></small>
-            </div>
 
             @await Html.PartialAsync("_Form", Model)
 

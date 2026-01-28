@@ -7,27 +7,24 @@ namespace LibraryManagement.Models;
 public class PhieuMuon
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã phiếu mượn")]
-    [StringLength(50)]
-    public string MaPhieuMuon { get; set; }
+    public int MaPhieuMuon { get; set; }
 
     // FK -> NguoiMuon
     [Required]
     [Display(Name = "Người mượn")]
-    public int NguoiMuonId { get; set; }
+    public int MaNguoiMuon { get; set; }
 
-    [ForeignKey(nameof(NguoiMuonId))]
+    [ForeignKey(nameof(MaNguoiMuon))]
     public NguoiMuon? NguoiMuon { get; set; }
 
     // FK -> NhanVien
     [Required]
     [Display(Name = "Nhân viên")]
-    public int NhanVienId { get; set; }
+    public int MaNhanVien { get; set; }
 
-    [ForeignKey(nameof(NhanVienId))]
+    [ForeignKey(nameof(MaNhanVien))]
     public NhanVien? NhanVien { get; set; }
 
     [Display(Name = "Ngày mượn")]

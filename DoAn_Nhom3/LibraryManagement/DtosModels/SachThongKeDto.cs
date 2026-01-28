@@ -1,0 +1,10 @@
+﻿namespace LibraryManagement.DtosModels
+{
+    public class SachThongKeDto
+    {
+        public string MaSach { get; set; } = string.Empty;
+        public string TenSach { get; set; } = string.Empty;
+        public int TongSoCuon { get; set; }
+        public int SoCuonCon { get; set; }
+    }
+}

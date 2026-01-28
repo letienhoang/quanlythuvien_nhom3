@@ -15,26 +15,53 @@ GO
 -- Trả số ngày trễ lớn hơn 0. Nếu ngày trả là NULL thì trả về ngày hiện tại
 CREATE FUNCTION dbo.fn_TinhSoNgayTre
 (
-    @NguoiMuonId INT
+    @MaNguoiMuon INT,
+    @MaCuon INT = NULL
 )
     RETURNS INT
 AS
 BEGIN
     DECLARE @TotalDaysLate INT;
 
-    SELECT @TotalDaysLate =
-           SUM(
-                   CASE
-                       WHEN ct.NgayTra IS NULL AND p.HanTra < GETDATE()
-                           THEN DATEDIFF(day, p.HanTra, GETDATE())
-                       WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
-                           THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
-                       ELSE 0
-                       END
-           )
-    FROM ChiTietPhieuMuons ct
-             JOIN PhieuMuons p ON ct.PhieuMuonId = p.Id
-    WHERE p.NguoiMuonId = @NguoiMuonId;
+    IF @MaCuon IS NOT NULL
+        BEGIN
+            SELECT @TotalDaysLate =
+                   SUM(
+                           CASE
+                               WHEN ct.NgayTra IS NULL AND p.HanTra < GETUTCDATE()
+                                   THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
+                               WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
+                                   THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
+                               ELSE 0
+                               END
+                   )
+            FROM ChiTietPhieuMuons ct
+                     JOIN PhieuMuons p ON ct.MaPhieuMuon = p.MaPhieuMuon
+            WHERE p.MaNguoiMuon = @MaNguoiMuon
+              AND ct.MaCuon = @MaCuon;
+        END
+    ELSE
+        BEGIN
+            SELECT @TotalDaysLate = SUM(PerPhieuLate)
+            FROM
+                (
+                    SELECT
+                        p.MaPhieuMuon,
+                        MAX(
+                                CASE
+                                    WHEN ct.NgayTra IS NULL AND p.HanTra < GETUTCDATE()
+                                        THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
+                                    WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
+                                        THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
+                                    ELSE 0
+                                    END
+                        ) AS PerPhieuLate
+                    FROM ChiTietPhieuMuons ct
+                             JOIN PhieuMuons p ON ct.MaPhieuMuon = p.MaPhieuMuon
+                    WHERE p.MaNguoiMuon = @MaNguoiMuon
+                    GROUP BY p.MaPhieuMuon
+                ) AS t;
+        END
 
     RETURN ISNULL(@TotalDaysLate, 0);
 END;
@@ -45,7 +72,7 @@ GO
 -- Đếm số bản ghi cuốn sách mà người mượn hiện đang mượn trong tất cả phiếu mượn
 CREATE FUNCTION dbo.fn_SoSachDangMuon
 (
-    @NguoiMuonId INT
+    @MaNguoiMuon INT
 )
     RETURNS INT
 AS
@@ -54,10 +81,10 @@ BEGIN
 
     SELECT @Count = COUNT(*)
     FROM ChiTietPhieuMuons ct
-             JOIN PhieuMuons p ON ct.PhieuMuonId = p.Id
-    WHERE p.NguoiMuonId = @NguoiMuonId
-      AND ct.NgayTra IS NULL;
-    
+             JOIN PhieuMuons p ON ct.MaPhieuMuon = p.MaPhieuMuon
+    WHERE p.MaNguoiMuon = @MaNguoiMuon
+      AND ct.NgayTra IS NULL AND p.TrangThai = N'DangMuon';
+
     RETURN ISNULL(@Count, 0);
 END;
 GO
@@ -66,7 +93,7 @@ GO
 -- Trả số bản hiện có sẵn của một sách bằng cách đếm các cuốn sách của nó có trạng thái có sẵn
 CREATE FUNCTION dbo.fn_CountAvailableCopies
 (
-    @SachId INT
+    @MaSach INT
 )
     RETURNS INT
 AS
@@ -75,9 +102,9 @@ BEGIN
 
     SELECT @Count = COUNT(*)
     FROM CuonSachs
-    WHERE SachId = @SachId
-      AND TrangThai = 'CoSan';
-    
+    WHERE MaSach = @MaSach
+      AND TrangThai = N'CoSan';
+
     RETURN ISNULL(@Count, 0);
 END;
 GO
@@ -89,9 +116,20 @@ GO
 
 -- 1. Thêm sách và nhập kho -> (DONE)
 -- Thêm hoặc cập nhật đầu sách và chèn các bản ghi trong bảng cuốn sách
+-- Thêm phân loại sách trong bảng phân loại
+
+-- Tạo kiểu bảng để truyền danh sách ID danh mục
+IF NOT EXISTS (SELECT * FROM sys.types WHERE is_table_type = 1 AND name = 'IntList')
+BEGIN
+    CREATE TYPE dbo.IntList AS TABLE
+        (
+        Value INT NOT NULL
+        );
+END
+GO
+
 CREATE PROCEDURE usp_InsertBookAndCopies
 (
-    @MaSach NVARCHAR(50),
     @TenSach NVARCHAR(250),
     @ISBN NVARCHAR(50),
     @NamXuatBan INT,
@@ -99,122 +137,98 @@ CREATE PROCEDURE usp_InsertBookAndCopies
     @NgonNgu NVARCHAR(100),
     @SoTrang INT,
     @MoTa NVARCHAR(MAX),
-    @TacGiaId INT,
-    @SoLuong INT
+    @MaTacGia INT,
+    @SoLuong INT,
+    @CategoryIds dbo.IntList READONLY
 )
-    AS
+AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF @SoLuong IS NULL OR @SoLuong < 0
+        SET @SoLuong = 0;
+
     BEGIN TRY
-    BEGIN TRANSACTION;
+        INSERT INTO Sachs ( TenSach, ISBN, NamXuatBan, NhaXuatBan, NgonNgu, SoTrang, MoTa, MaTacGia, SoLuong )
+        VALUES ( @TenSach, @ISBN, @NamXuatBan, @NhaXuatBan, @NgonNgu, @SoTrang, @MoTa, @MaTacGia, @SoLuong );
+        
+        DECLARE @MaSach INT = CAST(SCOPE_IDENTITY() AS INT);
+        
+        IF @SoLuong > 0
+        BEGIN
+            ;WITH Tally AS
+            (
+                SELECT TOP (@SoLuong) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+                FROM sys.all_objects a CROSS JOIN sys.all_objects b
+            )
+            INSERT INTO CuonSachs (MaSach, TinhTrang, TrangThai, ViTriKe, NgayNhap)
+            SELECT @MaSach, N'Moi', N'CoSan', NULL, GETUTCDATE()
+            FROM Tally;
+        END
+        IF EXISTS (SELECT 1 FROM @CategoryIds)
+        BEGIN
+            INSERT INTO PhanLoais (MaSach, MaDanhMuc)
+            SELECT DISTINCT @MaSach, c.Value
+            FROM @CategoryIds c
+            WHERE NOT EXISTS (
+                SELECT 1 FROM PhanLoais p
+                WHERE p.MaSach = @MaSach AND p.MaDanhMuc = c.Value
+            );
+        END
     
-            DECLARE @SachId INT;
-    
-    INSERT INTO Sachs
-    (
-        MaSach, TenSach, ISBN, NamXuatBan,
-        NhaXuatBan, NgonNgu, SoTrang, MoTa,
-        TacGiaId, SoLuong
-    )
-    VALUES
-        (
-            @MaSach, @TenSach, @ISBN, @NamXuatBan,
-            @NhaXuatBan, @NgonNgu, @SoTrang, @MoTa,
-            @TacGiaId, @SoLuong
-        );
-    
-    SET @SachId = SCOPE_IDENTITY();
-    
-            DECLARE @i INT = 1;
-            WHILE @i <= @SoLuong
-    BEGIN
-    INSERT INTO CuonSachs
-    (
-        MaCuon, SachId, TinhTrang, TrangThai, ViTriKe, NgayNhap
-    )
-    VALUES
-        (
-            CONCAT(@MaSach, '-', @i),
-            @SachId,
-            'Moi',
-            'CoSan',
-            NULL,
-            GETDATE()
-        );
-    
-    SET @i += 1;
-    END
-    
-    COMMIT;
+        SELECT @MaSach AS MaSach;
     END TRY
     BEGIN CATCH
-    ROLLBACK;
-            THROW;
+        THROW;
     END CATCH
 END;
 GO
 
-
-
 -- 2. Lập phiếu mượn
 -- Tạo phiếu mượn và chi tiết mượn, cập nhật trạng thái cuốn sách
-CREATE PROCEDURE usp_CreateBorrowRecord
-(
-    @MaPhieuMuon NVARCHAR(50),
-    @NguoiMuonId INT,
-    @NhanVienId INT,
-    @CuonSachId INT,
+CREATE OR ALTER PROCEDURE usp_CreateBorrowRecord (
+    @MaNguoiMuon INT,
+    @MaNhanVien INT,
+    @MaCuon INT,
     @HanTra DATETIME
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF dbo.fn_SoSachDangMuon(@NguoiMuonId) >= 3
-        BEGIN
-            THROW 50001, N'Độc giả đã mượn tối đa 3 cuốn', 1;
-        END
-
+    IF dbo.fn_SoSachDangMuon(@MaNguoiMuon) >= 3
+    BEGIN
+        RAISERROR(N'Độc giả đã mượn tối đa 3 cuốn', 16, 1);
+        RETURN;
+    END
+    
     IF NOT EXISTS (
         SELECT 1 FROM CuonSachs
-        WHERE Id = @CuonSachId AND TrangThai = 'CoSan'
+        WHERE MaCuon = @MaCuon AND TrangThai = N'CoSan'
     )
-        BEGIN
-            THROW 50002, N'Cuốn sách không có sẵn', 1;
-        END
-
-    BEGIN TRANSACTION;
-
-    DECLARE @PhieuMuonId INT;
-
-    INSERT INTO PhieuMuons
-    (
-        MaPhieuMuon, NguoiMuonId, NhanVienId,
-        NgayMuon, HanTra, TrangThai
-    )
-    VALUES
-        (
-            @MaPhieuMuon, @NguoiMuonId, @NhanVienId,
-            GETDATE(), @HanTra, 'DangMuon'
-        );
-
-    SET @PhieuMuonId = SCOPE_IDENTITY();
-
-    INSERT INTO ChiTietPhieuMuons
-    (
-        PhieuMuonId, CuonSachId, NgayTra, TinhTrangTra
-    )
-    VALUES
-        (
-            @PhieuMuonId, @CuonSachId, NULL, NULL
-        );
-
-    UPDATE CuonSachs
-    SET TrangThai = 'DangMuon'
-    WHERE Id = @CuonSachId;
-
-    COMMIT;
+    BEGIN
+        RAISERROR(N'Cuốn sách không có sẵn', 16, 1);
+        RETURN;
+    END
+    
+    BEGIN TRY
+        INSERT INTO PhieuMuons ( MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai ) 
+        VALUES ( @MaNguoiMuon, @MaNhanVien, GETUTCDATE(), @HanTra, N'DangMuon');
+        
+        DECLARE @MaPhieuMuon INT = CAST(SCOPE_IDENTITY() AS INT);
+        
+        INSERT INTO ChiTietPhieuMuons ( MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra ) 
+        VALUES ( @MaPhieuMuon, @MaCuon, NULL, NULL );
+        
+        UPDATE CuonSachs
+        SET TrangThai = N'DangMuon'
+        WHERE MaCuon = @MaCuon;
+        
+        SELECT @MaPhieuMuon AS MaPhieuMuon;
+    END TRY
+    BEGIN CATCH
+    THROW;
+    END CATCH
 END;
 GO
 
@@ -222,42 +236,59 @@ GO
 -- Cập nhật trạng thái trả cho từng bản ghi chi tiết phiếu mượn, cập nhật cuốn sách, sinh phiếu phạt nếu trễ/hỏng
 CREATE PROCEDURE usp_ReturnBooks
 (
-    @PhieuMuonId INT,
-    @CuonSachId INT,
+    @MaPhieuMuon INT,
+    @MaCuon INT,
     @TinhTrangTra NVARCHAR(20)
 )
-    AS
+AS
 BEGIN
-    BEGIN TRANSACTION;
-    
-    UPDATE ChiTietPhieuMuons
-    SET NgayTra = GETDATE(),
-        TinhTrangTra = @TinhTrangTra
-    WHERE PhieuMuonId = @PhieuMuonId
-      AND CuonSachId = @CuonSachId
-      AND NgayTra IS NULL;
-    
-    UPDATE CuonSachs
-    SET TrangThai =
-            CASE
-                WHEN @TinhTrangTra = 'Hong' THEN 'BaoTri'
-                WHEN @TinhTrangTra = 'Mat' THEN 'BaoTri'
-                ELSE 'CoSan'
-                END
-    WHERE Id = @CuonSachId;
-    
-    IF NOT EXISTS (
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        UPDATE ChiTietPhieuMuons
+        SET NgayTra = GETUTCDATE(),
+            TinhTrangTra = @TinhTrangTra
+        WHERE MaPhieuMuon = @MaPhieuMuon
+          AND MaCuon = @MaCuon
+          AND NgayTra IS NULL;
+        
+        IF @@ROWCOUNT = 0
+        BEGIN
+            RAISERROR(N'Không tìm thấy bản ghi mượn hợp lệ để trả',16,1);
+            RETURN;
+        END
+        
+        UPDATE CuonSachs
+        SET TrangThai =
+        CASE
+            WHEN @TinhTrangTra IN (N'Hong', N'Mat') THEN N'BaoTri'
+            ELSE N'CoSan'
+            END
+        WHERE MaCuon = @MaCuon;
+        
+        DECLARE @HanTra DATETIME = (SELECT p.HanTra FROM PhieuMuons p WHERE p.MaPhieuMuon = @MaPhieuMuon);
+        IF @HanTra IS NOT NULL AND GETUTCDATE() > @HanTra
+        BEGIN
+                    DECLARE @DaysLate INT = DATEDIFF(day, @HanTra, GETUTCDATE());
+                    DECLARE @Amount DECIMAL(18,2) = @DaysLate * 1000;
+        INSERT INTO PhieuPhats (MaPhieuMuon, SoTienPhat, LyDo, TrangThaiThanhToan)
+        VALUES (@MaPhieuMuon, @Amount, N'Trả muộn ' + CAST(@DaysLate AS NVARCHAR(10)) + N' ngày', N'ChuaThanhToan');
+        END
+        
+        IF NOT EXISTS (
             SELECT 1 FROM ChiTietPhieuMuons
-            WHERE PhieuMuonId = @PhieuMuonId
+            WHERE MaPhieuMuon = @MaPhieuMuon
               AND NgayTra IS NULL
         )
-    BEGIN
-    UPDATE PhieuMuons
-    SET TrangThai = 'DaTraDu'
-    WHERE Id = @PhieuMuonId;
-    END
-    
-    COMMIT;
+        BEGIN
+            UPDATE PhieuMuons
+            SET TrangThai = N'DaTraDu'
+            WHERE MaPhieuMuon = @MaPhieuMuon;
+        END
+    END TRY
+    BEGIN CATCH
+    THROW;
+    END CATCH
 END;
 GO
 
@@ -265,15 +296,17 @@ GO
 -- Gia hạn hạn trả cho một phiếu mượn để tránh bị phạt
 CREATE PROCEDURE usp_RenewLoan
 (
-    @PhieuMuonId INT,
+    @MaPhieuMuon INT,
     @SoNgayGiaHan INT
 )
-    AS
+AS
 BEGIN
+    SET NOCOUNT ON;
+
     UPDATE PhieuMuons
     SET HanTra = DATEADD(DAY, @SoNgayGiaHan, HanTra)
-    WHERE Id = @PhieuMuonId
-      AND TrangThai = 'DangMuon';
+    WHERE MaPhieuMuon = @MaPhieuMuon
+      AND TrangThai = N'DangMuon';
 END;
 GO
 
@@ -288,9 +321,8 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        p.Id,
         p.MaPhieuMuon,
-        p.NguoiMuonId,
+        p.MaNguoiMuon,
         n.MaNguoiMuon,
         n.HoTen,
         n.SoDienThoai,
@@ -301,21 +333,21 @@ BEGIN
         ISNULL(ct.SoSachDangMuon, 0) AS SoSachDangMuon,
         ISNULL(ph.TongTienPhatChuaTra, 0) AS TongTienPhatChuaTra
     FROM PhieuMuons p
-             INNER JOIN NguoiMuons n ON n.Id = p.NguoiMuonId
+             INNER JOIN NguoiMuons n ON n.MaNguoiMuon = p.MaNguoiMuon
              LEFT JOIN (
-        SELECT PhieuMuonId, COUNT(*) AS SoSachDangMuon
+        SELECT MaPhieuMuon, COUNT(*) AS SoSachDangMuon
         FROM ChiTietPhieuMuons
         WHERE NgayTra IS NULL
-        GROUP BY PhieuMuonId
-    ) ct ON ct.PhieuMuonId = p.Id
+        GROUP BY MaPhieuMuon
+    ) ct ON ct.MaPhieuMuon = p.MaPhieuMuon
              LEFT JOIN (
-        SELECT PhieuMuonId, SUM(SoTienPhat) AS TongTienPhatChuaTra
+        SELECT MaPhieuMuon, SUM(SoTienPhat) AS TongTienPhatChuaTra
         FROM PhieuPhats
-        WHERE TrangThaiThanhToan <> 'DaThanhToan' 
-        GROUP BY PhieuMuonId
-    ) ph ON ph.PhieuMuonId = p.Id
+        WHERE TrangThaiThanhToan <> N'DaThanhToan'
+        GROUP BY MaPhieuMuon
+    ) ph ON ph.MaPhieuMuon = p.MaPhieuMuon
     WHERE
-        p.TrangThai = 'DangMuon'
+        p.TrangThai = N'DangMuon'
       AND (@OnlyOverdue = 0 OR p.HanTra < GETUTCDATE())
       AND (@FromDate IS NULL OR p.NgayMuon >= @FromDate)
       AND (@ToDate   IS NULL OR p.NgayMuon <= @ToDate)
@@ -331,33 +363,34 @@ GO
 -- 1. Khi thêm chi tiết mượn
 -- Khi thêm chi tiết mượn (tức cuốn được gán cho phiếu mượn), cập nhật trạng thái cuốn sách vừa insert 
 CREATE TRIGGER trg_CHITIETPHIEUMUON_AfterInsert
-ON ChiTietPhieuMuons
-AFTER INSERT
-AS
+    ON ChiTietPhieuMuons
+    AFTER INSERT
+    AS
 BEGIN
     UPDATE cs
-    SET TrangThai = 'DangMuon'
-        FROM CuonSachs cs
-        JOIN INSERTED i ON cs.Id = i.CuonSachId;
+    SET TrangThai = N'DangMuon'
+    FROM CuonSachs cs
+             JOIN INSERTED i ON cs.MaCuon = i.MaCuon;
 END;
 GO
 
 -- 2. Khi trả sách
 -- Khi một chi tiết mượn được cập nhật ngày trả, cập nhật trạng thái cuốn sách theo tình trạng trả
 CREATE TRIGGER trg_CHITIETPHIEUMUON_AfterUpdate
-ON ChiTietPhieuMuons
-AFTER UPDATE
-          AS
+    ON ChiTietPhieuMuons
+    AFTER UPDATE
+    AS
 BEGIN
     UPDATE cs
     SET TrangThai =
             CASE
-                WHEN i.TinhTrangTra IN ('Hong', 'Mat') THEN 'BaoTri'
-                ELSE 'CoSan'
+                WHEN i.TinhTrangTra IN (N'Hong', N'Mat') THEN N'BaoTri'
+                ELSE N'CoSan'
                 END
-        FROM CuonSachs cs
-        JOIN INSERTED i ON cs.Id = i.CuonSachId
-    WHERE i.NgayTra IS NOT NULL;
+    FROM CuonSachs cs
+             JOIN INSERTED i ON cs.MaCuon = i.MaCuon
+             JOIN DELETED d ON d.MaCuon = i.MaCuon
+    WHERE i.NgayTra IS NOT NULL AND d.NgayTra IS NULL;
 END;
 GO
 
@@ -366,31 +399,31 @@ GO
 CREATE TRIGGER trg_CUONSACH_AfterInsertUpdateDelete
     ON CuonSachs
     AFTER INSERT, DELETE
-AS
+    AS
 BEGIN
     UPDATE s
     SET SoLuong = (
-        SELECT COUNT(*) FROM CuonSachs WHERE SachId = s.Id
+        SELECT COUNT(*) FROM CuonSachs WHERE MaSach = s.MaSach
     )
-        FROM Sachs s
-    WHERE s.Id IN (
-        SELECT SachId FROM INSERTED
+    FROM Sachs s
+    WHERE s.MaSach IN (
+        SELECT MaSach FROM INSERTED
         UNION
-        SELECT SachId FROM DELETED
-        );
+        SELECT MaSach FROM DELETED
+    );
 END;
 GO
 
 -- 4. Mặc định trạng thái phiếu mượn
 -- Khi tạo phiếu mượn phải đảm bảo trạng thái phiếu mượn mặc định là đang mượn
 CREATE TRIGGER trg_PHIEUMUON_AfterInsert
-ON PhieuMuons
-AFTER INSERT
-AS
+    ON PhieuMuons
+    AFTER INSERT
+    AS
 BEGIN
     UPDATE PhieuMuons
-    SET TrangThai = 'DangMuon'
-    WHERE Id IN (SELECT Id FROM INSERTED)
+    SET TrangThai = N'DangMuon'
+    WHERE MaPhieuMuon IN (SELECT MaPhieuMuon FROM INSERTED)
       AND TrangThai IS NULL;
 END;
 GO
@@ -398,14 +431,14 @@ GO
 -- 5. Khóa độc giả khi hết hạn
 -- Khi sửa người mượn nếu ngày hết hạn nhỏ hơn ngày hiện tại sẽ tự đặt trạng thái không được mượn
 CREATE TRIGGER trg_NGUOIMUON_AfterUpdate
-ON NguoiMuons
-AFTER UPDATE
-          AS
+    ON NguoiMuons
+    AFTER UPDATE
+    AS
 BEGIN
     UPDATE NguoiMuons
-    SET TrangThai = 'Khoa'
-    WHERE Id IN (SELECT Id FROM INSERTED)
-      AND NgayHetHan < GETDATE();
+    SET TrangThai = N'Khoa'
+    WHERE MaNguoiMuon IN (SELECT MaNguoiMuon FROM INSERTED)
+      AND NgayHetHan < GETUTCDATE();
 END;
 GO
 
@@ -417,12 +450,54 @@ GO
 -- Cursor 1: Cập nhật phiếu mượn quá hạn
 -- Duyệt từng phiếu mượn đang mượn có hạn trả bé hơn ngày hiện tại và cập nhật trạng thái của phiếu mượn sang quá hạn (đang thực hiện)
 CREATE PROCEDURE sp_ProcessOverdueLoans_Cursor
-    AS
+AS
 BEGIN
-    UPDATE PhieuMuons
-    SET TrangThai = 'QuaHan'
-    WHERE TrangThai = 'DangMuon'
-      AND HanTra < GETDATE();
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        DECLARE @MaPhieuMuon INT;
+
+        DECLARE cur_overdue CURSOR LOCAL FAST_FORWARD FOR
+        SELECT MaPhieuMuon
+        FROM PhieuMuons
+        WHERE TrangThai = N'DangMuon'
+          AND HanTra < GETUTCDATE();
+
+        OPEN cur_overdue;
+            FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
+
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                UPDATE PhieuMuons
+                SET TrangThai = N'QuaHan'
+                WHERE MaPhieuMuon = @MaPhieuMuon
+                  AND TrangThai = N'DangMuon'
+                  AND HanTra < GETUTCDATE();
+                
+                FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
+            END
+        CLOSE cur_overdue;
+        DEALLOCATE cur_overdue;
+    END TRY
+    BEGIN CATCH
+        IF CURSOR_STATUS('variable', 'cur_overdue') >= -1
+        BEGIN
+            BEGIN TRY
+                CLOSE cur_overdue;
+            END TRY
+            BEGIN CATCH
+            END CATCH
+            BEGIN TRY
+                DEALLOCATE cur_overdue;
+            END TRY
+            BEGIN CATCH
+            END CATCH
+        END
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrNum INT = ERROR_NUMBER();
+        RAISERROR(N'Lỗi khi xử lý phiếu quá hạn: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
+        RETURN;
+    END CATCH
 END;
 GO
 
@@ -431,26 +506,52 @@ GO
 CREATE PROCEDURE sp_RecalculateBookQuantities_Cursor
     AS
 BEGIN
-    DECLARE @SachId INT, @Count INT;
+    SET NOCOUNT ON;
 
-    DECLARE curSach CURSOR FOR
-    SELECT Id FROM Sachs;
-    
-    OPEN curSach;
-    FETCH NEXT FROM curSach INTO @SachId;
-    
-    WHILE @@FETCH_STATUS = 0
-    BEGIN
-    SELECT @Count = COUNT(*) FROM CuonSachs WHERE SachId = @SachId;
-    
-    UPDATE Sachs
-    SET SoLuong = @Count
-    WHERE Id = @SachId;
-    
-    FETCH NEXT FROM curSach INTO @SachId;
-    END
-    
-    CLOSE curSach;
-    DEALLOCATE curSach;
+    BEGIN TRY
+        DECLARE @MaSach INT;
+        DECLARE @Cnt INT;
+
+        DECLARE cur_sach CURSOR LOCAL FAST_FORWARD FOR
+        SELECT MaSach FROM Sachs;
+
+        OPEN cur_sach;
+            FETCH NEXT FROM cur_sach INTO @MaSach;
+
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SELECT @Cnt = COUNT(*) FROM CuonSachs WHERE MaSach = @MaSach;
+                
+                UPDATE Sachs
+                SET SoLuong = ISNULL(@Cnt, 0)
+                WHERE MaSach = @MaSach;
+                
+                FETCH NEXT FROM cur_sach INTO @MaSach;
+            END
+
+        CLOSE cur_sach;
+        DEALLOCATE cur_sach;
+    END TRY
+    BEGIN CATCH
+        IF CURSOR_STATUS('variable', 'cur_sach') >= -1
+        BEGIN
+            BEGIN TRY
+                CLOSE cur_sach;
+            END TRY
+            BEGIN CATCH
+            END CATCH
+            BEGIN TRY
+                DEALLOCATE cur_sach;
+            END TRY
+            BEGIN CATCH
+            END CATCH
+        END
+
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrNum INT = ERROR_NUMBER();
+        RAISERROR(N'Lỗi khi tính lại số lượng sách: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
+        RETURN;
+    END CATCH
 END;
 GO
+

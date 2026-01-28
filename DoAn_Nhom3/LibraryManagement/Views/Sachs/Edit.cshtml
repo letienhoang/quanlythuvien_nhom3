@@ -1,9 +1,10 @@
-﻿@model LibraryManagement.Models.Sach
+﻿@model LibraryManagement.ViewModels.SachEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@await Html.PartialAsync("_Alerts")
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Sửa sách</h1>
@@ -13,10 +14,7 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <form asp-action="Edit" class="needs-validation" novalidate>
-            <input type="hidden" asp-for="Id" />
-            <div class="mb-2">
-                <small class="text-muted">Mã sách: <strong>@ViewBag.GeneratedMaSach</strong></small>
-            </div>
+            <input type="hidden" asp-for="MaSach" />
 
             @await Html.PartialAsync("_Form", Model)
 

@@ -1,13 +1,8 @@
-﻿@model LibraryManagement.Models.Sach
+﻿@model LibraryManagement.ViewModels.SachEditViewModel
 
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="MaSach" class="form-label"></label>
-        <input asp-for="MaSach" class="form-control" readonly />
-        <span asp-validation-for="MaSach" class="text-danger"></span>
-    </div>
 
     <div class="col-md-6">
         <label asp-for="TenSach" class="form-label"></label>
@@ -46,13 +41,11 @@
     </div>
 
     <div class="col-md-6">
-        <label asp-for="TacGiaId" class="form-label"></label>
-        <select asp-for="TacGiaId" asp-items="ViewBag.TacGiaId" class="form-select">
+        <label asp-for="MaTacGia" class="form-label"></label>
+        <select asp-for="MaTacGia" asp-items="ViewBag.MaTacGia" class="form-select">
             <option value="">-- Chọn tác giả --</option>
         </select>
-     
-
-        <span asp-validation-for="TacGiaId" class="text-danger"></span>
+        <span asp-validation-for="MaTacGia" class="text-danger"></span>
     </div>
 
     <div class="col-12">
@@ -66,4 +59,21 @@
         <input asp-for="SoLuong" class="form-control" />
         <span asp-validation-for="SoLuong" class="text-danger"></span>
     </div>
+
+    <div class="col-12">
+        <label class="form-label">Chọn danh mục (có thể chọn nhiều)</label>
+        <div class="row row-cols-1 row-cols-md-2 g-2">
+            @foreach (var cat in Model.AvailableCategories)
+            {
+                var isChecked = Model.SelectedCategoryIds?.Contains(int.Parse(cat.Value)) == true;
+                <div class="col">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="SelectedCategoryIds" value="@cat.Value" id="cat_@cat.Value" @(isChecked ? "checked" : "") />
+                        <label class="form-check-label" for="cat_@cat.Value">@cat.Text</label>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
 </div>

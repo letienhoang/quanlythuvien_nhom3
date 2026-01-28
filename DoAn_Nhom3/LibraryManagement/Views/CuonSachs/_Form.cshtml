@@ -4,18 +4,13 @@
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-    <div class="col-md-4">
-        <label asp-for="MaCuon" class="form-label"></label>
-        <input asp-for="MaCuon" class="form-control" readonly/>
-        <span asp-validation-for="MaCuon" class="text-danger"></span>
-    </div>
 
     <div class="col-md-4">
-        <label asp-for="SachId" class="form-label"></label>
-        <select asp-for="SachId" asp-items="@(ViewBag.SachId as SelectList)" class="form-select">
+        <label asp-for="MaSach" class="form-label"></label>
+        <select asp-for="MaSach" asp-items="@(ViewBag.MaSach as SelectList)" class="form-select">
             <option value="">-- Chọn sách --</option>
         </select>
-        <span asp-validation-for="SachId" class="text-danger"></span>
+        <span asp-validation-for="MaSach" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LibraryManagement.Models.CuonSach>
+﻿@model LibraryManagement.ViewModels.PagedResult<LibraryManagement.Models.CuonSach>
 @using LibraryManagement.Extensions
 
 @{
@@ -25,7 +25,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>
                 <td>@item.MaCuon</td>
@@ -35,12 +35,19 @@
                 <td>@item.ViTriKe</td>
                 <td>@(item.NgayNhap?.ToString("yyyy-MM-dd") ?? "")</td>
                 <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                    <a asp-action="Details" asp-route-id="@item.MaCuon" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.MaCuon" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.MaCuon" class="btn btn-sm btn-outline-danger">Xóa</a>
                 </td>
             </tr>
         }
         </tbody>
     </table>
 </div>
+
+@await Component.InvokeAsync("Pagination", new {
+    pageNumber = Model.PageNumber,
+    pageSize = Model.PageSize,
+    totalItems = Model.TotalItems,
+    actionName = "Index"
+})

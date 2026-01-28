@@ -1,19 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
     public class NhanViensController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public NhanViensController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public NhanViensController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         // GET: NhanViens
@@ -29,7 +26,7 @@ namespace LibraryManagement.Controllers
 
             var nhanVien = await _context.NhanViens
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaNhanVien == id);
 
             if (nhanVien == null) return NotFound();
 
@@ -39,10 +36,7 @@ namespace LibraryManagement.Controllers
         // GET: NhanViens/Create
         public async Task<IActionResult> Create()
         {
-            var model = new NhanVien
-            {
-                MaNhanVien = await _codeGen.GenerateNextAsync<NhanVien>(x => x.MaNhanVien, "NV", 4)
-            };
+            var model = new NhanVien{};
             return View(model);
         }
 
@@ -53,18 +47,12 @@ namespace LibraryManagement.Controllers
             "MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")]
             NhanVien nhanVien)
         {
-            nhanVien.MaNhanVien =
-                await _codeGen.GenerateNextWithRetriesAsync<NhanVien>(x => x.MaNhanVien, "NV", 4);
-
             if (ModelState.IsValid)
             {
                 _context.Add(nhanVien);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-
-            nhanVien.MaNhanVien =
-                await _codeGen.GenerateNextAsync<NhanVien>(x => x.MaNhanVien, "NV", 4);
 
             return View(nhanVien);
         }
@@ -83,11 +71,11 @@ namespace LibraryManagement.Controllers
         // POST: NhanViens/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind(
-            "Id,MaNhanVien,HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")]
+        public async Task<IActionResult> Edit(int maNhanVien, [Bind(
+            "HoTen,NgaySinh,CCCD,ChucVu,SoDienThoai,Email,TaiKhoan,MatKhau")]
             NhanVien nhanVien)
         {
-            if (id != nhanVien.Id) return NotFound();
+            if (maNhanVien != nhanVien.MaNhanVien) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -105,7 +93,7 @@ namespace LibraryManagement.Controllers
 
             var nhanVien = await _context.NhanViens
                 .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(m => m.MaNhanVien == id);
 
             if (nhanVien == null) return NotFound();
 

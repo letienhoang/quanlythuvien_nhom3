@@ -159,8 +159,8 @@
                                         {
                                             <form asp-action="XoaSach" method="post" class="d-inline"
                                                   onsubmit="return confirm('Bạn có chắc muốn xóa sách này khỏi phiếu mượn?');">
-                                                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
-                                                <input type="hidden" name="cuonSachId" value="@ct.CuonSachId" />
+                                                <input type="hidden" name="MaPhieuMuon" value="@Model.MaPhieuMuon" />
+                                                <input type="hidden" name="MaCuon" value="@ct.MaCuon" />
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     x
                                                 </button>
@@ -188,20 +188,12 @@
 
     <!-- Nút thao tác -->
     <div class="mt-4">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm py-1 px-2 me-2">
+        <a asp-action="Edit" asp-route-id="@Model.MaPhieuMuon" class="btn btn-primary btn-sm py-1 px-2 me-2">
            Sửa phiếu
         </a>
-        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger btn-sm py-1 px-2 me-2">
+        <a asp-action="Delete" asp-route-id="@Model.MaPhieuMuon" class="btn btn-danger btn-sm py-1 px-2">
              Xóa phiếu
         </a>
-        @if (Model.TrangThai == LibraryManagement.Enums.LoanStatus.DangMuon)
-        {
-            <button class="btn btn-warning btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#giaHanModal">
-                Gia hạn mượn
-            </button>
-        }
     </div>
 </div>
 
@@ -216,7 +208,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="ThemSach" method="post">
-                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
+                <input type="hidden" name="maPhieuMuon" value="@Model.MaPhieuMuon" />
                 <div class="modal-body">
                     <!-- Tìm kiếm -->
                     <div class="mb-3">
@@ -259,7 +251,7 @@
                                     {
                                         <tr class="book-row">
                                             <td>
-                                                <input type="checkbox" name="cuonSachIds" value="@cuon.Id" 
+                                                <input type="checkbox" name="MaCuons" value="@cuon.MaCuon" 
                                                        class="form-check-input book-checkbox" @(remainingSlots==0 ? "disabled" : "")>
                                             </td>
                                             <td><code>@cuon.MaCuon</code></td>
@@ -309,8 +301,8 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="TraSach" method="post">
-                <input type="hidden" name="phieuMuonId" value="@Model.Id" />
-                <input type="hidden" name="cuonSachId" value="" id="cuonSachIdInput" />
+                <input type="hidden" name="MaPhieuMuon" value="@Model.MaPhieuMuon" />
+                <input type="hidden" name="MaCuon" value="" id="MaCuonInput" />
                 <div class="modal-body">
                     <p>Bạn chắc chắn muốn trả cuốn sách <strong id="tenSachLabel"></strong>?</p>
 
@@ -341,33 +333,6 @@
                 </div>
             </form>
         </div>
-    </div>
-</div>
-
-<!-- Modal Gia Hạn -->
-<div class="modal fade" id="giaHanModal">
-    <div class="modal-dialog">
-        <form asp-action="GiaHan" method="post">
-            <input type="hidden" name="phieuMuonId" value="@Model.Id" />
-
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Gia hạn phiếu mượn</h5>
-                </div>
-
-                <div class="modal-body">
-                    <label>Số ngày gia hạn</label>
-                    <input type="number" name="soNgayGiaHan"
-                           class="form-control"
-                           min="1" max="30" required />
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button class="btn btn-warning">Xác nhận gia hạn</button>
-                </div>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -443,9 +408,9 @@
             // Xử lý sự kiện cho nút trả sách
             document.querySelectorAll('.btn-tra-sach').forEach(button => {
                 button.addEventListener('click', function() {
-                    const cuonSachId = this.getAttribute('data-cuon-sach-id');
+                    const MaCuon = this.getAttribute('data-cuon-sach-id');
                     const tenSach = this.getAttribute('data-ten-sach');
-                    document.getElementById('cuonSachIdInput').value = cuonSachId;
+                    document.getElementById('MaCuonInput').value = MaCuon;
                     document.getElementById('tenSachLabel').textContent = tenSach;
                     var myModal = new bootstrap.Modal(document.getElementById('traSachModal'));
                     myModal.show();

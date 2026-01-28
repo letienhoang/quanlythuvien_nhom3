@@ -1,17 +1,15 @@
 ﻿using LibraryManagement.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LibraryManagement.Models;
 
 public class NguoiMuon
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã người mượn")]
-    [StringLength(50)]
-    public string MaNguoiMuon { get; set; }
+    public int MaNguoiMuon { get; set; }
 
     [Display(Name = "Họ tên")]
     [StringLength(250)]

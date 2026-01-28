@@ -7,19 +7,16 @@ namespace LibraryManagement.Models;
 public class CuonSach
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã cuốn sách")]
-    [StringLength(50)]
-    public string MaCuon { get; set; }
+    public int MaCuon { get; set; }
 
     // FK -> Sach
     [Required]
     [Display(Name = "Sách")]
-    public int SachId { get; set; }
+    public int MaSach { get; set; }
 
-    [ForeignKey(nameof(SachId))]
+    [ForeignKey(nameof(MaSach))]
     public Sach? Sach { get; set; }
 
     [Display(Name = "Tình trạng")]

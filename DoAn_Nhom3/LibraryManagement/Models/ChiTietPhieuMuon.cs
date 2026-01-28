@@ -7,10 +7,10 @@ namespace LibraryManagement.Models;
 public class ChiTietPhieuMuon
 {
     [Display(Name = "Phiếu mượn")]
-    public int PhieuMuonId { get; set; }
+    public int MaPhieuMuon { get; set; }
 
     [Display(Name = "Cuốn sách")]
-    public int CuonSachId { get; set; }
+    public int MaCuon { get; set; }
 
     [Display(Name = "Ngày trả")]
     public DateTime? NgayTra { get; set; }
@@ -18,9 +18,9 @@ public class ChiTietPhieuMuon
     [Display(Name = "Tình trạng trả")]
     public ReturnCondition? TinhTrangTra { get; set; }
 
-    [ForeignKey(nameof(PhieuMuonId))]
+    [ForeignKey(nameof(MaPhieuMuon))]
     public PhieuMuon? PhieuMuon { get; set; }
 
-    [ForeignKey(nameof(CuonSachId))]
+    [ForeignKey(nameof(MaCuon))]
     public CuonSach? CuonSach { get; set; }
 }

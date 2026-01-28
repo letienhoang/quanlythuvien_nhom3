@@ -3,16 +3,11 @@
 <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
 <div class="row g-3">
-    <div class="col-md-6">
-        <label asp-for="MaPhat" class="form-label"></label>
-        <input asp-for="MaPhat" class="form-control" readonly />
-        <span asp-validation-for="MaPhat" class="text-danger"></span>
-    </div>
 
     <div class="col-md-6">
-        <label asp-for="PhieuMuonId" class="form-label"></label>
-        <select asp-for="PhieuMuonId" class="form-select" asp-items="ViewBag.PhieuMuonId"></select>
-        <span asp-validation-for="PhieuMuonId" class="text-danger"></span>
+        <label asp-for="MaPhieuMuon" class="form-label"></label>
+        <select asp-for="MaPhieuMuon" class="form-select"></select>
+        <span asp-validation-for="MaPhieuMuon" class="text-danger"></span>
     </div>
 
     <div class="col-md-4">

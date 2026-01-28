@@ -1,9 +1,10 @@
-﻿@model IEnumerable<LibraryManagement.Models.Sach>
+﻿@model LibraryManagement.ViewModels.PagedResult<LibraryManagement.Models.Sach>
 
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+@await Html.PartialAsync("_Alerts")
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Danh sách sách</h2>
@@ -25,7 +26,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>
                 <td>@item.MaSach</td>
@@ -36,12 +37,19 @@
                 <td>@item.TacGia?.TenTacGia</td>
                 <td>@item.SoLuong</td>
                 <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Chi tiết</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Sửa</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Xóa</a>
+                    <a asp-action="Details" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                    <a asp-action="Edit" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                    <a asp-action="Delete" asp-route-id="@item.MaSach" class="btn btn-sm btn-outline-danger">Xóa</a>
                 </td>
             </tr>
         }
         </tbody>
     </table>
 </div>
+
+@await Component.InvokeAsync("Pagination", new {
+    pageNumber = Model.PageNumber,
+    pageSize = Model.PageSize,
+    totalItems = Model.TotalItems,
+    actionName = "Index"
+})

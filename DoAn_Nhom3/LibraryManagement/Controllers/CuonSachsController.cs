@@ -2,48 +2,69 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
-using LibraryManagement.Services;
+using LibraryManagement.ViewModels;
 
 namespace LibraryManagement.Controllers
 {
     public class CuonSachsController : Controller
     {
         private readonly LibraryDbContext _context;
-        private readonly ILibraryCodeGenerator _codeGen;
 
-        public CuonSachsController(LibraryDbContext context, ILibraryCodeGenerator codeGen)
+        public CuonSachsController(LibraryDbContext context)
         {
             _context = context;
-            _codeGen = codeGen;
         }
 
         private void PopulateSachDropDown(object? selectedSach = null)
         {
             var list = _context.Sachs
                         .OrderBy(s => s.TenSach)
-                        .Select(s => new { s.Id, s.TenSach })
+                        .Select(s => new { s.MaSach, s.TenSach })
                         .ToList();
 
-            ViewBag.SachId = new SelectList(list, "Id", "TenSach", selectedSach);
+            ViewBag.MaSach = new SelectList(list, "MaSach", "TenSach", selectedSach);
         }
 
         // GET: CuonSachs
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
-            var cuonSachs = await _context.CuonSachs
-                                .Include(c => c.Sach)
-                                .ToListAsync();
-            return View(cuonSachs);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _context.CuonSachs
+                .AsNoTracking()
+                .Include(c => c.Sach);
+
+            var total = await query.CountAsync();
+            
+            var totalPages = (int)Math.Ceiling((double)total / pageSize);
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var items = await query
+                .OrderByDescending(c => c.MaCuon)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<CuonSach>
+            {
+                Items = items,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = total
+            };
+
+            return View(result);
         }
 
         // GET: CuonSachs/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? maSach)
         {
-            if (id == null) return NotFound();
+            if (maSach == null) return NotFound();
 
             var cuonSach = await _context.CuonSachs
                                 .Include(c => c.Sach)
-                                .FirstOrDefaultAsync(m => m.Id == id);
+                                .FirstOrDefaultAsync(m => m.MaSach == maSach);
             if (cuonSach == null) return NotFound();
 
             return View(cuonSach);
@@ -53,25 +74,20 @@ namespace LibraryManagement.Controllers
         public async Task<IActionResult> Create()
         {
             // generate suggestion for MaCuon
-            var generated = await _codeGen.GenerateNextAsync<CuonSach>(c => c.MaCuon, "C", 6);
-            var model = new CuonSach { MaCuon = generated, NgayNhap = DateTime.Now };
+            var model = new CuonSach { NgayNhap = DateTime.Now };
             PopulateSachDropDown();
-            ViewBag.GeneratedMaCuon = generated;
             return View(model);
         }
 
         // POST: CuonSachs/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
+        public async Task<IActionResult> Create([Bind("MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
-            // ensure unique/generated MaCuon (with retries)
-            cuonSach.MaCuon = await _codeGen.GenerateNextWithRetriesAsync<CuonSach>(c => c.MaCuon, "C", 6);
-
-            // server-side: ensure SachId exists
-            if (!_context.Sachs.Any(s => s.Id == cuonSach.SachId))
+            // server-side: ensure MaSach exists
+            if (!_context.Sachs.Any(s => s.MaSach == cuonSach.MaSach))
             {
-                ModelState.AddModelError(nameof(cuonSach.SachId), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
+                ModelState.AddModelError(nameof(cuonSach.MaSach), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
             }
 
             if (ModelState.IsValid)
@@ -86,8 +102,7 @@ namespace LibraryManagement.Controllers
             }
 
             // repopulate dropdown and keep suggestion
-            PopulateSachDropDown(cuonSach.SachId);
-            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
+            PopulateSachDropDown(cuonSach.MaSach);
             return View(cuonSach);
         }
 
@@ -99,21 +114,20 @@ namespace LibraryManagement.Controllers
             var cuonSach = await _context.CuonSachs.FindAsync(id);
             if (cuonSach == null) return NotFound();
 
-            PopulateSachDropDown(cuonSach.SachId);
-            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
+            PopulateSachDropDown(cuonSach.MaSach);
             return View(cuonSach);
         }
 
         // POST: CuonSachs/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MaCuon,SachId,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
+        public async Task<IActionResult> Edit(int maCuon, [Bind("MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
-            if (id != cuonSach.Id) return NotFound();
+            if (maCuon != cuonSach.MaCuon) return NotFound();
 
-            if (!_context.Sachs.Any(s => s.Id == cuonSach.SachId))
+            if (!_context.Sachs.Any(s => s.MaSach == cuonSach.MaSach))
             {
-                ModelState.AddModelError(nameof(cuonSach.SachId), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
+                ModelState.AddModelError(nameof(cuonSach.MaSach), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
             }
 
             if (ModelState.IsValid)
@@ -128,13 +142,12 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CuonSachExists(cuonSach.Id)) return NotFound();
+                    if (!CuonSachExists(cuonSach.MaCuon)) return NotFound();
                     else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            PopulateSachDropDown(cuonSach.SachId);
-            ViewBag.GeneratedMaCuon = cuonSach.MaCuon;
+            PopulateSachDropDown(cuonSach.MaSach);
             return View(cuonSach);
         }
 
@@ -145,7 +158,7 @@ namespace LibraryManagement.Controllers
 
             var cuonSach = await _context.CuonSachs
                                 .Include(c => c.Sach)
-                                .FirstOrDefaultAsync(m => m.Id == id);
+                                .FirstOrDefaultAsync(m => m.MaCuon == id);
             if (cuonSach == null) return NotFound();
 
             return View(cuonSach);
@@ -170,7 +183,7 @@ namespace LibraryManagement.Controllers
 
         private bool CuonSachExists(int id)
         {
-            return _context.CuonSachs.Any(e => e.Id == id);
+            return _context.CuonSachs.Any(e => e.MaCuon == id);
         }
     }
 }

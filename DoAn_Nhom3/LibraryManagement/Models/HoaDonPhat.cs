@@ -7,19 +7,16 @@ namespace LibraryManagement.Models;
 public class HoaDonPhat
 {
     [Key]
-    public int Id { get; set; }
-
-    [Required]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "Mã hóa đơn phạt")]
-    [StringLength(50)]
-    public string MaHoaDon { get; set; }
+    public int MaHoaDon { get; set; }
 
     // FK -> PhieuPhat
     [Required]
     [Display(Name = "Phạt")]
-    public int PhieuPhatId { get; set; }
+    public int MaPhat { get; set; }
 
-    [ForeignKey(nameof(PhieuPhatId))]
+    [ForeignKey(nameof(MaPhat))]
     public PhieuPhat? PhieuPhat { get; set; }
 
     [Display(Name = "Ngày thanh toán")]
