@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LibraryManagement.Models.CuonSach>
+﻿@model LibraryManagement.ViewModels.PagedResult<LibraryManagement.Models.CuonSach>
 @using LibraryManagement.Extensions
 
 @{
@@ -25,7 +25,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>
                 <td>@item.MaCuon</td>
@@ -44,3 +44,10 @@
         </tbody>
     </table>
 </div>
+
+@await Component.InvokeAsync("Pagination", new {
+    pageNumber = Model.PageNumber,
+    pageSize = Model.PageSize,
+    totalItems = Model.TotalItems,
+    actionName = "Index"
+})

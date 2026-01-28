@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
 using LibraryManagement.ViewModels;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LibraryManagement.Controllers
@@ -16,6 +17,20 @@ namespace LibraryManagement.Controllers
         public SachsController(LibraryDbContext context)
         {
             _context = context;
+        }
+        
+        private static DataTable BuildIntListTvp(IEnumerable<int>? ids)
+        {
+            var table = new DataTable();
+            table.Columns.Add("Value", typeof(int));
+
+            if (ids == null) return table;
+
+            foreach (var id in ids.Distinct())
+            {
+                table.Rows.Add(id);
+            }
+            return table;
         }
 
         private void PopulateTacGiaDropDown(object? selectedTacGia = null)
@@ -48,12 +63,34 @@ namespace LibraryManagement.Controllers
         }
 
         // GET: Sachs
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
-            var books = await _context.Sachs
-                 .Include(s => s.TacGia)
-                 .ToListAsync();
-            return View(books);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _context.Sachs
+                .AsNoTracking()
+                .Include(c => c.TacGia);
+
+            var total = await query.CountAsync();
+            
+            var totalPages = (int)Math.Ceiling((double)total / pageSize);
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var items = await query
+                .OrderByDescending(c => c.MaSach)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<Sach>
+            {
+                Items = items,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = total
+            };
+            return View(result);
         }
 
         // GET: Sachs/Details/5
@@ -105,27 +142,25 @@ namespace LibraryManagement.Controllers
                 await PopulateCategoriesFor(vm);
                 return View(vm);
             }
-
-            // Bắt đầu transaction EF
-            using var efTx = await _context.Database.BeginTransactionAsync();
+            
+            await using var efTx = await _context.Database.BeginTransactionAsync();
             var conn = _context.Database.GetDbConnection();
             bool openedHere = false;
 
             try
             {
-                // Chỉ mở connection nếu nó đang đóng
-                if (conn.State != System.Data.ConnectionState.Open)
+                if (conn.State != ConnectionState.Open)
                 {
                     await conn.OpenAsync();
                     openedHere = true;
                 }
 
-                using var cmd = conn.CreateCommand();
+                await using var cmd = conn.CreateCommand();
                 cmd.CommandType = System.Data.CommandType.StoredProcedure;
                 cmd.CommandText = "usp_InsertBookAndCopies";
 
                 // Tạo parameter helper
-                System.Data.Common.DbParameter MakeParam(string name, object? value, System.Data.DbType? dbType = null)
+                System.Data.Common.DbParameter MakeParam(string name, object? value, DbType? dbType = null)
                 {
                     var p = cmd.CreateParameter();
                     p.ParameterName = name;
@@ -136,13 +171,37 @@ namespace LibraryManagement.Controllers
 
                 cmd.Parameters.Add(MakeParam("@TenSach", vm.TenSach));
                 cmd.Parameters.Add(MakeParam("@ISBN", vm.ISBN));
-                cmd.Parameters.Add(MakeParam("@NamXuatBan", vm.NamXuatBan, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@NamXuatBan", vm.NamXuatBan, DbType.Int32));
                 cmd.Parameters.Add(MakeParam("@NhaXuatBan", vm.NhaXuatBan));
                 cmd.Parameters.Add(MakeParam("@NgonNgu", vm.NgonNgu));
-                cmd.Parameters.Add(MakeParam("@SoTrang", vm.SoTrang, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@SoTrang", vm.SoTrang, DbType.Int32));
                 cmd.Parameters.Add(MakeParam("@MoTa", vm.MoTa));
-                cmd.Parameters.Add(MakeParam("@MaTacGia", vm.MaTacGia, System.Data.DbType.Int32));
-                cmd.Parameters.Add(MakeParam("@SoLuong", vm.SoLuong ?? 0, System.Data.DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@MaTacGia", vm.MaTacGia, DbType.Int32));
+                cmd.Parameters.Add(MakeParam("@SoLuong", vm.SoLuong ?? 0, DbType.Int32));
+                
+                var categoriesTable = new DataTable();
+                categoriesTable.Columns.Add("Value", typeof(int));
+                if (vm.SelectedCategoryIds != null)
+                {
+                    foreach (var id in vm.SelectedCategoryIds)
+                    {
+                        categoriesTable.Rows.Add(id);
+                    }
+                }
+                
+                if (cmd is SqlCommand sqlCmd)
+                {
+                    var tvpParam = new SqlParameter("@CategoryIds", SqlDbType.Structured)
+                    {
+                        TypeName = "dbo.IntList",
+                        Value = categoriesTable
+                    };
+                    sqlCmd.Parameters.Add(tvpParam);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Connection is not a SQL Server connection.");
+                }
 
                 // Gắn transaction hiện thời (EF transaction) vào command để command nằm trong cùng transaction
                 if (efTx.GetDbTransaction() is System.Data.Common.DbTransaction nativeTx)
@@ -153,18 +212,9 @@ namespace LibraryManagement.Controllers
                 // ExecuteScalarAsync vì stored proc trả SELECT @MaSach AS MaSach
                 var scalar = await cmd.ExecuteScalarAsync();
                 if (scalar == null || scalar == DBNull.Value)
-                    throw new Exception("Stored procedure không trả về MaSach.");
+                    throw new Exception("Stored procedure không trả về Mã Sách.");
 
                 var newMaSach = Convert.ToInt32(scalar);
-
-                // Thêm PhanLoais nếu có chọn danh mục
-                if (vm.SelectedCategoryIds != null && vm.SelectedCategoryIds.Any())
-                {
-                    var distinct = vm.SelectedCategoryIds.Distinct().ToList();
-                    var phanLoais = distinct.Select(cid => new PhanLoai { MaSach = newMaSach, MaDanhMuc = cid });
-                    _context.PhanLoais.AddRange(phanLoais);
-                    await _context.SaveChangesAsync(); // commit inserts of PhanLoai into same transaction/connection
-                }
 
                 await efTx.CommitAsync();
                 TempData["Success"] = $"Đã thêm sách '{vm.TenSach}' (ID {newMaSach}).";

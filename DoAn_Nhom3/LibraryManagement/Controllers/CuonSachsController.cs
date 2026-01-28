@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using LibraryManagement.ViewModels;
 
 namespace LibraryManagement.Controllers
 {
@@ -25,12 +26,35 @@ namespace LibraryManagement.Controllers
         }
 
         // GET: CuonSachs
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
-            var cuonSachs = await _context.CuonSachs
-                                .Include(c => c.Sach)
-                                .ToListAsync();
-            return View(cuonSachs);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var query = _context.CuonSachs
+                .AsNoTracking()
+                .Include(c => c.Sach);
+
+            var total = await query.CountAsync();
+            
+            var totalPages = (int)Math.Ceiling((double)total / pageSize);
+            if (totalPages > 0 && page > totalPages) page = totalPages;
+
+            var items = await query
+                .OrderByDescending(c => c.MaCuon)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var result = new PagedResult<CuonSach>
+            {
+                Items = items,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalItems = total
+            };
+
+            return View(result);
         }
 
         // GET: CuonSachs/Details/5

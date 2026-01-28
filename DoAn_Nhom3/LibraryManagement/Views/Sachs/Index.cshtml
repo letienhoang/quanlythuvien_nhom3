@@ -1,4 +1,4 @@
-﻿@model IEnumerable<LibraryManagement.Models.Sach>
+﻿@model LibraryManagement.ViewModels.PagedResult<LibraryManagement.Models.Sach>
 
 @{
     ViewData["Title"] = "Index";
@@ -25,7 +25,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Items)
         {
             <tr>
                 <td>@item.MaSach</td>
@@ -45,3 +45,10 @@
         </tbody>
     </table>
 </div>
+
+@await Component.InvokeAsync("Pagination", new {
+    pageNumber = Model.PageNumber,
+    pageSize = Model.PageSize,
+    totalItems = Model.TotalItems,
+    actionName = "Index"
+})

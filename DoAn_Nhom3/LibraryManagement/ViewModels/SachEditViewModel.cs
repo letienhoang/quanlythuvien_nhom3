@@ -41,7 +41,7 @@ public class SachEditViewModel
     public int? SoLuong { get; set; }
 
     // Categories selection
-    public List<int> SelectedCategoryIds { get; set; } = new();
+    public List<int>? SelectedCategoryIds { get; set; } = new();
 
     // For UI
     public List<SelectListItem> AvailableCategories { get; set; } = new();
