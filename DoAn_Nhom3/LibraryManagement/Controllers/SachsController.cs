@@ -18,20 +18,6 @@ namespace LibraryManagement.Controllers
         {
             _context = context;
         }
-        
-        private static DataTable BuildIntListTvp(IEnumerable<int>? ids)
-        {
-            var table = new DataTable();
-            table.Columns.Add("Value", typeof(int));
-
-            if (ids == null) return table;
-
-            foreach (var id in ids.Distinct())
-            {
-                table.Rows.Add(id);
-            }
-            return table;
-        }
 
         private void PopulateTacGiaDropDown(object? selectedTacGia = null)
         {

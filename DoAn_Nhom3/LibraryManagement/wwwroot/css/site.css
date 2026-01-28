@@ -132,3 +132,92 @@ body {
     .validation-box li {
         line-height: 1.5;
     }
+
+/* === Toast custom styles === */
+.toast-container.position-fixed.top-0.end-0.p-3 {
+    z-index: 1080; /* chắc chắn hiển trên modal */
+    pointer-events: none; /* cho phép click vào phần dưới nếu cần; bật lại cho nội dung toast */
+}
+
+/* Thêm lớp .custom-toast cho toast để dễ chỉnh */
+.custom-toast {
+    pointer-events: auto; /* cho phép tương tác */
+    min-width: 280px;
+    max-width: 420px;
+    width: auto;
+    margin: 0.5rem; /* giảm sát mép */
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18), 0 2px 6px rgba(0,0,0,0.08);
+    transform-origin: top right;
+}
+
+/* Nội dung toast: dễ đọc, xuống hàng tốt */
+.custom-toast .toast-body {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.35;
+    white-space: pre-wrap; /* giữ newline nếu có */
+    word-break: break-word;
+    color: #fff; /* phù hợp với text-bg-success */
+}
+
+/* Căn nút close ở góc phải trên, nhưng nhỏ gọn */
+.custom-toast .btn-close {
+    align-self: flex-start;
+    opacity: 0.95;
+    margin: auto;
+}
+
+/* Nếu dùng text-bg-success (bootstrap) - giữ contrast, bo góc bên phải */
+.custom-toast.text-bg-success {
+    border: 0;
+}
+
+.custom-toast.text-bg-danger {
+    border: 0;
+}
+
+/* Hiệu ứng slide-in cho toast khi .show */
+@keyframes slideInFromRight {
+    0%   { transform: translateX(14px); opacity: 0; }
+    60%  { transform: translateX(-6px); opacity: 1; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+.custom-toast.show {
+    animation: slideInFromRight 300ms cubic-bezier(.16,.84,.44,1) both;
+}
+
+/* Nhỏ hơn trên mobile: căn giữa và chiếm gần hết chiều ngang */
+@media (max-width: 576px) {
+    .toast-container.position-fixed.top-0.end-0.p-3 {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%);
+        top: 0.8rem;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .custom-toast {
+        max-width: calc(100% - 1.6rem);
+        min-width: 0;
+        margin: 0.3rem;
+        border-radius: 10px;
+    }
+}
+
+/* Nếu muốn toast mảnh hơn (tùy chọn) */
+.custom-toast.small {
+    max-width: 340px;
+    font-size: 0.92rem;
+}
+
+/* option: thêm icon trái (nếu bạn muốn chèn SVG vào DOM) */
+.custom-toast .toast-icon {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0.9rem;
+    padding-right: 0.6rem;
+    font-size: 1.15rem;
+    opacity: 0.95;
+}
