@@ -444,10 +444,10 @@ namespace LibraryManagement.Controllers
         }
 
         // Function In SQL 
-        public async Task<int> GetSoSachDangMuon(int MaNguoiMuon)
+        public async Task<int> GetSoSachDangMuon(int maNguoiMuon)
         {
             var result = await _context.Database
-                .SqlQuery<int>($"SELECT dbo.fn_TinhSoNgayTre({MaNguoiMuon})")
+                .SqlQuery<int>($"SELECT dbo.fn_TinhSoNgayTre({maNguoiMuon})")
                 .FirstOrDefaultAsync();
 
             return result;
@@ -456,60 +456,65 @@ namespace LibraryManagement.Controllers
         // POST: PhieuMuons/TraSach - Cập nhật tình trạng trả sách
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> TraSach(int maPhieuMuon, int maCuon, DateTime ngayTra, ReturnCondition tinhTrangTra)
+        public async Task<IActionResult> ReturnBook(int maPhieuMuon, int maCuon, DateTime ngayTra, ReturnCondition tinhTrangTra)
         {
-            var chiTiet = await _context.ChiTietPhieuMuons
-                .FirstOrDefaultAsync(ct => ct.MaPhieuMuon == maPhieuMuon && ct.MaCuon == maCuon);
-
-            if (chiTiet == null) return NotFound();
-
-            chiTiet.NgayTra = ngayTra;
-            chiTiet.TinhTrangTra = tinhTrangTra;
-
-            // Cập nhật trạng thái cuốn sách
-            var cuonSach = await _context.CuonSachs.FindAsync(maCuon);
-            if (cuonSach != null)
+            if (maPhieuMuon <= 0 || maCuon <= 0)
             {
-                if (tinhTrangTra == ReturnCondition.Mat)
-                {
-                    cuonSach.TrangThai = CopyStatus.BaoTri;
-                    cuonSach.TinhTrang = BookCondition.Mat;
-                }
-                else if (tinhTrangTra == ReturnCondition.Hong)
-                {
-                    cuonSach.TrangThai = CopyStatus.BaoTri;
-                    cuonSach.TinhTrang = BookCondition.Hong;
-                }
-                else
-                {
-                    cuonSach.TrangThai = CopyStatus.CoSan;
-                }
+                TempData["Error"] = "Dữ liệu không hợp lệ.";
+                return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
             }
+
+            var conn = _context.Database.GetDbConnection();
+            bool openedHere = false;
 
             try
             {
-                var phieuMuon = await _context.PhieuMuons
-                    .Include(p => p.ChiTietPhieuMuons)
-                    .FirstOrDefaultAsync(p => p.MaPhieuMuon == maPhieuMuon);
-
-                if (phieuMuon != null)
+                if (conn.State != ConnectionState.Open)
                 {
-                    var tatCaDaTra = phieuMuon.ChiTietPhieuMuons?.All(ct => ct.NgayTra.HasValue) ?? false;
-                    if (tatCaDaTra)
-                    {
-                        phieuMuon.TrangThai = LoanStatus.DaTraDu;
-                    }
+                    await conn.OpenAsync();
+                    openedHere = true;
                 }
 
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Đã cập nhật tình trạng trả sách thành công.";
+                if (conn is not SqlConnection sqlConn)
+                    throw new InvalidOperationException("Kết nối DB không phải SqlConnection. Stored procedure chỉ hỗ trợ SQL Server.");
 
+                await using var cmd = sqlConn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "usp_ReturnBooks";
+
+                // truyền tham số
+                cmd.Parameters.Add(new SqlParameter("@MaPhieuMuon", SqlDbType.Int) { Value = maPhieuMuon });
+                cmd.Parameters.Add(new SqlParameter("@MaCuon", SqlDbType.Int) { Value = maCuon });
+
+                // chuyển enum thành string (đảm bảo tên enum khớp với giá trị DB)
+                var tinhTrangStr = tinhTrangTra.ToString();
+                cmd.Parameters.Add(new SqlParameter("@TinhTrangTra", SqlDbType.NVarChar, 20) { Value = tinhTrangStr });
+
+                // Execute (proc sử dụng THROW / RAISERROR khi lỗi => sẽ ném SqlException)
+                await cmd.ExecuteNonQueryAsync();
+                
+                TempData["Success"] = "Đã trả sách thành công.";
                 return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
             }
-            catch(Exception ex)
+            catch (SqlException ex)
             {
-                TempData["Error"] = $"Lỗi khi cập nhật tình trạng trả sách: {ex.Message}";
+                // Lỗi do SP (RAISERROR / THROW)
+                ModelState.AddModelError("", $"Lỗi khi trả sách: {ex.Message}");
+                TempData["Error"] = $"Lỗi khi trả sách: {ex.Message}";
                 return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Lỗi: {ex.Message}");
+                TempData["Error"] = $"Lỗi: {ex.Message}";
+                return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    try { await conn.CloseAsync(); } catch { /* ignore */ }
+                }
             }
         }
     }
