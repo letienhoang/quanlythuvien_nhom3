@@ -139,7 +139,7 @@ CREATE PROCEDURE usp_InsertBookAndCopies
     @MoTa NVARCHAR(MAX),
     @MaTacGia INT,
     @SoLuong INT,
-    @CategoryIds dbo.IntList READONLY
+    @MaDanhMucs dbo.IntList READONLY
 )
 AS
 BEGIN
@@ -165,11 +165,11 @@ BEGIN
             SELECT @MaSach, N'Moi', N'CoSan', NULL, GETUTCDATE()
             FROM Tally;
         END
-        IF EXISTS (SELECT 1 FROM @CategoryIds)
+        IF EXISTS (SELECT 1 FROM @MaDanhMucs)
         BEGIN
             INSERT INTO PhanLoais (MaSach, MaDanhMuc)
             SELECT DISTINCT @MaSach, c.Value
-            FROM @CategoryIds c
+            FROM @MaDanhMucs c
             WHERE NOT EXISTS (
                 SELECT 1 FROM PhanLoais p
                 WHERE p.MaSach = @MaSach AND p.MaDanhMuc = c.Value
@@ -186,48 +186,82 @@ GO
 
 -- 2. Lập phiếu mượn
 -- Tạo phiếu mượn và chi tiết mượn, cập nhật trạng thái cuốn sách
+-- Chỉ tối đa 3 cuốn sách đang mượn, cuốn sách phải có sẵn
 CREATE OR ALTER PROCEDURE usp_CreateBorrowRecord (
     @MaNguoiMuon INT,
     @MaNhanVien INT,
-    @MaCuon INT,
-    @HanTra DATETIME
+    @HanTra DATETIME,
+    @MaCuons dbo.IntList READONLY
 )
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF dbo.fn_SoSachDangMuon(@MaNguoiMuon) >= 3
-    BEGIN
-        RAISERROR(N'Độc giả đã mượn tối đa 3 cuốn', 16, 1);
-        RETURN;
-    END
-    
-    IF NOT EXISTS (
-        SELECT 1 FROM CuonSachs
-        WHERE MaCuon = @MaCuon AND TrangThai = N'CoSan'
-    )
-    BEGIN
-        RAISERROR(N'Cuốn sách không có sẵn', 16, 1);
-        RETURN;
-    END
-    
     BEGIN TRY
-        INSERT INTO PhieuMuons ( MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai ) 
-        VALUES ( @MaNguoiMuon, @MaNhanVien, GETUTCDATE(), @HanTra, N'DangMuon');
-        
+        DECLARE @CurrentlyBorrowed INT = dbo.fn_SoSachDangMuon(@MaNguoiMuon);
+
+        DECLARE @RequestedCount INT;
+        SELECT @RequestedCount = COUNT(DISTINCT Value) FROM @MaCuons;
+
+        IF @RequestedCount IS NULL OR @RequestedCount = 0
+        BEGIN
+            RAISERROR(N'Không có cuốn nào được chọn để mượn.', 16, 1);
+            RETURN;
+        END
+
+        IF (@CurrentlyBorrowed + @RequestedCount) > 3
+        BEGIN
+            RAISERROR(N'Độc giả đã vượt giới hạn mượn (tối đa 3 cuốn).', 16, 1);
+            RETURN;
+        END
+
+        DECLARE @MissingIds NVARCHAR(MAX);
+
+        SELECT @MissingIds = STUFF((
+           SELECT ',' + CAST(v.Value AS NVARCHAR(20))
+           FROM (
+                    SELECT DISTINCT Value FROM @MaCuons
+                ) v
+                    LEFT JOIN CuonSachs cs
+                              ON cs.MaCuon = v.Value AND cs.TrangThai = N'CoSan'
+           WHERE cs.MaCuon IS NULL
+           FOR XML PATH(''), TYPE
+        ).value('.', 'nvarchar(max)'), 1, 1, '');
+
+        IF @MissingIds IS NOT NULL AND LEN(@MissingIds) > 0
+        BEGIN
+            RAISERROR(N'Những cuốn sau không có sẵn: %s', 16, 1, @MissingIds);
+            RETURN;
+        END
+
+        INSERT INTO PhieuMuons (MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai)
+        VALUES (@MaNguoiMuon, @MaNhanVien, GETUTCDATE(), @HanTra, N'DangMuon');
+
         DECLARE @MaPhieuMuon INT = CAST(SCOPE_IDENTITY() AS INT);
-        
-        INSERT INTO ChiTietPhieuMuons ( MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra ) 
-        VALUES ( @MaPhieuMuon, @MaCuon, NULL, NULL );
-        
-        UPDATE CuonSachs
+
+        INSERT INTO ChiTietPhieuMuons (MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra)
+        SELECT @MaPhieuMuon, cs.MaCuon, NULL, NULL
+        FROM (
+             SELECT DISTINCT Value FROM @MaCuons
+        ) v
+        INNER JOIN CuonSachs cs
+        ON cs.MaCuon = v.Value
+           AND cs.TrangThai = N'CoSan';
+
+        UPDATE cs
         SET TrangThai = N'DangMuon'
-        WHERE MaCuon = @MaCuon;
-        
+            FROM CuonSachs cs
+                INNER JOIN (
+                    SELECT DISTINCT Value AS MaCuon FROM @MaCuons
+                ) sel ON sel.MaCuon = cs.MaCuon;
+
         SELECT @MaPhieuMuon AS MaPhieuMuon;
     END TRY
     BEGIN CATCH
-    THROW;
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrNum INT = ERROR_NUMBER();
+        RAISERROR(N'Lỗi khi tạo phiếu mượn: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
+        RETURN;
     END CATCH
 END;
 GO

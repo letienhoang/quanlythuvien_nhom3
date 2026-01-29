@@ -6,9 +6,6 @@ namespace LibraryManagement.DtosModels
     public class CreateBorrowRecordDto
     {
         [Required]
-        public int MaPhieuMuon { get; set; }
-
-        [Required]
         public int MaNguoiMuon { get; set; }
 
         [Required]

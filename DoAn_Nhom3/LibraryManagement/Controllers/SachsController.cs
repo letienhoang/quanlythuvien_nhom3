@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using LibraryManagement.DtosModels;
+using LibraryManagement.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -165,22 +166,14 @@ namespace LibraryManagement.Controllers
                 cmd.Parameters.Add(MakeParam("@MaTacGia", vm.MaTacGia, DbType.Int32));
                 cmd.Parameters.Add(MakeParam("@SoLuong", vm.SoLuong ?? 0, DbType.Int32));
                 
-                var categoriesTable = new DataTable();
-                categoriesTable.Columns.Add("Value", typeof(int));
-                if (vm.SelectedCategoryIds != null)
-                {
-                    foreach (var id in vm.SelectedCategoryIds)
-                    {
-                        categoriesTable.Rows.Add(id);
-                    }
-                }
+                var tvp = ConvertHelper.BuildIntListTvp(vm.SelectedCategoryIds);
                 
                 if (cmd is SqlCommand sqlCmd)
                 {
-                    var tvpParam = new SqlParameter("@CategoryIds", SqlDbType.Structured)
+                    var tvpParam = new SqlParameter("@MaDanhMucs", SqlDbType.Structured)
                     {
                         TypeName = "dbo.IntList",
-                        Value = categoriesTable
+                        Value = tvp
                     };
                     sqlCmd.Parameters.Add(tvpParam);
                 }
@@ -210,6 +203,7 @@ namespace LibraryManagement.Controllers
             {
                 try { await efTx.RollbackAsync(); } catch { }
                 ModelState.AddModelError("", "Không thể lưu sách: " + ex.Message);
+                TempData["Error"] = "Lỗi khi thêm sách: " + ex.Message;
                 PopulateTacGiaDropDown(vm.MaTacGia);
                 await PopulateCategoriesFor(vm);
                 return View(vm);
