@@ -24,6 +24,11 @@
             @await Html.PartialAsync("_Form", Model)
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Lưu thông tin</button>
+                
+                <button type="submit" class="btn btn-warning ms-2" onclick="document.querySelector('input[name=soNgayGiaHan]').value = prompt('Số ngày gia hạn (số nguyên):', '7') || '';">
+                    Gia hạn
+                </button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Hủy</a>
             </div>
         </form>
     </div>

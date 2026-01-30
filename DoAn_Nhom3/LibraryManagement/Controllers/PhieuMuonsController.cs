@@ -343,9 +343,62 @@ namespace LibraryManagement.Controllers
         // POST: PhieuMuons/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int maPhieuMuon, [Bind("MaNguoiMuon,MaNhanVien,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon)
+        public async Task<IActionResult> Edit(int maPhieuMuon, [Bind("MaNguoiMuon,MaNhanVien,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon, int? soNgayGiaHan)
         {
             if (maPhieuMuon != phieuMuon.MaPhieuMuon) return NotFound();
+            
+            if (soNgayGiaHan.HasValue && soNgayGiaHan.Value > 0)
+            {
+                var conn = _context.Database.GetDbConnection();
+                bool openedHere = false;
+                try
+                {
+                    if (conn.State != ConnectionState.Open)
+                    {
+                        await conn.OpenAsync();
+                        openedHere = true;
+                    }
+
+                    if (conn is not SqlConnection sqlConn)
+                        throw new InvalidOperationException("Kết nối DB không phải SqlConnection. Stored procedure chỉ chạy trên SQL Server.");
+
+                    await using var cmd = sqlConn.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "usp_RenewLoan";
+
+                    cmd.Parameters.Add(new SqlParameter("@MaPhieuMuon", SqlDbType.Int) { Value = maPhieuMuon });
+                    cmd.Parameters.Add(new SqlParameter("@SoNgayGiaHan", SqlDbType.Int) { Value = soNgayGiaHan.Value });
+
+                    // Execute: usp_RenewLoan update HanTra nếu TrangThai = 'DangMuon'
+                    var affected = await cmd.ExecuteNonQueryAsync();
+
+                    if (affected == 0)
+                    {
+                        // stored proc không cập nhật dòng nào -> có thể phiếu không ở trạng thái 'DangMuon'
+                        TempData["Warning"] = "Không thể gia hạn — phiếu mượn không ở trạng thái 'Đang mượn' hoặc không tồn tại.";
+                    }
+                    else
+                    {
+                        TempData["Success"] = $"Đã gia hạn thêm {soNgayGiaHan.Value} ngày.";
+                    }
+
+                    // reload để hiển thị giá trị HanTra mới trong view hoặc chuyển hướng
+                    return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
+                }
+                catch (SqlException ex)
+                {
+                    ModelState.AddModelError("", $"Lỗi khi gia hạn: {ex.Message}");
+                    TempData["Error"] = $"Lỗi khi gia hạn: {ex.Message}";
+                    return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
+                }
+                finally
+                {
+                    if (openedHere)
+                    {
+                        try { await conn.CloseAsync(); } catch { /* ignore */ }
+                    }
+                }
+            }
 
             if (ModelState.IsValid)
             {
