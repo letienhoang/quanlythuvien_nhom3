@@ -532,6 +532,8 @@ namespace LibraryManagement.Controllers
         
                 cmd.Parameters.Add(new SqlParameter("@MaPhieuMuon", SqlDbType.Int) { Value = maPhieuMuon });
                 cmd.Parameters.Add(new SqlParameter("@SoNgayGiaHan", SqlDbType.Int) { Value = soNgayGiaHan });
+                
+                await cmd.ExecuteNonQueryAsync();
         
                 TempData["Success"] = $"Đã gia hạn thêm {soNgayGiaHan} ngày cho phiếu mượn #{maPhieuMuon}.";
             }
@@ -552,6 +554,50 @@ namespace LibraryManagement.Controllers
             }
         
             return RedirectToAction(nameof(Edit), new { id = maPhieuMuon });
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProcessOverdueLoans()
+        {
+            var conn = _context.Database.GetDbConnection();
+            bool openedHere = false;
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync();
+                    openedHere = true;
+                }
+        
+                if (conn is not SqlConnection sqlConn)
+                    throw new InvalidOperationException("Kết nối DB không phải SqlConnection. Stored procedure chỉ hoạt động trên SQL Server.");
+        
+                await using var cmd = sqlConn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "sp_ProcessOverdueLoans_Cursor";
+                
+                await cmd.ExecuteNonQueryAsync();
+        
+                TempData["Success"] = $"Đã xử lý các phiếu mượn quá hạn.";
+            }
+            catch (SqlException ex)
+            {
+                TempData["Error"] = $"Lỗi khi xử lý quá hạn: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi khi xử lý quá hạn: {ex.Message}";
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    try { await conn.CloseAsync(); } catch { }
+                }
+            }
+        
+            return RedirectToAction(nameof(Index));
         }
     }
 }

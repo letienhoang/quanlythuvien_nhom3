@@ -102,7 +102,10 @@ namespace LibraryManagement.Controllers
                     (pl, d) => new { d.MaDanhMuc, d.TenDanhMuc })
                 .ToListAsync();
 
-            ViewBag.Categories = categoryNames; // list of {MaDanhMuc, TenDanhMuc}
+            ViewBag.Categories = categoryNames; 
+            ViewBag.SoLuongSachCoSan = await _context.Database
+                .SqlQuery<int>($"SELECT dbo.fn_CountAvailableCopies({id.Value}) AS Value")
+                .FirstOrDefaultAsync();
 
             return View(sach);
         }

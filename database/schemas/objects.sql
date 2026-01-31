@@ -15,55 +15,21 @@ GO
 -- Trả số ngày trễ lớn hơn 0. Nếu ngày trả là NULL thì trả về ngày hiện tại
 CREATE FUNCTION dbo.fn_TinhSoNgayTre
 (
-    @MaNguoiMuon INT,
-    @MaCuon INT = NULL
+    @MaPhieuMuon INT
 )
     RETURNS INT
 AS
 BEGIN
-    DECLARE @TotalDaysLate INT;
+    DECLARE @DaysLate INT;
+    SELECT @DaysLate = DATEDIFF(day, p.HanTra, GETUTCDATE())
+    FROM PhieuMuons p
+    WHERE p.MaPhieuMuon = @MaPhieuMuon
+      AND p.HanTra < GETUTCDATE();
 
-    IF @MaCuon IS NOT NULL
-        BEGIN
-            SELECT @TotalDaysLate =
-                   SUM(
-                           CASE
-                               WHEN ct.NgayTra IS NULL AND p.HanTra < GETUTCDATE()
-                                   THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
-                               WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
-                                   THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
-                               ELSE 0
-                               END
-                   )
-            FROM ChiTietPhieuMuons ct
-                     JOIN PhieuMuons p ON ct.MaPhieuMuon = p.MaPhieuMuon
-            WHERE p.MaNguoiMuon = @MaNguoiMuon
-              AND ct.MaCuon = @MaCuon;
-        END
-    ELSE
-        BEGIN
-            SELECT @TotalDaysLate = SUM(PerPhieuLate)
-            FROM
-                (
-                    SELECT
-                        p.MaPhieuMuon,
-                        MAX(
-                                CASE
-                                    WHEN ct.NgayTra IS NULL AND p.HanTra < GETUTCDATE()
-                                        THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
-                                    WHEN ct.NgayTra IS NOT NULL AND ct.NgayTra > p.HanTra
-                                        THEN DATEDIFF(day, p.HanTra, ct.NgayTra)
-                                    ELSE 0
-                                    END
-                        ) AS PerPhieuLate
-                    FROM ChiTietPhieuMuons ct
-                             JOIN PhieuMuons p ON ct.MaPhieuMuon = p.MaPhieuMuon
-                    WHERE p.MaNguoiMuon = @MaNguoiMuon
-                    GROUP BY p.MaPhieuMuon
-                ) AS t;
-        END
+    IF @DaysLate IS NULL OR @DaysLate <= 0
+        RETURN 0;
 
-    RETURN ISNULL(@TotalDaysLate, 0);
+    RETURN ISNULL(@DaysLate, 0);
 END;
 GO
 
@@ -119,10 +85,7 @@ CREATE FUNCTION dbo.fn_CalculateUnpaidFines
 AS
 BEGIN
     DECLARE @DaysLate INT;
-    SELECT @DaysLate = DATEDIFF(day, p.HanTra, GETUTCDATE())
-    FROM PhieuMuons p
-    WHERE p.MaPhieuMuon = @MaPhieuMuon
-    AND p.HanTra < GETUTCDATE();
+    SELECT @DaysLate = dbo.fn_TinhSoNgayTre(@MaPhieuMuon);
     
     IF @DaysLate IS NULL OR @DaysLate <= 0
         RETURN 0;
@@ -223,6 +186,12 @@ BEGIN
     IF @RequestedCount IS NULL OR @RequestedCount = 0
     BEGIN
         RAISERROR(N'Không có cuốn nào được chọn để mượn.', 16, 1);
+        RETURN;
+    END
+    
+    IF EXISTS(SELECT 1 FROM NguoiMuons WHERE MaNguoiMuon = @MaNguoiMuon AND TrangThai = N'Khoa')
+    BEGIN
+        RAISERROR(N'Độc giả hiện đang bị khóa, không thể mượn sách.', 16, 1);
         RETURN;
     END
 
@@ -387,9 +356,7 @@ BEGIN
         n.Email,
         p.NgayMuon,
         p.HanTra,
-        CASE WHEN p.HanTra < GETUTCDATE()
-                 THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
-             ELSE 0 END AS SoNgayTre,
+        dbo.fn_TinhSoNgayTre(p.MaPhieuMuon) as SoNgayTre,
         CAST(CASE WHEN p.HanTra < GETUTCDATE() THEN 1 ELSE 0 END AS bit) AS IsOverdue,
         ISNULL(ct.SoSachDangMuon, 0) AS SoSachDangMuon,
         ISNULL(ph.TongTienPhatChuaTra, 0) AS TongTienPhatChuaTra
@@ -407,9 +374,7 @@ BEGIN
         WHERE TrangThaiThanhToan <> N'DaThanhToan'
         GROUP BY MaPhieuMuon
     ) ph ON ph.MaPhieuMuon = p.MaPhieuMuon
-    WHERE
-        p.TrangThai = N'DangMuon'
-      AND (@OnlyOverdue = 0 OR p.HanTra < GETUTCDATE())
+    WHERE (@OnlyOverdue = 0 OR p.HanTra < GETUTCDATE())
       AND (@FromDate IS NULL OR p.NgayMuon >= @FromDate)
       AND (@ToDate   IS NULL OR p.NgayMuon <= @ToDate)
     ORDER BY p.HanTra ASC, p.NgayMuon DESC;

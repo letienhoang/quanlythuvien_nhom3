@@ -22,8 +22,7 @@
                 data-bs-toggle="modal"
                 data-bs-target="#renewModal"
                 data-mapm="@Model.MaPhieuMuon"
-                data-current-hantra="@Model.HanTra.ToString("yyyy-MM-dd")">
-            <i class="bi bi-arrow-clockwise"></i> Gia hạn
+                data-current-hantra="@Model.HanTra.ToString("yyyy-MM-dd")">Gia hạn
         </button>
     </div>
     <div class="card-body">
@@ -103,7 +102,6 @@
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#traSachModal"
                                                 data-MaCuon="@ct.MaCuon"
-                                                data-MaCuon="@ct.CuonSach?.MaCuon"
                                                 data-tensach="@ct.CuonSach?.Sach?.TenSach">
                                                 Trả sách
                                         </button>
@@ -136,9 +134,6 @@
                 <input type="hidden" name="MaPhieuMuon" value="@Model.MaPhieuMuon" />
                 <input type="hidden" name="MaCuon" id="modalMaCuon" />
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <strong>Mã cuốn:</strong> <code id="modalMaCuon"></code>
-                    </div>
                     <div class="mb-3">
                         <strong>Tên sách:</strong> <span id="modalTenSach"></span>
                     </div>
