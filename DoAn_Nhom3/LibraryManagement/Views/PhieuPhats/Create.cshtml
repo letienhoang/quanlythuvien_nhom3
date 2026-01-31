@@ -5,6 +5,8 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@await Html.PartialAsync("_Alerts")
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>Tạo phiếu phạt</h1>
     <a asp-action="Index" class="btn btn-secondary">Quay lại</a>

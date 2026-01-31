@@ -381,6 +381,20 @@ BEGIN
 END;
 GO
 
+--6. Cập nhật tiền phạt tăng theo ngày
+-- Cập nhật số tiền phạt trong các phiếu phạt chưa thanh toán dựa trên số ngày trễ hiện tại
+CREATE PROCEDURE usp_UpdateUnpaidFines
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE pp
+    SET SoTienPhat = dbo.fn_CalculateUnpaidFines(pp.MaPhieuMuon)
+    FROM PhieuPhats pp
+             JOIN PhieuMuons pm ON pp.MaPhieuMuon = pm.MaPhieuMuon
+    WHERE pp.TrangThaiThanhToan != N'DaThanhToan';
+END;
+GO
+
 
 /* =========================================================
    TRIGGERS

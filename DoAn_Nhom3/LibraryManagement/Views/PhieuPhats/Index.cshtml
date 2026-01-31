@@ -6,9 +6,17 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+@await Html.PartialAsync("_Alerts")
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Danh sách phiếu phạt</h2>
-    <a asp-action="Create" class="btn btn-success">+ Tạo phiếu phạt</a>
+    <div>
+        <form asp-action="UpdateUnpaidFines" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">Cập nhật tiền phạt</button>
+        </form>
+        <a asp-action="Create" class="btn btn-success">+ Tạo phiếu phạt</a>
+    </div>
 </div>
 
 <div class="table-responsive">

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using Microsoft.Data.SqlClient;
 
 namespace LibraryManagement.Controllers
 {
@@ -84,7 +86,7 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maPhat, [Bind("MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
         {
-            if (maPhat != phieuPhat.MaPhat) return NotFound();
+            if (!PhieuPhatExists(maPhat)) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -136,6 +138,50 @@ namespace LibraryManagement.Controllers
         private bool PhieuPhatExists(int id)
         {
             return _context.PhieuPhats.Any(e => e.MaPhat == id);
+        }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateUnpaidFines()
+        {
+            var conn = _context.Database.GetDbConnection();
+            bool openedHere = false;
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync();
+                    openedHere = true;
+                }
+        
+                if (conn is not SqlConnection sqlConn)
+                    throw new InvalidOperationException("Kết nối DB không phải SqlConnection. Stored procedure chỉ hoạt động trên SQL Server.");
+        
+                await using var cmd = sqlConn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "usp_UpdateUnpaidFines";
+                
+                await cmd.ExecuteNonQueryAsync();
+        
+                TempData["Success"] = $"Đã cập nhật tiền phạt cho các phiếu mượn quá hạn.";
+            }
+            catch (SqlException ex)
+            {
+                TempData["Error"] = $"Lỗi khi câp nhật tiền phạt: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi khi cập nhật tiền phạt: {ex.Message}";
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    try { await conn.CloseAsync(); } catch { }
+                }
+            }
+        
+            return RedirectToAction(nameof(Index));
         }
     }
 }
