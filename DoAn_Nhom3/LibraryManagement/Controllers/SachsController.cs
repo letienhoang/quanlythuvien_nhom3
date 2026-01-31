@@ -373,5 +373,49 @@ namespace LibraryManagement.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecalculateBookQuantities()
+        {
+            var conn = _context.Database.GetDbConnection();
+            bool openedHere = false;
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync();
+                    openedHere = true;
+                }
+        
+                if (conn is not SqlConnection sqlConn)
+                    throw new InvalidOperationException("Kết nối DB không phải SqlConnection. Stored procedure chỉ hoạt động trên SQL Server.");
+        
+                await using var cmd = sqlConn.CreateCommand();
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.CommandText = "sp_RecalculateBookQuantities_Cursor";
+                
+                await cmd.ExecuteNonQueryAsync();
+        
+                TempData["Success"] = $"Đã cập nhật số lượng sách có sẵn thành công.";
+            }
+            catch (SqlException ex)
+            {
+                TempData["Error"] = $"Lỗi khi cập nhật số lượng sách: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Lỗi khi cập nhật số lượng sách: {ex.Message}";
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    try { await conn.CloseAsync(); } catch { }
+                }
+            }
+        
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
