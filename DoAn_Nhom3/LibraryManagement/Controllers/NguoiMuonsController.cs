@@ -60,13 +60,15 @@ namespace LibraryManagement.Controllers
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
-                catch (DbUpdateException)
+                catch (DbUpdateException ex)
                 {
-                    ModelState.AddModelError("", "Không thể lưu người mượn do xung đột mã; vui lòng thử lại.");
+                    ModelState.AddModelError("", "Đã xảy ra lỗi khi lưu người mượn: " + ex.Message);
+                    TempData["ErrorMessage"] = "Không thể lưu người mượn do xung đột dữ liệu. Vui lòng kiểm tra lại.";
                 }
                 catch (Exception ex)
                 {
                     ModelState.AddModelError("", $"Đã xảy ra lỗi khi lưu người mượn: {ex.Message}");
+                    TempData["ErrorMessage"] = "Không thể lưu người mượn do lỗi hệ thống. Vui lòng thử lại sau.";
                 }
             }
 

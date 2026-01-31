@@ -109,6 +109,29 @@ BEGIN
 END;
 GO
 
+-- 4. Tính số tiền phạt chưa thanh toán của một độc giả
+-- Trả về số tiền phạt dựa trên số ngày trễ của phiếu mượn nhân với 10 000
+CREATE FUNCTION dbo.fn_CalculateUnpaidFines
+(
+    @MaPhieuMuon INT
+)
+    RETURNS DECIMAL(18, 2)
+AS
+BEGIN
+    DECLARE @DaysLate INT;
+    SELECT @DaysLate = DATEDIFF(day, p.HanTra, GETUTCDATE())
+    FROM PhieuMuons p
+    WHERE p.MaPhieuMuon = @MaPhieuMuon
+    AND p.HanTra < GETUTCDATE();
+    
+    IF @DaysLate IS NULL OR @DaysLate <= 0
+        RETURN 0;
+        
+    DECLARE @TotalFine DECIMAL(18, 2);
+    Set @TotalFine = @DaysLate * 10000;
+    RETURN ISNULL(@TotalFine, 0);
+END;
+GO
 
 /* =========================================================
    STORED PROCEDURES
@@ -359,13 +382,15 @@ BEGIN
     SELECT
         p.MaPhieuMuon,
         p.MaNguoiMuon,
-        n.MaNguoiMuon,
         n.HoTen,
         n.SoDienThoai,
         n.Email,
         p.NgayMuon,
         p.HanTra,
-        DATEDIFF(day, p.HanTra, GETUTCDATE()) AS SoNgayTre,
+        CASE WHEN p.HanTra < GETUTCDATE()
+                 THEN DATEDIFF(day, p.HanTra, GETUTCDATE())
+             ELSE 0 END AS SoNgayTre,
+        CAST(CASE WHEN p.HanTra < GETUTCDATE() THEN 1 ELSE 0 END AS bit) AS IsOverdue,
         ISNULL(ct.SoSachDangMuon, 0) AS SoSachDangMuon,
         ISNULL(ph.TongTienPhatChuaTra, 0) AS TongTienPhatChuaTra
     FROM PhieuMuons p
@@ -490,104 +515,78 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        DECLARE @MaPhieuMuon INT;
+    DECLARE @MaPhieuMuon INT;
 
-        DECLARE cur_overdue CURSOR LOCAL FAST_FORWARD FOR
-        SELECT MaPhieuMuon
-        FROM PhieuMuons
-        WHERE TrangThai = N'DangMuon'
-          AND HanTra < GETUTCDATE();
+    DECLARE cur_overdue CURSOR LOCAL FAST_FORWARD FOR
+        SELECT PM.MaPhieuMuon
+        FROM PhieuMuons PM
+                 LEFT JOIN PhieuPhats PP ON PM.MaPhieuMuon = PP.MaPhieuMuon
+        WHERE PM.TrangThai = N'DangMuon'
+          AND PM.HanTra < GETUTCDATE()
+          AND PP.MaPhieuMuon IS NULL;
 
-        OPEN cur_overdue;
-            FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
+    OPEN cur_overdue;
+    FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
 
-            WHILE @@FETCH_STATUS = 0
-            BEGIN
-                UPDATE PhieuMuons
-                SET TrangThai = N'QuaHan'
-                WHERE MaPhieuMuon = @MaPhieuMuon
-                  AND TrangThai = N'DangMuon'
-                  AND HanTra < GETUTCDATE();
-                
-                FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
-            END
-        CLOSE cur_overdue;
-        DEALLOCATE cur_overdue;
-    END TRY
-    BEGIN CATCH
-        IF CURSOR_STATUS('variable', 'cur_overdue') >= -1
+    WHILE @@FETCH_STATUS = 0
         BEGIN
-            BEGIN TRY
-                CLOSE cur_overdue;
-            END TRY
-            BEGIN CATCH
-            END CATCH
-            BEGIN TRY
-                DEALLOCATE cur_overdue;
-            END TRY
-            BEGIN CATCH
-            END CATCH
+            UPDATE PhieuMuons
+            SET TrangThai = N'QuaHan'
+            WHERE MaPhieuMuon = @MaPhieuMuon
+              AND TrangThai = N'DangMuon'
+              AND HanTra < GETUTCDATE();
+            
+            INSERT INTO PhieuPhats (
+                MaPhieuMuon,
+                SoTienPhat,
+                LyDo,
+                TrangThaiThanhToan
+            ) VALUES (
+                         @MaPhieuMuon,
+                         dbo.fn_CalculateUnpaidFines(@MaPhieuMuon),
+                         N'Phiếu mượn quá hạn',
+                         N'ChuaThanhToan'
+                     );
+
+            FETCH NEXT FROM cur_overdue INTO @MaPhieuMuon;
         END
-        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrNum INT = ERROR_NUMBER();
-        RAISERROR(N'Lỗi khi xử lý phiếu quá hạn: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
-        RETURN;
-    END CATCH
+
+    CLOSE cur_overdue;
+    DEALLOCATE cur_overdue;
 END;
 GO
 
 -- Cursor 2: Đồng bộ số lượng sách
 -- Duyệt từng sách và cập nhật số lượng sách dựa trên đếm thực tế trong cuốn sách
 CREATE PROCEDURE sp_RecalculateBookQuantities_Cursor
-    AS
+AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        DECLARE @MaSach INT;
-        DECLARE @Cnt INT;
+    DECLARE @MaSach INT;
+    DECLARE @Cnt INT;
 
-        DECLARE cur_sach CURSOR LOCAL FAST_FORWARD FOR
+    DECLARE cur_sach CURSOR LOCAL FAST_FORWARD FOR
         SELECT MaSach FROM Sachs;
 
-        OPEN cur_sach;
-            FETCH NEXT FROM cur_sach INTO @MaSach;
+    OPEN cur_sach;
+    FETCH NEXT FROM cur_sach INTO @MaSach;
 
-            WHILE @@FETCH_STATUS = 0
-            BEGIN
-                SELECT @Cnt = COUNT(*) FROM CuonSachs WHERE MaSach = @MaSach;
-                
-                UPDATE Sachs
-                SET SoLuong = ISNULL(@Cnt, 0)
-                WHERE MaSach = @MaSach;
-                
-                FETCH NEXT FROM cur_sach INTO @MaSach;
-            END
-
-        CLOSE cur_sach;
-        DEALLOCATE cur_sach;
-    END TRY
-    BEGIN CATCH
-        IF CURSOR_STATUS('variable', 'cur_sach') >= -1
+    WHILE @@FETCH_STATUS = 0
         BEGIN
-            BEGIN TRY
-                CLOSE cur_sach;
-            END TRY
-            BEGIN CATCH
-            END CATCH
-            BEGIN TRY
-                DEALLOCATE cur_sach;
-            END TRY
-            BEGIN CATCH
-            END CATCH
+            SELECT @Cnt = COUNT(*)
+            FROM CuonSachs
+            WHERE MaSach = @MaSach;
+
+            UPDATE Sachs
+            SET SoLuong = ISNULL(@Cnt, 0)
+            WHERE MaSach = @MaSach;
+
+            FETCH NEXT FROM cur_sach INTO @MaSach;
         END
 
-        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrNum INT = ERROR_NUMBER();
-        RAISERROR(N'Lỗi khi tính lại số lượng sách: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
-        RETURN;
-    END CATCH
+    CLOSE cur_sach;
+    DEALLOCATE cur_sach;
 END;
 GO
 

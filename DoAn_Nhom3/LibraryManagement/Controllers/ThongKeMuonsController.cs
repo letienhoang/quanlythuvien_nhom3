@@ -1,4 +1,6 @@
-﻿using LibraryManagement.Models;
+﻿using LibraryManagement.DtosModels;
+using LibraryManagement.Models;
+using LibraryManagement.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,34 +15,34 @@ namespace LibraryManagement.Controllers
             _context = context;
         }
 
-        // GET: /ThongKe/MuonTheoThang
-        public async Task<IActionResult> Index(int? thang, int? nam)
+        // GET: /ThongKeMuons/Index
+        // optional: thang, nam
+        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, bool? onlyOverdue)
         {
-            var query = _context.PhieuMuons
-                .Include(p => p.NguoiMuon)
-                .Include(p => p.ChiTietPhieuMuons)
-                .AsQueryable();
-
-            // 🔥 CHỈ lọc khi người dùng bấm thống kê
-            if (thang.HasValue && nam.HasValue)
-            {
-                query = query.Where(p =>
-                    p.NgayMuon.Month == thang.Value &&
-                    p.NgayMuon.Year == nam.Value);
-            }
-
-            var data = await query
-                .OrderByDescending(p => p.NgayMuon)
+            // gọi SP trả result set khớp với BorrowReportItem
+            var items = await _context.Database
+                .SqlQuery<BorrowReportItem>($"""
+                                                 EXEC usp_GenerateReport
+                                                     {fromDate},
+                                                     {toDate},
+                                                     {onlyOverdue}
+                                             """)
                 .ToListAsync();
 
-            // Tổng số lượt mượn & tổng sách
-            ViewBag.TongLuotMuon = data.Count;
-            ViewBag.TongSachMuon = data.Sum(p => p.ChiTietPhieuMuons.Count);
+            // truyền lại giá trị để view giữ state
+            BorrowReportViewModel vm = new BorrowReportViewModel()
+            {
+                FromDate = fromDate ?? DateTime.Now.AddMonths(-1),
+                ToDate = toDate ?? DateTime.Now,
+                OnlyOverdue = onlyOverdue ?? false,
+                Items = items
+            };
 
-            ViewBag.Thang = thang;
-            ViewBag.Nam = nam;
+            // tính tổng (nếu cần hiển thị)
+            ViewBag.TongLuotMuon = items.Count;
+            ViewBag.TongSachMuon = items.Sum(i => i.SoSachDangMuon);
 
-            return View(data);
+            return View(vm);
         }
     }
 }

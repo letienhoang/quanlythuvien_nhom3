@@ -1,93 +1,74 @@
-﻿@model List<LibraryManagement.Models.PhieuMuon>
+﻿@model LibraryManagement.ViewModels.BorrowReportViewModel
 
 @{
-    ViewData["Title"] = "Thống kê mượn sách theo tháng";
+    ViewData["Title"] = "Báo cáo phiếu quá hạn";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Thống kê mượn sách theo tháng</h2>
+    <h2>Thống kê mượn sách</h2>
 </div>
 
-<!-- FORM LỌC -->
-<form asp-action="Index" method="get" class="row g-2 mb-3">
+<form method="get" class="row g-2 mb-3">
     <div class="col-md-3">
-        <select name="thang" class="form-select">
-            <option value="">-- Chọn tháng --</option>
-            @for (int i = 1; i <= 12; i++)
-            {
-                <option value="@i" selected="@(ViewBag.Thang == i)">
-                    Tháng @i
-                </option>
-            }
-        </select>
+        <label class="form-label">Từ ngày</label>
+        <input asp-for="FromDate" type="date" name="fromDate" class="form-control" />
     </div>
 
     <div class="col-md-3">
-        <select name="nam" class="form-select">
-            <option value="">-- Chọn năm --</option>
-            @for (int y = DateTime.Now.Year; y >= 2020; y--)
-            {
-                <option value="@y" selected="@(ViewBag.Nam == y)">
-                    @y
-                </option>
-            }
-        </select>
+        <label class="form-label">Đến ngày</label>
+        <input asp-for="ToDate" type="date" name="toDate" class="form-control" />
     </div>
 
-    <div class="col-md-6 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">🔍 Thống kê</button>
-        <a asp-action="Index" class="btn btn-secondary">❌ Clear</a>
+    <div class="col-md-3 d-flex align-items-end">
+        <div class="form-check">
+            <input asp-for="OnlyOverdue" class="form-check-input" type="checkbox" name="onlyOverdue" id="onlyOverdue" />
+            <label class="form-check-label" for="onlyOverdue">Chỉ phiếu quá hạn</label>
+        </div>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+        <button type="submit" class="btn btn-primary me-2">Lọc</button>
+        <a class="btn btn-secondary" href="@Url.Action("Index", "ThongKeMuons")">Reset</a>
     </div>
 </form>
 
-@if (Model == null || Model.Count == 0)
+@if (!Model.Items.Any())
 {
-    <div class="alert alert-info">
-        Không có dữ liệu.
-    </div>
+    <div class="alert alert-info">Không có dữ liệu.</div>
 }
 else
 {
-    <div class="alert alert-success fw-bold">
-        📚 Tổng lượt mượn: @ViewBag.TongLuotMuon |
-        📖 Tổng sách mượn: @ViewBag.TongSachMuon
-    </div>
+    <div class="alert alert-success">Tổng lượt: @ViewBag.TongLuotMuon — Tổng sách: @ViewBag.TongSachMuon</div>
 
     <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Mã phiếu</th>
-                    <th>ID Người mượn</th>
-                    <th>Người mượn</th>
-                    <th>Ngày mượn</th>
-                    <th>Hạn trả</th>
-                    <th>Số sách</th>
-                    <th>Trạng thái</th>
-                </tr>
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Mã phiếu</th>
+                <th>Người mượn</th>
+                <th>Ngày mượn</th>
+                <th>Hạn trả</th>
+                <th>Số ngày trễ</th>
+                <th>Quá hạn?</th>
+                <th>Số sách</th>
+                <th>Tiền phạt</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td><strong>@item.MaPhieuMuon</strong></td>
-                        <td>@item.MaNguoiMuon</td>
-                        <td>@item.NguoiMuon?.HoTen</td>
-                        <td>@item.NgayMuon.ToString("dd/MM/yyyy")</td>
-                        <td>@item.HanTra.ToString("dd/MM/yyyy")</td>
-                        <td>
-                            <span class="badge bg-info">
-                                @(item.ChiTietPhieuMuons?.Count ?? 0) cuốn
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-secondary">
-                                @item.TrangThai
-                            </span>
-                        </td>
-                    </tr>
-                }
+            @foreach (var r in Model.Items)
+            {
+                <tr>
+                    <td>@r.MaPhieuMuon</td>
+                    <td>@r.HoTen (@r.MaNguoiMuon)</td>
+                    <td>@r.NgayMuon.ToString("dd/MM/yyyy")</td>
+                    <td>@r.HanTra.ToString("dd/MM/yyyy")</td>
+                    <td>@r.SoNgayTre</td>
+                    <td>@(r.IsOverdue ? "Có" : "Không")</td>
+                    <td>@r.SoSachDangMuon</td>
+                    <td>@string.Format("{0:N0}", r.TongTienPhatChuaTra)</td>
+                </tr>
+            }
             </tbody>
         </table>
     </div>
