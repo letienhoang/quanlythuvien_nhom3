@@ -148,39 +148,34 @@ BEGIN
     IF @SoLuong IS NULL OR @SoLuong < 0
         SET @SoLuong = 0;
 
-    BEGIN TRY
-        INSERT INTO Sachs ( TenSach, ISBN, NamXuatBan, NhaXuatBan, NgonNgu, SoTrang, MoTa, MaTacGia, SoLuong )
-        VALUES ( @TenSach, @ISBN, @NamXuatBan, @NhaXuatBan, @NgonNgu, @SoTrang, @MoTa, @MaTacGia, @SoLuong );
-        
-        DECLARE @MaSach INT = CAST(SCOPE_IDENTITY() AS INT);
-        
-        IF @SoLuong > 0
-        BEGIN
-            ;WITH Tally AS
-            (
-                SELECT TOP (@SoLuong) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
-                FROM sys.all_objects a CROSS JOIN sys.all_objects b
-            )
-            INSERT INTO CuonSachs (MaSach, TinhTrang, TrangThai, ViTriKe, NgayNhap)
-            SELECT @MaSach, N'Moi', N'CoSan', NULL, GETUTCDATE()
-            FROM Tally;
-        END
-        IF EXISTS (SELECT 1 FROM @MaDanhMucs)
-        BEGIN
-            INSERT INTO PhanLoais (MaSach, MaDanhMuc)
-            SELECT DISTINCT @MaSach, c.Value
-            FROM @MaDanhMucs c
-            WHERE NOT EXISTS (
-                SELECT 1 FROM PhanLoais p
-                WHERE p.MaSach = @MaSach AND p.MaDanhMuc = c.Value
-            );
-        END
+    INSERT INTO Sachs ( TenSach, ISBN, NamXuatBan, NhaXuatBan, NgonNgu, SoTrang, MoTa, MaTacGia, SoLuong )
+    VALUES ( @TenSach, @ISBN, @NamXuatBan, @NhaXuatBan, @NgonNgu, @SoTrang, @MoTa, @MaTacGia, @SoLuong );
     
-        SELECT @MaSach AS MaSach;
-    END TRY
-    BEGIN CATCH
-        THROW;
-    END CATCH
+    DECLARE @MaSach INT = CAST(SCOPE_IDENTITY() AS INT);
+    
+    IF @SoLuong > 0
+    BEGIN
+        ;WITH Tally AS
+        (
+            SELECT TOP (@SoLuong) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+            FROM sys.all_objects a CROSS JOIN sys.all_objects b
+        )
+        INSERT INTO CuonSachs (MaSach, TinhTrang, TrangThai, ViTriKe, NgayNhap)
+        SELECT @MaSach, N'Moi', N'CoSan', NULL, GETUTCDATE()
+        FROM Tally;
+    END
+    IF EXISTS (SELECT 1 FROM @MaDanhMucs)
+    BEGIN
+        INSERT INTO PhanLoais (MaSach, MaDanhMuc)
+        SELECT DISTINCT @MaSach, c.Value
+        FROM @MaDanhMucs c
+        WHERE NOT EXISTS (
+            SELECT 1 FROM PhanLoais p
+            WHERE p.MaSach = @MaSach AND p.MaDanhMuc = c.Value
+        );
+    END
+
+    SELECT @MaSach AS MaSach;
 END;
 GO
 
@@ -197,72 +192,64 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        DECLARE @CurrentlyBorrowed INT = dbo.fn_SoSachDangMuon(@MaNguoiMuon);
+    DECLARE @CurrentlyBorrowed INT = dbo.fn_SoSachDangMuon(@MaNguoiMuon);
 
-        DECLARE @RequestedCount INT;
-        SELECT @RequestedCount = COUNT(DISTINCT Value) FROM @MaCuons;
+    DECLARE @RequestedCount INT;
+    SELECT @RequestedCount = COUNT(DISTINCT Value) FROM @MaCuons;
 
-        IF @RequestedCount IS NULL OR @RequestedCount = 0
-        BEGIN
-            RAISERROR(N'Không có cuốn nào được chọn để mượn.', 16, 1);
-            RETURN;
-        END
-
-        IF (@CurrentlyBorrowed + @RequestedCount) > 3
-        BEGIN
-            RAISERROR(N'Độc giả đã vượt giới hạn mượn (tối đa 3 cuốn).', 16, 1);
-            RETURN;
-        END
-
-        DECLARE @MissingIds NVARCHAR(MAX);
-
-        SELECT @MissingIds = STUFF((
-           SELECT ',' + CAST(v.Value AS NVARCHAR(20))
-           FROM (
-                    SELECT DISTINCT Value FROM @MaCuons
-                ) v
-                    LEFT JOIN CuonSachs cs
-                              ON cs.MaCuon = v.Value AND cs.TrangThai = N'CoSan'
-           WHERE cs.MaCuon IS NULL
-           FOR XML PATH(''), TYPE
-        ).value('.', 'nvarchar(max)'), 1, 1, '');
-
-        IF @MissingIds IS NOT NULL AND LEN(@MissingIds) > 0
-        BEGIN
-            RAISERROR(N'Những cuốn sau không có sẵn: %s', 16, 1, @MissingIds);
-            RETURN;
-        END
-
-        INSERT INTO PhieuMuons (MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai)
-        VALUES (@MaNguoiMuon, @MaNhanVien, GETUTCDATE(), @HanTra, N'DangMuon');
-
-        DECLARE @MaPhieuMuon INT = CAST(SCOPE_IDENTITY() AS INT);
-
-        INSERT INTO ChiTietPhieuMuons (MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra)
-        SELECT @MaPhieuMuon, cs.MaCuon, NULL, NULL
-        FROM (
-             SELECT DISTINCT Value FROM @MaCuons
-        ) v
-        INNER JOIN CuonSachs cs
-        ON cs.MaCuon = v.Value
-           AND cs.TrangThai = N'CoSan';
-
-        UPDATE cs
-        SET TrangThai = N'DangMuon'
-            FROM CuonSachs cs
-                INNER JOIN (
-                    SELECT DISTINCT Value AS MaCuon FROM @MaCuons
-                ) sel ON sel.MaCuon = cs.MaCuon;
-
-        SELECT @MaPhieuMuon AS MaPhieuMuon;
-    END TRY
-    BEGIN CATCH
-        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrNum INT = ERROR_NUMBER();
-        RAISERROR(N'Lỗi khi tạo phiếu mượn: %s (Error %d)', 16, 1, @ErrMsg, @ErrNum);
+    IF @RequestedCount IS NULL OR @RequestedCount = 0
+    BEGIN
+        RAISERROR(N'Không có cuốn nào được chọn để mượn.', 16, 1);
         RETURN;
-    END CATCH
+    END
+
+    IF (@CurrentlyBorrowed + @RequestedCount) > 3
+    BEGIN
+        RAISERROR(N'Độc giả đã vượt giới hạn mượn (tối đa 3 cuốn).', 16, 1);
+        RETURN;
+    END
+
+    DECLARE @MissingIds NVARCHAR(MAX);
+
+    SELECT @MissingIds = STUFF((
+       SELECT ',' + CAST(v.Value AS NVARCHAR(20))
+       FROM (
+                SELECT DISTINCT Value FROM @MaCuons
+            ) v
+                LEFT JOIN CuonSachs cs
+                          ON cs.MaCuon = v.Value AND cs.TrangThai = N'CoSan'
+       WHERE cs.MaCuon IS NULL
+       FOR XML PATH(''), TYPE
+    ).value('.', 'nvarchar(max)'), 1, 1, '');
+
+    IF @MissingIds IS NOT NULL AND LEN(@MissingIds) > 0
+    BEGIN
+        RAISERROR(N'Những cuốn sau không có sẵn: %s', 16, 1, @MissingIds);
+        RETURN;
+    END
+
+    INSERT INTO PhieuMuons (MaNguoiMuon, MaNhanVien, NgayMuon, HanTra, TrangThai)
+    VALUES (@MaNguoiMuon, @MaNhanVien, GETUTCDATE(), @HanTra, N'DangMuon');
+
+    DECLARE @MaPhieuMuon INT = CAST(SCOPE_IDENTITY() AS INT);
+
+    INSERT INTO ChiTietPhieuMuons (MaPhieuMuon, MaCuon, NgayTra, TinhTrangTra)
+    SELECT @MaPhieuMuon, cs.MaCuon, NULL, NULL
+    FROM (
+         SELECT DISTINCT Value FROM @MaCuons
+    ) v
+    INNER JOIN CuonSachs cs
+    ON cs.MaCuon = v.Value
+       AND cs.TrangThai = N'CoSan';
+
+    UPDATE cs
+    SET TrangThai = N'DangMuon'
+        FROM CuonSachs cs
+            INNER JOIN (
+                SELECT DISTINCT Value AS MaCuon FROM @MaCuons
+            ) sel ON sel.MaCuon = cs.MaCuon;
+
+    SELECT @MaPhieuMuon AS MaPhieuMuon;
 END;
 GO
 
@@ -278,51 +265,46 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    BEGIN TRY
-        UPDATE ChiTietPhieuMuons
-        SET NgayTra = GETUTCDATE(),
-            TinhTrangTra = @TinhTrangTra
+    UPDATE ChiTietPhieuMuons
+    SET NgayTra = GETUTCDATE(),
+        TinhTrangTra = @TinhTrangTra
+    WHERE MaPhieuMuon = @MaPhieuMuon
+      AND MaCuon = @MaCuon
+      AND NgayTra IS NULL;
+    
+    IF @@ROWCOUNT = 0
+    BEGIN
+        RAISERROR(N'Không tìm thấy bản ghi mượn hợp lệ để trả',16,1);
+        RETURN;
+    END
+    
+    UPDATE CuonSachs
+    SET TrangThai =
+    CASE
+        WHEN @TinhTrangTra IN (N'Hong', N'Mat') THEN N'BaoTri'
+        ELSE N'CoSan'
+        END
+    WHERE MaCuon = @MaCuon;
+    
+    DECLARE @HanTra DATETIME = (SELECT p.HanTra FROM PhieuMuons p WHERE p.MaPhieuMuon = @MaPhieuMuon);
+    IF @HanTra IS NOT NULL AND GETUTCDATE() > @HanTra
+    BEGIN
+                DECLARE @DaysLate INT = DATEDIFF(day, @HanTra, GETUTCDATE());
+                DECLARE @Amount DECIMAL(18,2) = @DaysLate * 1000;
+    INSERT INTO PhieuPhats (MaPhieuMuon, SoTienPhat, LyDo, TrangThaiThanhToan)
+    VALUES (@MaPhieuMuon, @Amount, N'Trả muộn ' + CAST(@DaysLate AS NVARCHAR(10)) + N' ngày', N'ChuaThanhToan');
+    END
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM ChiTietPhieuMuons
         WHERE MaPhieuMuon = @MaPhieuMuon
-          AND MaCuon = @MaCuon
-          AND NgayTra IS NULL;
-        
-        IF @@ROWCOUNT = 0
-        BEGIN
-            RAISERROR(N'Không tìm thấy bản ghi mượn hợp lệ để trả',16,1);
-            RETURN;
-        END
-        
-        UPDATE CuonSachs
-        SET TrangThai =
-        CASE
-            WHEN @TinhTrangTra IN (N'Hong', N'Mat') THEN N'BaoTri'
-            ELSE N'CoSan'
-            END
-        WHERE MaCuon = @MaCuon;
-        
-        DECLARE @HanTra DATETIME = (SELECT p.HanTra FROM PhieuMuons p WHERE p.MaPhieuMuon = @MaPhieuMuon);
-        IF @HanTra IS NOT NULL AND GETUTCDATE() > @HanTra
-        BEGIN
-                    DECLARE @DaysLate INT = DATEDIFF(day, @HanTra, GETUTCDATE());
-                    DECLARE @Amount DECIMAL(18,2) = @DaysLate * 1000;
-        INSERT INTO PhieuPhats (MaPhieuMuon, SoTienPhat, LyDo, TrangThaiThanhToan)
-        VALUES (@MaPhieuMuon, @Amount, N'Trả muộn ' + CAST(@DaysLate AS NVARCHAR(10)) + N' ngày', N'ChuaThanhToan');
-        END
-        
-        IF NOT EXISTS (
-            SELECT 1 FROM ChiTietPhieuMuons
-            WHERE MaPhieuMuon = @MaPhieuMuon
-              AND NgayTra IS NULL
-        )
-        BEGIN
-            UPDATE PhieuMuons
-            SET TrangThai = N'DaTraDu'
-            WHERE MaPhieuMuon = @MaPhieuMuon;
-        END
-    END TRY
-    BEGIN CATCH
-    THROW;
-    END CATCH
+          AND NgayTra IS NULL
+    )
+    BEGIN
+        UPDATE PhieuMuons
+        SET TrangThai = N'DaTraDu'
+        WHERE MaPhieuMuon = @MaPhieuMuon;
+    END
 END;
 GO
 
@@ -336,11 +318,31 @@ CREATE PROCEDURE usp_RenewLoan
 AS
 BEGIN
     SET NOCOUNT ON;
+    
+    IF (@SoNgayGiaHan IS NULL OR @SoNgayGiaHan <= 0)
+    BEGIN
+        RAISERROR(N'Số ngày gia hạn phải lớn hơn 0.', 16, 1);
+        RETURN;
+    END
+    
+    IF (@SoNgayGiaHan > 365)
+    BEGIN
+        RAISERROR(N'Số ngày gia hạn không được vượt quá 365 ngày.', 16, 1);
+        RETURN;
+    END 
+    
+    IF (NOT EXISTS (SELECT 1 FROM PhieuMuons
+                    WHERE MaPhieuMuon = @MaPhieuMuon
+                      AND TrangThai = N'DangMuon')
+    )
+    BEGIN
+        RAISERROR(N'Phiếu mượn không tồn tại hoặc không ở trạng thái đang mượn.', 16, 1);
+        RETURN;
+    END
 
     UPDATE PhieuMuons
     SET HanTra = DATEADD(DAY, @SoNgayGiaHan, HanTra)
-    WHERE MaPhieuMuon = @MaPhieuMuon
-      AND TrangThai = N'DangMuon';
+    WHERE MaPhieuMuon = @MaPhieuMuon;
 END;
 GO
 

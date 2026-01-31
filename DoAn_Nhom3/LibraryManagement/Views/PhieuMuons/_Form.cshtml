@@ -34,10 +34,4 @@
         <select asp-for="TrangThai" class="form-select" asp-items="Html.GetEnumSelectList<LoanStatus>()"></select>
         <span asp-validation-for="TrangThai" class="text-danger"></span>
     </div>
-    
-    <div class="col-md-4">
-        <label class="form-label">Số ngày gia hạn (nhập > 0 để gia hạn)</label>
-        <input type="number" name="soNgayGiaHan" min="0" class="form-control" />
-        <div class="form-text">Nhập số ngày muốn gia hạn rồi nhấn "Gia hạn". Nếu để 0 hoặc bỏ trống, hệ thống sẽ thực hiện cập nhật thông thường khi nhấn "Lưu".</div>
-    </div>
 </div>

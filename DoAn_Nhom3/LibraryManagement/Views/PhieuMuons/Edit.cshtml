@@ -15,8 +15,16 @@
 
 <!-- Form thông tin phiếu mượn -->
 <div class="card mb-4">
-    <div class="card-header bg-primary text-white">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Thông tin phiếu mượn</h5>
+        <button type="button"
+                class="btn btn-warning"
+                data-bs-toggle="modal"
+                data-bs-target="#renewModal"
+                data-mapm="@Model.MaPhieuMuon"
+                data-current-hantra="@Model.HanTra.ToString("yyyy-MM-dd")">
+            <i class="bi bi-arrow-clockwise"></i> Gia hạn
+        </button>
     </div>
     <div class="card-body">
         <form asp-action="Edit">
@@ -24,10 +32,6 @@
             @await Html.PartialAsync("_Form", Model)
             <div class="mt-3">
                 <button type="submit" class="btn btn-primary">Lưu thông tin</button>
-                
-                <button type="submit" class="btn btn-warning ms-2" onclick="document.querySelector('input[name=soNgayGiaHan]').value = prompt('Số ngày gia hạn (số nguyên):', '7') || '';">
-                    Gia hạn
-                </button>
                 <a asp-action="Index" class="btn btn-secondary ms-2">Hủy</a>
             </div>
         </form>
@@ -166,6 +170,45 @@
     </div>
 </div>
 
+<div class="modal fade" id="renewModal" tabindex="-1" aria-labelledby="renewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Renew" asp-controller="PhieuMuons" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="renewModalLabel">Gia hạn phiếu mượn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <input type="hidden" name="maPhieuMuon" id="renew_maPhieuMuon" value="" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Phiếu mượn</label>
+                        <div id="renew_displayMaPhieuMuon" class="fw-bold"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="renew_soNgay" class="form-label">Số ngày gia hạn</label>
+                        <input type="number" min="1" max="365" class="form-control" id="renew_soNgay" name="soNgayGiaHan" value="7" required />
+                        <div class="form-text">Nhập số ngày muốn cộng vào hạn trả (ví dụ 7).</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Hạn trả hiện tại</label>
+                        <div id="renew_currentHanTra" class="text-muted"></div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-warning">Xác nhận gia hạn</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
@@ -181,4 +224,42 @@
             document.getElementById('modalTenSach').textContent = tenSach;
         });
     </script>
+    
+    <script>
+        (function () {
+            var renewModalEl = document.getElementById('renewModal');
+            if (!renewModalEl) return;
+
+            renewModalEl.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var mapm = button.getAttribute('data-mapm');
+                var currentHanTra = button.getAttribute('data-current-hantra') || '';
+
+                document.getElementById('renew_maPhieuMuon').value = mapm || '';
+                document.getElementById('renew_displayMaPhieuMuon').textContent = mapm ? ('#' + mapm) : '-';
+                document.getElementById('renew_currentHanTra').textContent = currentHanTra || '-';
+                // set default soNgay (7) if empty
+                var soNgayInput = document.getElementById('renew_soNgay');
+                if (soNgayInput && !soNgayInput.value) soNgayInput.value = 7;
+            });
+
+            // client-side basic validation before submit
+            document.querySelector('#renewModal form')?.addEventListener('submit', function (e) {
+                var soNgay = parseInt(document.getElementById('renew_soNgay')?.value || '0', 10);
+                if (isNaN(soNgay) || soNgay <= 0) {
+                    e.preventDefault();
+                    alert('Vui lòng nhập số ngày gia hạn hợp lệ (> 0).');
+                    return false;
+                }
+                if (soNgay > 365) {
+                    if (!confirm('Bạn đang gia hạn quá 365 ngày. Tiếp tục?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                return true;
+            });
+        })();
+    </script>
 }
+

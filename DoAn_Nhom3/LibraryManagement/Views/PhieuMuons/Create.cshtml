@@ -81,10 +81,9 @@
             @* Bind hidden fields for DTO (will be populated by JS from filter selects before submit) *@
             <input asp-for="MaNguoiMuon" type="hidden" id="formMaNguoiMuon" />
             <input asp-for="MaNhanVien" type="hidden" id="formMaNhanVien" />
-            <input asp-for="HanTra" type="hidden" />
 
             <div class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-4 d-none">
                     <label class="form-label">Người mượn (POST)</label>
                     @* visible read-only select to show selection for POST (kept for UX) *@
                     <select class="form-select" id="displayMaNguoiMuon" disabled>
@@ -105,7 +104,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-4 d-none">
                     <label class="form-label">Nhân viên lập phiếu</label>
                     <select class="form-select" id="displayMaNhanVien" disabled>
                         @if (ViewBag.MaNhanVien is SelectList d2)
