@@ -24,10 +24,30 @@ public class LibraryDbContext : DbContext
     {
         base.OnModelCreating(mb);
 
-        /* =========================
-         *  COMPOSITE KEYS
-         * ========================= */
+        // because CuonSach has a trigger in the database.
+        mb.Entity<ChiTietPhieuMuon>().ToTable(tb =>
+        {
+            tb.UseSqlOutputClause(false);
+            tb.HasTrigger("trg_CHITIETPHIEUMUON_AfterInsert");
+            tb.HasTrigger("trg_CHITIETPHIEUMUON_AfterUpdate");
+        });
+        
+        mb.Entity<CuonSach>().ToTable(tb => {
+            tb.UseSqlOutputClause(false);
+            tb.HasTrigger("trg_CUONSACH_AfterInsertUpdateDelete");
+        });
+        
+        mb.Entity<PhieuMuon>().ToTable(tb =>
+        {
+            tb.UseSqlOutputClause(false);
+            tb.HasTrigger("trg_PHIEUMUON_AfterInsert");
+        });
 
+        mb.Entity<NguoiMuon>().ToTable(tb =>
+        {
+            tb.UseSqlOutputClause(false);
+            tb.HasTrigger("trg_NGUOIMUON_AfterUpdate");
+        });
         /* =========================
          *  COMPOSITE KEYS
          * ========================= */
@@ -48,11 +68,6 @@ public class LibraryDbContext : DbContext
         // ISBN vẫn là unique
         mb.Entity<Sach>()
             .HasIndex(x => x.ISBN)
-            .IsUnique();
-
-        // CCCD của NguoiMuon là unique
-        mb.Entity<NguoiMuon>()
-            .HasIndex(x => x.CCCD)
             .IsUnique();
 
         // TaiKhoan của NhanVien là unique

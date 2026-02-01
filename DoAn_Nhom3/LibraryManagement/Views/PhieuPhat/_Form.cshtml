@@ -6,7 +6,9 @@
 
     <div class="col-md-6">
         <label asp-for="MaPhieuMuon" class="form-label"></label>
-        <select asp-for="MaPhieuMuon" class="form-select"></select>
+        <select asp-for="MaPhieuMuon" sp-items="ViewBag.MaPhieuMuon" class="form-select">
+            <option value="">-- Chọn Phieu Muon --</option>
+        </select>
         <span asp-validation-for="MaPhieuMuon" class="text-danger"></span>
     </div>
 

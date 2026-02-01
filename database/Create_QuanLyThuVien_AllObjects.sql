@@ -154,7 +154,7 @@ END;
 GO
 
 -- Stored Procedure 2. Lập phiếu mượn
-CREATE OR ALTER PROCEDURE usp_CreateBorrowRecord (
+CREATE PROCEDURE usp_CreateBorrowRecord (
     @MaNguoiMuon INT,
     @MaNhanVien INT,
     @HanTra DATETIME,
@@ -322,7 +322,7 @@ BEGIN
 END;
 GO
 
--- 5. Báo cáo phiếu quá hạn
+-- Stored Procedure 5. Báo cáo phiếu quá hạn
 CREATE PROCEDURE usp_GenerateReport
     @FromDate DATETIME = NULL,
     @ToDate   DATETIME = NULL,
@@ -364,7 +364,7 @@ BEGIN
 END;
 GO
 
--- Trigger 6. Cập nhật tiền phạt tăng theo ngày
+-- Stored Procedure 6. Cập nhật tiền phạt tăng theo ngày
 CREATE PROCEDURE usp_UpdateUnpaidFines
 AS
 BEGIN

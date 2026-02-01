@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using LibraryManagement.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 
 namespace LibraryManagement.Controllers
@@ -13,6 +14,15 @@ namespace LibraryManagement.Controllers
         public PhieuPhatController(LibraryDbContext context)
         {
             _context = context;
+        }
+        
+        private void PopulatePhieuMuonDropDown(object? selectedPhieuMuon = null)
+        {
+            var list = _context.PhieuMuon
+                .OrderBy(t => t.MaPhieuMuon)
+                .Select(t => new { t.MaPhieuMuon, t.MaNguoiMuon })
+                .ToList();
+            ViewBag.MaPhieuMuon = new SelectList(list, "MaPhieuMuon", "MaNguoiMuon", selectedPhieuMuon);
         }
 
         // GET: PhieuPhat
@@ -44,7 +54,7 @@ namespace LibraryManagement.Controllers
         public async Task<IActionResult> Create()
         {
             var model = new PhieuPhat { };
-            
+            PopulatePhieuMuonDropDown();
             return View(model);
         }
 
@@ -57,6 +67,7 @@ namespace LibraryManagement.Controllers
             {
                 try
                 {
+                    PopulatePhieuMuonDropDown(phieuPhat.MaPhieuMuon);
                     _context.Add(phieuPhat);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
@@ -77,7 +88,7 @@ namespace LibraryManagement.Controllers
 
             var phieuPhat = await _context.PhieuPhat.FindAsync(id);
             if (phieuPhat == null) return NotFound();
-
+            PopulatePhieuMuonDropDown(phieuPhat.MaPhieuMuon);
            return View(phieuPhat);
         }
 
@@ -92,6 +103,7 @@ namespace LibraryManagement.Controllers
             {
                 try
                 {
+                    PopulatePhieuMuonDropDown(phieuPhat.MaPhieuMuon);
                     _context.Update(phieuPhat);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));

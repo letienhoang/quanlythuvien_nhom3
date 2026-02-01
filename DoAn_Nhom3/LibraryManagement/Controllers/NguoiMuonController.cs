@@ -91,19 +91,20 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maNguoiMuon, [Bind("HoTen,NgaySinh,CCCD,DiaChi,SoDienThoai,Email,LoaiDocGia,NgayDangKy,NgayHetHan,TrangThai")] NguoiMuon nguoiMuon)
         {
-            if (maNguoiMuon != nguoiMuon.MaNguoiMuon) return NotFound();
+            if (!NguoiMuonExistsById(maNguoiMuon)) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    nguoiMuon.MaNguoiMuon = maNguoiMuon;
                     _context.Update(nguoiMuon);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!NguoiMuonExistsById(nguoiMuon.MaNguoiMuon)) return NotFound();
+                    
                     throw;
                 }
             }

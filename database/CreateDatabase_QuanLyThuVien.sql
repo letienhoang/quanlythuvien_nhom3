@@ -139,9 +139,7 @@ CREATE INDEX [IX_ChiTietPhieuMuon_MaCuon] ON [ChiTietPhieuMuon] ([MaCuon]);
   
 CREATE INDEX [IX_CuonSach_MaSach] ON [CuonSach] ([MaSach]);                                                                                                                                                                       
  
-CREATE INDEX [IX_HoaDonPhat_MaPhat] ON [HoaDonPhat] ([MaPhat]);                                                                                                                                                                   
-  
-CREATE UNIQUE INDEX [IX_NguoiMuon_CCCD] ON [NguoiMuon] ([CCCD]);                                                                                                                                                                  
+CREATE INDEX [IX_HoaDonPhat_MaPhat] ON [HoaDonPhat] ([MaPhat]);                                                                                                                                                                                                                                                                                                                              
  
 CREATE UNIQUE INDEX [IX_NhanVien_TaiKhoan] ON [NhanVien] ([TaiKhoan]);                                                                                                                                                            
   

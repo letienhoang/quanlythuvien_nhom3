@@ -173,7 +173,7 @@ namespace LibraryManagement.Controllers
                 
                 if (cmd is SqlCommand sqlCmd)
                 {
-                    var tvpParam = new SqlParameter("@MaDanhMuc", SqlDbType.Structured)
+                    var tvpParam = new SqlParameter("@MaDanhMucs", SqlDbType.Structured)
                     {
                         TypeName = "dbo.IntList",
                         Value = tvp

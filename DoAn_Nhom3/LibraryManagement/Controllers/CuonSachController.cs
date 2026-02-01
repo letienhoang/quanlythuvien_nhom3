@@ -119,7 +119,7 @@ namespace LibraryManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maCuon, [Bind("MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
-            if (maCuon != cuonSach.MaCuon) return NotFound();
+            if (!CuonSachExists(maCuon)) return NotFound();
 
             if (!_context.Sach.Any(s => s.MaSach == cuonSach.MaSach))
             {
@@ -130,6 +130,7 @@ namespace LibraryManagement.Controllers
             {
                 try
                 {
+                    cuonSach.MaCuon = maCuon;
                     _context.Update(cuonSach);
                     await _context.SaveChangesAsync();
                 }
