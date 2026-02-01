@@ -43,5 +43,5 @@ public class NhanVien
     [Display(Name = "Mật khẩu")]
     public string MatKhau { get; set; }
 
-    public ICollection<PhieuMuon>? PhieuMuons { get; set; }
+    public ICollection<PhieuMuon>? PhieuMuon { get; set; }
 }

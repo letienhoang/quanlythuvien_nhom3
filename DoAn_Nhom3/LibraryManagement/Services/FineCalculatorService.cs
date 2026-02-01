@@ -46,9 +46,9 @@ namespace LibraryManagement.Services
 
             // Tính phạt hỏng/mất sách
             decimal damageFine = 0;
-            if (phieuMuon.ChiTietPhieuMuons != null)
+            if (phieuMuon.ChiTietPhieuMuon != null)
             {
-                foreach (var chiTiet in phieuMuon.ChiTietPhieuMuons)
+                foreach (var chiTiet in phieuMuon.ChiTietPhieuMuon)
                 {
                     if (chiTiet.TinhTrangTra.HasValue && chiTiet.TinhTrangTra != ReturnCondition.NguyenVen)
                     {

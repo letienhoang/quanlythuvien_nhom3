@@ -48,6 +48,6 @@ public class Sach
     [Display(Name = "Số lượng")]
     public int? SoLuong { get; set; }
 
-    public ICollection<PhanLoai>? PhanLoais { get; set; }
-    public ICollection<CuonSach>? CuonSachs { get; set; }
+    public ICollection<PhanLoai>? PhanLoai { get; set; }
+    public ICollection<CuonSach>? CuonSach { get; set; }
 }

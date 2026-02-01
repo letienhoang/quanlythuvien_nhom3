@@ -26,5 +26,5 @@ public class TacGia
     [Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
 
-    public ICollection<Sach>? Sachs { get; set; }
+    public ICollection<Sach>? Sach { get; set; }
 }

@@ -31,5 +31,5 @@ public class CuonSach
     [Display(Name = "Ngày nhập")]
     public DateTime? NgayNhap { get; set; }
 
-    public ICollection<ChiTietPhieuMuon>? ChiTietPhieuMuons { get; set; }
+    public ICollection<ChiTietPhieuMuon>? ChiTietPhieuMuon { get; set; }
 }

@@ -12,19 +12,19 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LibraryManagement.Controllers
 {
-    public class PhieuMuonsController : Controller
+    public class PhieuMuonController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public PhieuMuonsController(LibraryDbContext context)
+        public PhieuMuonController(LibraryDbContext context)
         {
             _context = context;
         }
 
-        // GET: PhieuMuons
+        // GET: PhieuMuon
         public async Task<IActionResult> Index()
         {
-            var items = await _context.PhieuMuons
+            var items = await _context.PhieuMuon
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.NhanVien)
                 .AsNoTracking()
@@ -47,15 +47,15 @@ namespace LibraryManagement.Controllers
             return View(items);
         }
 
-        // GET: PhieuMuons/Details/5
+        // GET: PhieuMuon/Details/5
         public async Task<IActionResult> Details(int? id, string q = null)
         {
             if (id == null) return NotFound();
 
-            var phieuMuon = await _context.PhieuMuons
+            var phieuMuon = await _context.PhieuMuon
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.NhanVien)
-                .Include(p => p.ChiTietPhieuMuons!)
+                .Include(p => p.ChiTietPhieuMuon!)
                 .ThenInclude(ct => ct.CuonSach)
                 .ThenInclude(cs => cs!.Sach)
                 .AsNoTracking()
@@ -64,7 +64,7 @@ namespace LibraryManagement.Controllers
             if (phieuMuon == null) return NotFound();
 
             // Load available cuon sach filtered
-            IQueryable<CuonSach> query = _context.CuonSachs
+            IQueryable<CuonSach> query = _context.CuonSach
                 .AsNoTracking()
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach);
@@ -86,7 +86,7 @@ namespace LibraryManagement.Controllers
             return View(phieuMuon);
         }
 
-        // POST: PhieuMuons/ThemSach - Thêm sách vào phiếu mượn
+        // POST: PhieuMuon/ThemSach - Thêm sách vào phiếu mượn
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ThemSach(int maPhieuMuon, int[] MaCuons)
@@ -97,7 +97,7 @@ namespace LibraryManagement.Controllers
                 return RedirectToAction(nameof(Details), new { maPhieuMuon = maPhieuMuon });
             }
 
-            var phieuMuon = await _context.PhieuMuons.FindAsync(maPhieuMuon);
+            var phieuMuon = await _context.PhieuMuon.FindAsync(maPhieuMuon);
             if (phieuMuon == null) return NotFound();
 
             // Kiểm tra số slot còn lại (server-side) bằng hàm fn_CountBooksCurrentlyBorrowed
@@ -121,7 +121,7 @@ namespace LibraryManagement.Controllers
             foreach (var MaCuon in MaCuons)
             {
                 // Kiểm tra sách đã có trong phiếu mượn chưa
-                var existing = await _context.ChiTietPhieuMuons
+                var existing = await _context.ChiTietPhieuMuon
                     .AnyAsync(ct => ct.MaPhieuMuon == maPhieuMuon && ct.MaCuon == MaCuon);
 
                 if (!existing)
@@ -134,10 +134,10 @@ namespace LibraryManagement.Controllers
                         NgayTra = null,
                         TinhTrangTra = null
                     };
-                    _context.ChiTietPhieuMuons.Add(chiTiet);
+                    _context.ChiTietPhieuMuon.Add(chiTiet);
 
                     // Cập nhật trạng thái cuốn sách thành "Đang mượn"
-                    var cuonSach = await _context.CuonSachs.FindAsync(MaCuon);
+                    var cuonSach = await _context.CuonSach.FindAsync(MaCuon);
                     if (cuonSach != null)
                     {
                         cuonSach.TrangThai = CopyStatus.DangMuon;
@@ -151,20 +151,20 @@ namespace LibraryManagement.Controllers
             return RedirectToAction(nameof(Details), new { maPhieuMuon = maPhieuMuon });
         }
 
-        // POST: PhieuMuons/XoaSach - Xóa sách khỏi phiếu mượn
+        // POST: PhieuMuon/XoaSach - Xóa sách khỏi phiếu mượn
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> XoaSach(int maPhieuMuon, int MaCuon)
         {
-            var chiTiet = await _context.ChiTietPhieuMuons
+            var chiTiet = await _context.ChiTietPhieuMuon
                 .FirstOrDefaultAsync(ct => ct.MaPhieuMuon == maPhieuMuon && ct.MaCuon == MaCuon);
 
             if (chiTiet != null)
             {
-                _context.ChiTietPhieuMuons.Remove(chiTiet);
+                _context.ChiTietPhieuMuon.Remove(chiTiet);
 
                 // Cập nhật trạng thái cuốn sách thành "Có sẵn"
-                var cuonSach = await _context.CuonSachs.FindAsync(MaCuon);
+                var cuonSach = await _context.CuonSach.FindAsync(MaCuon);
                 if (cuonSach != null)
                 {
                     cuonSach.TrangThai = CopyStatus.CoSan;
@@ -177,7 +177,7 @@ namespace LibraryManagement.Controllers
             return RedirectToAction(nameof(Details), new { maPhieuMuon = maPhieuMuon });
         }
 
-        // GET: PhieuMuons/Create
+        // GET: PhieuMuon/Create
         public async Task<IActionResult> Create(string q = null, int? selectedNguoiMuon = null, int? selectedNhanVien = null)
         {
             var dto = new CreateBorrowRecordDto
@@ -189,7 +189,7 @@ namespace LibraryManagement.Controllers
             
             await PopulateSelectsAsync(selectedNguoiMuon, selectedNhanVien);
             
-            IQueryable<CuonSach> query = _context.CuonSachs
+            IQueryable<CuonSach> query = _context.CuonSach
                 .AsNoTracking()
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
@@ -218,7 +218,7 @@ namespace LibraryManagement.Controllers
             return View(dto);
         }
 
-        // POST: PhieuMuons/Create
+        // POST: PhieuMuon/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateBorrowRecordDto dto, int[] maCuons)
@@ -226,7 +226,7 @@ namespace LibraryManagement.Controllers
             if (!ModelState.IsValid)
             {
                 await LoadDropdowns(dto.MaNguoiMuon, dto.MaNhanVien);
-                ViewBag.CuonSachCoSan = await _context.CuonSachs
+                ViewBag.CuonSachCoSan = await _context.CuonSach
                     .Where(c => c.TrangThai == CopyStatus.CoSan)
                     .Include(c => c.Sach)
                     .ToListAsync();
@@ -315,7 +315,7 @@ namespace LibraryManagement.Controllers
             }
             
             await LoadDropdowns(dto.MaNguoiMuon, dto.MaNhanVien);
-            ViewBag.CuonSachCoSan = await _context.CuonSachs
+            ViewBag.CuonSachCoSan = await _context.CuonSach
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
                 .ToListAsync();
@@ -323,13 +323,13 @@ namespace LibraryManagement.Controllers
             return View(dto);
         }
 
-        // GET: PhieuMuons/Edit/5
+        // GET: PhieuMuon/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var phieuMuon = await _context.PhieuMuons
-                .Include(p => p.ChiTietPhieuMuons!)
+            var phieuMuon = await _context.PhieuMuon
+                .Include(p => p.ChiTietPhieuMuon!)
                     .ThenInclude(ct => ct.CuonSach)
                         .ThenInclude(cs => cs!.Sach)
                 .FirstOrDefaultAsync(m => m.MaPhieuMuon == id);
@@ -340,7 +340,7 @@ namespace LibraryManagement.Controllers
             return View(phieuMuon);
         }
 
-        // POST: PhieuMuons/Edit/5
+        // POST: PhieuMuon/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maPhieuMuon, [Bind("MaNguoiMuon,MaNhanVien,NgayMuon,HanTra,TrangThai,SoNgayTre")] PhieuMuon phieuMuon)
@@ -359,12 +359,12 @@ namespace LibraryManagement.Controllers
             return View(phieuMuon);
         }
 
-        // GET: PhieuMuons/Delete/5
+        // GET: PhieuMuon/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var phieuMuon = await _context.PhieuMuons
+            var phieuMuon = await _context.PhieuMuon
                 .Include(p => p.NguoiMuon)
                 .Include(p => p.NhanVien)
                 .AsNoTracking()
@@ -375,26 +375,26 @@ namespace LibraryManagement.Controllers
             return View(phieuMuon);
         }
 
-        // POST: PhieuMuons/Delete/5
+        // POST: PhieuMuon/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var phieuMuon = await _context.PhieuMuons.FindAsync(id);
+            var phieuMuon = await _context.PhieuMuon.FindAsync(id);
             if (phieuMuon != null)
             {
-                _context.PhieuMuons.Remove(phieuMuon);
+                _context.PhieuMuon.Remove(phieuMuon);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
         }
 
         private bool PhieuMuonExists(int id) =>
-            _context.PhieuMuons.Any(e => e.MaPhieuMuon == id);
+            _context.PhieuMuon.Any(e => e.MaPhieuMuon == id);
 
         private async Task PopulateSelectsAsync(int? selectedNguoiId = null, int? selectedMaNhanVien = null)
         {
-            var nguoiList = await _context.NguoiMuons
+            var nguoiList = await _context.NguoiMuon
                 .AsNoTracking()
                 .OrderBy(n => n.HoTen)
                 .Select(n => new SelectListItem
@@ -404,7 +404,7 @@ namespace LibraryManagement.Controllers
                 })
                 .ToListAsync();
 
-            var nhanvienList = await _context.NhanViens
+            var nhanvienList = await _context.NhanVien
                 .AsNoTracking()
                 .OrderBy(n => n.HoTen)
                 .Select(n => new SelectListItem
@@ -425,7 +425,7 @@ namespace LibraryManagement.Controllers
             await PopulateSelectsAsync(selectedNguoiId, selectedMaNhanVien);
 
             // Load available copies for the view (same as used in Details)
-            var cuonSachCoSan = await _context.CuonSachs
+            var cuonSachCoSan = await _context.CuonSach
                 .AsNoTracking()
                 .Where(c => c.TrangThai == CopyStatus.CoSan)
                 .Include(c => c.Sach)
@@ -434,7 +434,7 @@ namespace LibraryManagement.Controllers
             ViewBag.CuonSachCoSan = cuonSachCoSan;
         }
         
-        // POST: PhieuMuons/TraSach - Cập nhật tình trạng trả sách
+        // POST: PhieuMuon/TraSach - Cập nhật tình trạng trả sách
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ReturnBook(int maPhieuMuon, int maCuon, DateTime ngayTra, ReturnCondition tinhTrangTra)

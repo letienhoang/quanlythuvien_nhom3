@@ -6,18 +6,18 @@ using LibraryManagement.ViewModels;
 
 namespace LibraryManagement.Controllers
 {
-    public class CuonSachsController : Controller
+    public class CuonSachController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public CuonSachsController(LibraryDbContext context)
+        public CuonSachController(LibraryDbContext context)
         {
             _context = context;
         }
 
         private void PopulateSachDropDown(object? selectedSach = null)
         {
-            var list = _context.Sachs
+            var list = _context.Sach
                         .OrderBy(s => s.TenSach)
                         .Select(s => new { s.MaSach, s.TenSach })
                         .ToList();
@@ -25,13 +25,13 @@ namespace LibraryManagement.Controllers
             ViewBag.MaSach = new SelectList(list, "MaSach", "TenSach", selectedSach);
         }
 
-        // GET: CuonSachs
+        // GET: CuonSach
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var query = _context.CuonSachs
+            var query = _context.CuonSach
                 .AsNoTracking()
                 .Include(c => c.Sach);
 
@@ -57,12 +57,12 @@ namespace LibraryManagement.Controllers
             return View(result);
         }
 
-        // GET: CuonSachs/Details/5
+        // GET: CuonSach/Details/5
         public async Task<IActionResult> Details(int? maSach)
         {
             if (maSach == null) return NotFound();
 
-            var cuonSach = await _context.CuonSachs
+            var cuonSach = await _context.CuonSach
                                 .Include(c => c.Sach)
                                 .FirstOrDefaultAsync(m => m.MaSach == maSach);
             if (cuonSach == null) return NotFound();
@@ -70,7 +70,7 @@ namespace LibraryManagement.Controllers
             return View(cuonSach);
         }
 
-        // GET: CuonSachs/Create
+        // GET: CuonSach/Create
         public async Task<IActionResult> Create()
         {
             // generate suggestion for MaCuon
@@ -79,13 +79,13 @@ namespace LibraryManagement.Controllers
             return View(model);
         }
 
-        // POST: CuonSachs/Create
+        // POST: CuonSach/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
             // server-side: ensure MaSach exists
-            if (!_context.Sachs.Any(s => s.MaSach == cuonSach.MaSach))
+            if (!_context.Sach.Any(s => s.MaSach == cuonSach.MaSach))
             {
                 ModelState.AddModelError(nameof(cuonSach.MaSach), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
             }
@@ -102,26 +102,26 @@ namespace LibraryManagement.Controllers
             return View(cuonSach);
         }
 
-        // GET: CuonSachs/Edit/5
+        // GET: CuonSach/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var cuonSach = await _context.CuonSachs.FindAsync(id);
+            var cuonSach = await _context.CuonSach.FindAsync(id);
             if (cuonSach == null) return NotFound();
 
             PopulateSachDropDown(cuonSach.MaSach);
             return View(cuonSach);
         }
 
-        // POST: CuonSachs/Edit/5
+        // POST: CuonSach/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maCuon, [Bind("MaSach,TinhTrang,TrangThai,ViTriKe,NgayNhap")] CuonSach cuonSach)
         {
             if (maCuon != cuonSach.MaCuon) return NotFound();
 
-            if (!_context.Sachs.Any(s => s.MaSach == cuonSach.MaSach))
+            if (!_context.Sach.Any(s => s.MaSach == cuonSach.MaSach))
             {
                 ModelState.AddModelError(nameof(cuonSach.MaSach), "Sách không hợp lệ. Vui lòng chọn sách từ danh sách.");
             }
@@ -144,12 +144,12 @@ namespace LibraryManagement.Controllers
             return View(cuonSach);
         }
 
-        // GET: CuonSachs/Delete/5
+        // GET: CuonSach/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var cuonSach = await _context.CuonSachs
+            var cuonSach = await _context.CuonSach
                                 .Include(c => c.Sach)
                                 .FirstOrDefaultAsync(m => m.MaCuon == id);
             if (cuonSach == null) return NotFound();
@@ -157,15 +157,15 @@ namespace LibraryManagement.Controllers
             return View(cuonSach);
         }
 
-        // POST: CuonSachs/Delete/5
+        // POST: CuonSach/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var cuonSach = await _context.CuonSachs.FindAsync(id);
+            var cuonSach = await _context.CuonSach.FindAsync(id);
             if (cuonSach != null)
             {
-                _context.CuonSachs.Remove(cuonSach);
+                _context.CuonSach.Remove(cuonSach);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -173,7 +173,7 @@ namespace LibraryManagement.Controllers
 
         private bool CuonSachExists(int id)
         {
-            return _context.CuonSachs.Any(e => e.MaCuon == id);
+            return _context.CuonSach.Any(e => e.MaCuon == id);
         }
     }
 }

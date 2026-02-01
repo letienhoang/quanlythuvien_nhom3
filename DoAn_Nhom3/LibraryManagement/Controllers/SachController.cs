@@ -11,18 +11,18 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LibraryManagement.Controllers
 {
-    public class SachsController : Controller
+    public class SachController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public SachsController(LibraryDbContext context)
+        public SachController(LibraryDbContext context)
         {
             _context = context;
         }
 
         private void PopulateTacGiaDropDown(object? selectedTacGia = null)
         {
-            var list = _context.TacGias
+            var list = _context.TacGia
                         .OrderBy(t => t.TenTacGia)
                         .Select(t => new { t.MaTacGia, t.TenTacGia })
                         .ToList();
@@ -31,7 +31,7 @@ namespace LibraryManagement.Controllers
         
         private async Task PopulateCategoriesFor(SachEditViewModel vm)
         {
-            var cats = await _context.DanhMucs
+            var cats = await _context.DanhMuc
                 .AsNoTracking()
                 .OrderBy(d => d.TenDanhMuc)
                 .Select(d => new { d.MaDanhMuc, d.TenDanhMuc })
@@ -46,16 +46,16 @@ namespace LibraryManagement.Controllers
         
         private bool SachExists(int id)
         {
-            return _context.Sachs.Any(e => e.MaSach == id);
+            return _context.Sach.Any(e => e.MaSach == id);
         }
 
-        // GET: Sachs
+        // GET: Sach
         public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
         {
             if (page < 1) page = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var query = _context.Sachs
+            var query = _context.Sach
                 .AsNoTracking()
                 .Include(c => c.TacGia);
 
@@ -80,12 +80,12 @@ namespace LibraryManagement.Controllers
             return View(result);
         }
 
-        // GET: Sachs/Details/5
+        // GET: Sach/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
-            var sach = await _context.Sachs
+            var sach = await _context.Sach
                 .AsNoTracking()
                 .Include(s => s.TacGia) // optional
                 .FirstOrDefaultAsync(m => m.MaSach == id.Value);
@@ -93,10 +93,10 @@ namespace LibraryManagement.Controllers
             if (sach == null) return NotFound();
 
             // lấy tên danh mục bằng query set-based
-            var categoryNames = await _context.PhanLoais
+            var categoryNames = await _context.PhanLoai
                 .AsNoTracking()
                 .Where(pl => pl.MaSach == id.Value)
-                .Join(_context.DanhMucs,
+                .Join(_context.DanhMuc,
                     pl => pl.MaDanhMuc,
                     d => d.MaDanhMuc,
                     (pl, d) => new { d.MaDanhMuc, d.TenDanhMuc })
@@ -110,7 +110,7 @@ namespace LibraryManagement.Controllers
             return View(sach);
         }
 
-        // GET: Sachs/Create
+        // GET: Sach/Create
         public async Task<IActionResult> Create()
         {
             var vm = new SachEditViewModel();
@@ -119,7 +119,7 @@ namespace LibraryManagement.Controllers
             return View(vm);
         }
 
-        // POST: Sachs/Create
+        // POST: Sach/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -173,7 +173,7 @@ namespace LibraryManagement.Controllers
                 
                 if (cmd is SqlCommand sqlCmd)
                 {
-                    var tvpParam = new SqlParameter("@MaDanhMucs", SqlDbType.Structured)
+                    var tvpParam = new SqlParameter("@MaDanhMuc", SqlDbType.Structured)
                     {
                         TypeName = "dbo.IntList",
                         Value = tvp
@@ -221,12 +221,12 @@ namespace LibraryManagement.Controllers
             }
         }
 
-        // GET: Sachs/Edit/5
+        // GET: Sach/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var sach = await _context.Sachs
+            var sach = await _context.Sach
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.MaSach == id.Value);
 
@@ -247,7 +247,7 @@ namespace LibraryManagement.Controllers
             };
 
             // load selected categories
-            vm.SelectedCategoryIds = await _context.PhanLoais
+            vm.SelectedCategoryIds = await _context.PhanLoai
                 .Where(p => p.MaSach == id.Value)
                 .Select(p => p.MaDanhMuc)
                 .ToListAsync();
@@ -258,7 +258,7 @@ namespace LibraryManagement.Controllers
             return View(vm);
         }
 
-        // POST: Sachs/Edit/5
+        // POST: Sach/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -277,7 +277,7 @@ namespace LibraryManagement.Controllers
             using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
-                var existing = await _context.Sachs.FindAsync(maSach);
+                var existing = await _context.Sach.FindAsync(maSach);
                 if (existing == null) return NotFound();
 
                 // update properties
@@ -293,8 +293,8 @@ namespace LibraryManagement.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // sync PhanLoais
-                var currentIds = await _context.PhanLoais
+                // sync PhanLoai
+                var currentIds = await _context.PhanLoai
                     .Where(p => p.MaSach == maSach)
                     .Select(p => p.MaDanhMuc)
                     .ToListAsync();
@@ -307,15 +307,15 @@ namespace LibraryManagement.Controllers
                 if (toAdd.Any())
                 {
                     var adds = toAdd.Select(cid => new PhanLoai { MaSach = maSach, MaDanhMuc = cid });
-                    _context.PhanLoais.AddRange(adds);
+                    _context.PhanLoai.AddRange(adds);
                 }
 
                 if (toRemove.Any())
                 {
-                    var removes = await _context.PhanLoais
+                    var removes = await _context.PhanLoai
                         .Where(p => p.MaSach == maSach && toRemove.Contains(p.MaDanhMuc))
                         .ToListAsync();
-                    _context.PhanLoais.RemoveRange(removes);
+                    _context.PhanLoai.RemoveRange(removes);
                 }
 
                 await _context.SaveChangesAsync();
@@ -339,7 +339,7 @@ namespace LibraryManagement.Controllers
             }
         }
 
-        // GET: Sachs/Delete/5
+        // GET: Sach/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -347,7 +347,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var sach = await _context.Sachs
+            var sach = await _context.Sach
                 .FirstOrDefaultAsync(m => m.MaSach == id);
             if (sach == null)
             {
@@ -357,18 +357,18 @@ namespace LibraryManagement.Controllers
             return View(sach);
         }
 
-        // POST: Sachs/Delete/5
+        // POST: Sach/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var sach = await _context.Sachs.FindAsync(id);
+            var sach = await _context.Sach.FindAsync(id);
             if (sach != null)
             {
-                var phans = _context.PhanLoais.Where(p => p.MaSach == id);
-                _context.PhanLoais.RemoveRange(phans);
+                var phans = _context.PhanLoai.Where(p => p.MaSach == id);
+                _context.PhanLoai.RemoveRange(phans);
 
-                _context.Sachs.Remove(sach);
+                _context.Sach.Remove(sach);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));

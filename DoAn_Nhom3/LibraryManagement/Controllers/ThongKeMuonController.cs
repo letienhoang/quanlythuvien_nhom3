@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LibraryManagement.Controllers
 {
-    public class ThongKeMuonsController : Controller
+    public class ThongKeMuonController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public ThongKeMuonsController(LibraryDbContext context)
+        public ThongKeMuonController(LibraryDbContext context)
         {
             _context = context;
         }

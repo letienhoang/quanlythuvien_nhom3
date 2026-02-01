@@ -36,6 +36,6 @@ public class PhieuMuon
     [Display(Name = "Trạng thái")]
     public LoanStatus TrangThai { get; set; }
 
-    public ICollection<ChiTietPhieuMuon>? ChiTietPhieuMuons { get; set; }
-    public ICollection<PhieuPhat>? PhieuPhats { get; set; }
+    public ICollection<ChiTietPhieuMuon>? ChiTietPhieuMuon { get; set; }
+    public ICollection<PhieuPhat>? PhieuPhat { get; set; }
 }

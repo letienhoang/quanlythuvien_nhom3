@@ -6,23 +6,23 @@ using LibraryManagement.Services;
 
 namespace LibraryManagement.Controllers
 {
-    public class TacGiasController : Controller
+    public class TacGiaController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public TacGiasController(LibraryDbContext context)
+        public TacGiaController(LibraryDbContext context)
         {
             _context = context;
         }
         
-        // GET: TacGias
+        // GET: TacGia
         public async Task<IActionResult> Index()
         {
-            var list = await _context.TacGias.AsNoTracking().ToListAsync();
+            var list = await _context.TacGia.AsNoTracking().ToListAsync();
             return View(list);
         }
 
-        // GET: TacGias/Details/5
+        // GET: TacGia/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -30,8 +30,8 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var tacGia = await _context.TacGias
-                .Include(t => t.Sachs)
+            var tacGia = await _context.TacGia
+                .Include(t => t.Sach)
                 .FirstOrDefaultAsync(m => m.MaTacGia == id);
             if (tacGia == null)
             {
@@ -41,14 +41,14 @@ namespace LibraryManagement.Controllers
             return View(tacGia);
         }
 
-        // GET: TacGias/Create
+        // GET: TacGia/Create
         public async Task<IActionResult> Create()
         {
             var model = new TacGia { };
             return View(model);
         }
 
-        // POST: TacGias/Create
+        // POST: TacGia/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -71,7 +71,7 @@ namespace LibraryManagement.Controllers
             return View(tacGia);
         }
 
-        // GET: TacGias/Edit/5
+        // GET: TacGia/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -79,7 +79,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var tacGia = await _context.TacGias.FindAsync(id);
+            var tacGia = await _context.TacGia.FindAsync(id);
             if (tacGia == null)
             {
                 return NotFound();
@@ -88,7 +88,7 @@ namespace LibraryManagement.Controllers
             return View(tacGia);
         }
 
-        // POST: TacGias/Edit/5
+        // POST: TacGia/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
@@ -123,7 +123,7 @@ namespace LibraryManagement.Controllers
             return View(tacGia);
         }
 
-        // GET: TacGias/Delete/5
+        // GET: TacGia/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -131,7 +131,7 @@ namespace LibraryManagement.Controllers
                 return NotFound();
             }
 
-            var tacGia = await _context.TacGias
+            var tacGia = await _context.TacGia
                 .FirstOrDefaultAsync(m => m.MaTacGia == id);
             if (tacGia == null)
             {
@@ -141,15 +141,15 @@ namespace LibraryManagement.Controllers
             return View(tacGia);
         }
 
-        // POST: TacGias/Delete/5
+        // POST: TacGia/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var tacGia = await _context.TacGias.FindAsync(id);
+            var tacGia = await _context.TacGia.FindAsync(id);
             if (tacGia != null)
             {
-                _context.TacGias.Remove(tacGia);
+                _context.TacGia.Remove(tacGia);
             }
 
             await _context.SaveChangesAsync();
@@ -158,7 +158,7 @@ namespace LibraryManagement.Controllers
 
         private bool TacGiaExists(int id)
         {
-            return _context.TacGias.Any(e => e.MaTacGia == id);
+            return _context.TacGia.Any(e => e.MaTacGia == id);
         }
     }
 }

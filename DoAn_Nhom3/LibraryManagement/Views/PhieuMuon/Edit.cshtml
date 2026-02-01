@@ -38,7 +38,7 @@
 </div>
 
 <!-- Chi tiết sách mượn - Cập nhật tình trạng trả -->
-@if (Model.ChiTietPhieuMuons != null && Model.ChiTietPhieuMuons.Any())
+@if (Model.ChiTietPhieuMuon != null && Model.ChiTietPhieuMuon.Any())
 {
     <div class="card">
         <div class="card-header bg-info text-white">
@@ -61,7 +61,7 @@
                         @{
                             int stt = 1;
                         }
-                        @foreach (var ct in Model.ChiTietPhieuMuons)
+                        @foreach (var ct in Model.ChiTietPhieuMuon)
                         {
                             <tr>
                                 <td>@(stt++)</td>
@@ -168,7 +168,7 @@
 <div class="modal fade" id="renewModal" tabindex="-1" aria-labelledby="renewModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="Renew" asp-controller="PhieuMuons" method="post">
+            <form asp-action="Renew" asp-controller="PhieuMuon" method="post">
                 @Html.AntiForgeryToken()
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title" id="renewModalLabel">Gia hạn phiếu mượn</h5>

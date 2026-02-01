@@ -17,5 +17,5 @@ public class DanhMuc
     [Display(Name = "Mô tả")]
     public string? MoTa { get; set; }
 
-    public ICollection<PhanLoai>? PhanLoais { get; set; }
+    public ICollection<PhanLoai>? PhanLoai { get; set; }
 }

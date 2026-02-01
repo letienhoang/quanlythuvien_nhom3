@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Solution Items/">
-    <File Path="../database/schemas/objects.sql" />
+    <File Path="../database/CreateDatabase_QuanLyThuVien.sql" />
+    <File Path="../database/Create_QuanLyThuVien_AllObjects.sql" />
     <File Path="../README.md" />
   </Folder>
   <Project Path="LibraryManagement/LibraryManagement.csproj" />

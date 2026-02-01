@@ -29,5 +29,5 @@ public class PhieuPhat
     [Display(Name = "Trạng thái thanh toán")]
     public PaymentStatus TrangThaiThanhToan { get; set; }
 
-    public ICollection<HoaDonPhat>? HoaDonPhats { get; set; }
+    public ICollection<HoaDonPhat>? HoaDonPhat { get; set; }
 }

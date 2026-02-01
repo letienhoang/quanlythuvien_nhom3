@@ -51,7 +51,7 @@
                     {
                         foreach (var c in cats)
                         {
-                            <a asp-controller="DanhMucs" asp-action="Details" asp-route-id="@c.MaDanhMuc" class="badge bg-secondary me-1 text-decoration-none">
+                            <a asp-controller="DanhMuc" asp-action="Details" asp-route-id="@c.MaDanhMuc" class="badge bg-secondary me-1 text-decoration-none">
                                 @c.TenDanhMuc
                             </a>
                         }

@@ -45,5 +45,5 @@ public class NguoiMuon
     [Display(Name = "Trạng thái")]
     public MemberStatus TrangThai { get; set; }
 
-    public ICollection<PhieuMuon>? PhieuMuons { get; set; }
+    public ICollection<PhieuMuon>? PhieuMuon { get; set; }
 }

@@ -6,31 +6,31 @@ using Microsoft.Data.SqlClient;
 
 namespace LibraryManagement.Controllers
 {
-    public class PhieuPhatsController : Controller
+    public class PhieuPhatController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public PhieuPhatsController(LibraryDbContext context)
+        public PhieuPhatController(LibraryDbContext context)
         {
             _context = context;
         }
 
-        // GET: PhieuPhats
+        // GET: PhieuPhat
         public async Task<IActionResult> Index()
         {
-            var list = await _context.PhieuPhats
+            var list = await _context.PhieuPhat
                 .Include(p => p.PhieuMuon)
                 .ThenInclude(pm => pm.NguoiMuon)
                 .ToListAsync();
             return View(list);
         }
 
-        // GET: PhieuPhats/Details/5
+        // GET: PhieuPhat/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
-            var phieuPhat = await _context.PhieuPhats
+            var phieuPhat = await _context.PhieuPhat
                 .Include(p => p.PhieuMuon)
                 .ThenInclude(pm => pm.NguoiMuon)
                 .FirstOrDefaultAsync(m => m.MaPhat == id);
@@ -40,7 +40,7 @@ namespace LibraryManagement.Controllers
             return View(phieuPhat);
         }
 
-        // GET: PhieuPhats/Create
+        // GET: PhieuPhat/Create
         public async Task<IActionResult> Create()
         {
             var model = new PhieuPhat { };
@@ -48,7 +48,7 @@ namespace LibraryManagement.Controllers
             return View(model);
         }
 
-        // POST: PhieuPhats/Create
+        // POST: PhieuPhat/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("MaPhat,MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
@@ -70,18 +70,18 @@ namespace LibraryManagement.Controllers
             return View(phieuPhat);
         }
 
-        // GET: PhieuPhats/Edit/5
+        // GET: PhieuPhat/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var phieuPhat = await _context.PhieuPhats.FindAsync(id);
+            var phieuPhat = await _context.PhieuPhat.FindAsync(id);
             if (phieuPhat == null) return NotFound();
 
            return View(phieuPhat);
         }
 
-        // POST: PhieuPhats/Edit/5
+        // POST: PhieuPhat/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int maPhat, [Bind("MaPhieuMuon,SoTienPhat,LyDo,TrangThaiThanhToan")] PhieuPhat phieuPhat)
@@ -98,7 +98,7 @@ namespace LibraryManagement.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.PhieuPhats.Any(e => e.MaPhat == maPhat)) return NotFound();
+                    if (!_context.PhieuPhat.Any(e => e.MaPhat == maPhat)) return NotFound();
                     throw;
                 }
             }
@@ -106,12 +106,12 @@ namespace LibraryManagement.Controllers
             return View(phieuPhat);
         }
 
-        // GET: PhieuPhats/Delete/5
+        // GET: PhieuPhat/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var phieuPhat = await _context.PhieuPhats
+            var phieuPhat = await _context.PhieuPhat
                 .Include(p => p.PhieuMuon)
                 .ThenInclude(pm => pm.NguoiMuon)
                 .FirstOrDefaultAsync(m => m.MaPhat == id);
@@ -121,15 +121,15 @@ namespace LibraryManagement.Controllers
             return View(phieuPhat);
         }
 
-        // POST: PhieuPhats/Delete/5
+        // POST: PhieuPhat/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var phieuPhat = await _context.PhieuPhats.FindAsync(id);
+            var phieuPhat = await _context.PhieuPhat.FindAsync(id);
             if (phieuPhat != null)
             {
-                _context.PhieuPhats.Remove(phieuPhat);
+                _context.PhieuPhat.Remove(phieuPhat);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -137,7 +137,7 @@ namespace LibraryManagement.Controllers
 
         private bool PhieuPhatExists(int id)
         {
-            return _context.PhieuPhats.Any(e => e.MaPhat == id);
+            return _context.PhieuPhat.Any(e => e.MaPhat == id);
         }
         
         [HttpPost]

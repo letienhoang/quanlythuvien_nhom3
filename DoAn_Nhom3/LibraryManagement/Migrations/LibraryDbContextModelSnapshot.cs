@@ -41,7 +41,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaCuon");
 
-                    b.ToTable("ChiTietPhieuMuons");
+                    b.ToTable("ChiTietPhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.CuonSach", b =>
@@ -75,7 +75,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaSach");
 
-                    b.ToTable("CuonSachs");
+                    b.ToTable("CuonSach");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.DanhMuc", b =>
@@ -95,7 +95,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasKey("MaDanhMuc");
 
-                    b.ToTable("DanhMucs");
+                    b.ToTable("DanhMuc");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.HoaDonPhat", b =>
@@ -124,7 +124,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaPhat");
 
-                    b.ToTable("HoaDonPhats");
+                    b.ToTable("HoaDonPhat");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NguoiMuon", b =>
@@ -177,7 +177,7 @@ namespace LibraryManagement.Migrations
                     b.HasIndex("CCCD")
                         .IsUnique();
 
-                    b.ToTable("NguoiMuons");
+                    b.ToTable("NguoiMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NhanVien", b =>
@@ -224,7 +224,7 @@ namespace LibraryManagement.Migrations
                     b.HasIndex("TaiKhoan")
                         .IsUnique();
 
-                    b.ToTable("NhanViens");
+                    b.ToTable("NhanVien");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhanLoai", b =>
@@ -239,7 +239,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaDanhMuc");
 
-                    b.ToTable("PhanLoais");
+                    b.ToTable("PhanLoai");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuMuon", b =>
@@ -273,7 +273,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaNhanVien");
 
-                    b.ToTable("PhieuMuons");
+                    b.ToTable("PhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuPhat", b =>
@@ -302,7 +302,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaPhieuMuon");
 
-                    b.ToTable("PhieuPhats");
+                    b.ToTable("PhieuPhat");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.Sach", b =>
@@ -353,7 +353,7 @@ namespace LibraryManagement.Migrations
 
                     b.HasIndex("MaTacGia");
 
-                    b.ToTable("Sachs");
+                    b.ToTable("Sach");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.TacGia", b =>
@@ -381,19 +381,19 @@ namespace LibraryManagement.Migrations
 
                     b.HasKey("MaTacGia");
 
-                    b.ToTable("TacGias");
+                    b.ToTable("TacGia");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.ChiTietPhieuMuon", b =>
                 {
                     b.HasOne("LibraryManagement.Models.CuonSach", "CuonSach")
-                        .WithMany("ChiTietPhieuMuons")
+                        .WithMany("ChiTietPhieuMuon")
                         .HasForeignKey("MaCuon")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.PhieuMuon", "PhieuMuon")
-                        .WithMany("ChiTietPhieuMuons")
+                        .WithMany("ChiTietPhieuMuon")
                         .HasForeignKey("MaPhieuMuon")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -406,7 +406,7 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.CuonSach", b =>
                 {
                     b.HasOne("LibraryManagement.Models.Sach", "Sach")
-                        .WithMany("CuonSachs")
+                        .WithMany("CuonSach")
                         .HasForeignKey("MaSach")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -417,7 +417,7 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.HoaDonPhat", b =>
                 {
                     b.HasOne("LibraryManagement.Models.PhieuPhat", "PhieuPhat")
-                        .WithMany("HoaDonPhats")
+                        .WithMany("HoaDonPhat")
                         .HasForeignKey("MaPhat")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -428,13 +428,13 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.PhanLoai", b =>
                 {
                     b.HasOne("LibraryManagement.Models.DanhMuc", "DanhMuc")
-                        .WithMany("PhanLoais")
+                        .WithMany("PhanLoai")
                         .HasForeignKey("MaDanhMuc")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.Sach", "Sach")
-                        .WithMany("PhanLoais")
+                        .WithMany("PhanLoai")
                         .HasForeignKey("MaSach")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -447,13 +447,13 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.PhieuMuon", b =>
                 {
                     b.HasOne("LibraryManagement.Models.NguoiMuon", "NguoiMuon")
-                        .WithMany("PhieuMuons")
+                        .WithMany("PhieuMuon")
                         .HasForeignKey("MaNguoiMuon")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("LibraryManagement.Models.NhanVien", "NhanVien")
-                        .WithMany("PhieuMuons")
+                        .WithMany("PhieuMuon")
                         .HasForeignKey("MaNhanVien")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -466,7 +466,7 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.PhieuPhat", b =>
                 {
                     b.HasOne("LibraryManagement.Models.PhieuMuon", "PhieuMuon")
-                        .WithMany("PhieuPhats")
+                        .WithMany("PhieuPhat")
                         .HasForeignKey("MaPhieuMuon")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -477,7 +477,7 @@ namespace LibraryManagement.Migrations
             modelBuilder.Entity("LibraryManagement.Models.Sach", b =>
                 {
                     b.HasOne("LibraryManagement.Models.TacGia", "TacGia")
-                        .WithMany("Sachs")
+                        .WithMany("Sach")
                         .HasForeignKey("MaTacGia")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -487,46 +487,46 @@ namespace LibraryManagement.Migrations
 
             modelBuilder.Entity("LibraryManagement.Models.CuonSach", b =>
                 {
-                    b.Navigation("ChiTietPhieuMuons");
+                    b.Navigation("ChiTietPhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.DanhMuc", b =>
                 {
-                    b.Navigation("PhanLoais");
+                    b.Navigation("PhanLoai");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NguoiMuon", b =>
                 {
-                    b.Navigation("PhieuMuons");
+                    b.Navigation("PhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.NhanVien", b =>
                 {
-                    b.Navigation("PhieuMuons");
+                    b.Navigation("PhieuMuon");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuMuon", b =>
                 {
-                    b.Navigation("ChiTietPhieuMuons");
+                    b.Navigation("ChiTietPhieuMuon");
 
-                    b.Navigation("PhieuPhats");
+                    b.Navigation("PhieuPhat");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.PhieuPhat", b =>
                 {
-                    b.Navigation("HoaDonPhats");
+                    b.Navigation("HoaDonPhat");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.Sach", b =>
                 {
-                    b.Navigation("CuonSachs");
+                    b.Navigation("CuonSach");
 
-                    b.Navigation("PhanLoais");
+                    b.Navigation("PhanLoai");
                 });
 
             modelBuilder.Entity("LibraryManagement.Models.TacGia", b =>
                 {
-                    b.Navigation("Sachs");
+                    b.Navigation("Sach");
                 });
 #pragma warning restore 612, 618
         }

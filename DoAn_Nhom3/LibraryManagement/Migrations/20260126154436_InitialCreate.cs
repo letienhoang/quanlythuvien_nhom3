@@ -12,7 +12,7 @@ namespace LibraryManagement.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "DanhMucs",
+                name: "DanhMuc",
                 columns: table => new
                 {
                     MaDanhMuc = table.Column<int>(type: "int", nullable: false)
@@ -22,11 +22,11 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DanhMucs", x => x.MaDanhMuc);
+                    table.PrimaryKey("PK_DanhMuc", x => x.MaDanhMuc);
                 });
 
             migrationBuilder.CreateTable(
-                name: "NguoiMuons",
+                name: "NguoiMuon",
                 columns: table => new
                 {
                     MaNguoiMuon = table.Column<int>(type: "int", nullable: false)
@@ -44,11 +44,11 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NguoiMuons", x => x.MaNguoiMuon);
+                    table.PrimaryKey("PK_NguoiMuon", x => x.MaNguoiMuon);
                 });
 
             migrationBuilder.CreateTable(
-                name: "NhanViens",
+                name: "NhanVien",
                 columns: table => new
                 {
                     MaNhanVien = table.Column<int>(type: "int", nullable: false)
@@ -64,11 +64,11 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NhanViens", x => x.MaNhanVien);
+                    table.PrimaryKey("PK_NhanVien", x => x.MaNhanVien);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TacGias",
+                name: "TacGia",
                 columns: table => new
                 {
                     MaTacGia = table.Column<int>(type: "int", nullable: false)
@@ -80,11 +80,11 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TacGias", x => x.MaTacGia);
+                    table.PrimaryKey("PK_TacGia", x => x.MaTacGia);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhieuMuons",
+                name: "PhieuMuon",
                 columns: table => new
                 {
                     MaPhieuMuon = table.Column<int>(type: "int", nullable: false)
@@ -97,23 +97,23 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhieuMuons", x => x.MaPhieuMuon);
+                    table.PrimaryKey("PK_PhieuMuon", x => x.MaPhieuMuon);
                     table.ForeignKey(
-                        name: "FK_PhieuMuons_NguoiMuons_MaNguoiMuon",
+                        name: "FK_PhieuMuon_NguoiMuon_MaNguoiMuon",
                         column: x => x.MaNguoiMuon,
-                        principalTable: "NguoiMuons",
+                        principalTable: "NguoiMuon",
                         principalColumn: "MaNguoiMuon",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PhieuMuons_NhanViens_MaNhanVien",
+                        name: "FK_PhieuMuon_NhanVien_MaNhanVien",
                         column: x => x.MaNhanVien,
-                        principalTable: "NhanViens",
+                        principalTable: "NhanVien",
                         principalColumn: "MaNhanVien",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Sachs",
+                name: "Sach",
                 columns: table => new
                 {
                     MaSach = table.Column<int>(type: "int", nullable: false)
@@ -130,17 +130,17 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Sachs", x => x.MaSach);
+                    table.PrimaryKey("PK_Sach", x => x.MaSach);
                     table.ForeignKey(
-                        name: "FK_Sachs_TacGias_MaTacGia",
+                        name: "FK_Sach_TacGia_MaTacGia",
                         column: x => x.MaTacGia,
-                        principalTable: "TacGias",
+                        principalTable: "TacGia",
                         principalColumn: "MaTacGia",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhieuPhats",
+                name: "PhieuPhat",
                 columns: table => new
                 {
                     MaPhat = table.Column<int>(type: "int", nullable: false)
@@ -152,17 +152,17 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhieuPhats", x => x.MaPhat);
+                    table.PrimaryKey("PK_PhieuPhat", x => x.MaPhat);
                     table.ForeignKey(
-                        name: "FK_PhieuPhats_PhieuMuons_MaPhieuMuon",
+                        name: "FK_PhieuPhat_PhieuMuon_MaPhieuMuon",
                         column: x => x.MaPhieuMuon,
-                        principalTable: "PhieuMuons",
+                        principalTable: "PhieuMuon",
                         principalColumn: "MaPhieuMuon",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CuonSachs",
+                name: "CuonSach",
                 columns: table => new
                 {
                     MaCuon = table.Column<int>(type: "int", nullable: false)
@@ -175,17 +175,17 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CuonSachs", x => x.MaCuon);
+                    table.PrimaryKey("PK_CuonSach", x => x.MaCuon);
                     table.ForeignKey(
-                        name: "FK_CuonSachs_Sachs_MaSach",
+                        name: "FK_CuonSach_Sach_MaSach",
                         column: x => x.MaSach,
-                        principalTable: "Sachs",
+                        principalTable: "Sach",
                         principalColumn: "MaSach",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhanLoais",
+                name: "PhanLoai",
                 columns: table => new
                 {
                     MaSach = table.Column<int>(type: "int", nullable: false),
@@ -193,23 +193,23 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhanLoais", x => new { x.MaSach, x.MaDanhMuc });
+                    table.PrimaryKey("PK_PhanLoai", x => new { x.MaSach, x.MaDanhMuc });
                     table.ForeignKey(
-                        name: "FK_PhanLoais_DanhMucs_MaDanhMuc",
+                        name: "FK_PhanLoai_DanhMuc_MaDanhMuc",
                         column: x => x.MaDanhMuc,
-                        principalTable: "DanhMucs",
+                        principalTable: "DanhMuc",
                         principalColumn: "MaDanhMuc",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PhanLoais_Sachs_MaSach",
+                        name: "FK_PhanLoai_Sach_MaSach",
                         column: x => x.MaSach,
-                        principalTable: "Sachs",
+                        principalTable: "Sach",
                         principalColumn: "MaSach",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "HoaDonPhats",
+                name: "HoaDonPhat",
                 columns: table => new
                 {
                     MaHoaDon = table.Column<int>(type: "int", nullable: false)
@@ -221,17 +221,17 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HoaDonPhats", x => x.MaHoaDon);
+                    table.PrimaryKey("PK_HoaDonPhat", x => x.MaHoaDon);
                     table.ForeignKey(
-                        name: "FK_HoaDonPhats_PhieuPhats_MaPhat",
+                        name: "FK_HoaDonPhat_PhieuPhat_MaPhat",
                         column: x => x.MaPhat,
-                        principalTable: "PhieuPhats",
+                        principalTable: "PhieuPhat",
                         principalColumn: "MaPhat",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ChiTietPhieuMuons",
+                name: "ChiTietPhieuMuon",
                 columns: table => new
                 {
                     MaPhieuMuon = table.Column<int>(type: "int", nullable: false),
@@ -241,77 +241,77 @@ namespace LibraryManagement.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChiTietPhieuMuons", x => new { x.MaPhieuMuon, x.MaCuon });
+                    table.PrimaryKey("PK_ChiTietPhieuMuon", x => new { x.MaPhieuMuon, x.MaCuon });
                     table.ForeignKey(
-                        name: "FK_ChiTietPhieuMuons_CuonSachs_MaCuon",
+                        name: "FK_ChiTietPhieuMuon_CuonSach_MaCuon",
                         column: x => x.MaCuon,
-                        principalTable: "CuonSachs",
+                        principalTable: "CuonSach",
                         principalColumn: "MaCuon",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ChiTietPhieuMuons_PhieuMuons_MaPhieuMuon",
+                        name: "FK_ChiTietPhieuMuon_PhieuMuon_MaPhieuMuon",
                         column: x => x.MaPhieuMuon,
-                        principalTable: "PhieuMuons",
+                        principalTable: "PhieuMuon",
                         principalColumn: "MaPhieuMuon",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChiTietPhieuMuons_MaCuon",
-                table: "ChiTietPhieuMuons",
+                name: "IX_ChiTietPhieuMuon_MaCuon",
+                table: "ChiTietPhieuMuon",
                 column: "MaCuon");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CuonSachs_MaSach",
-                table: "CuonSachs",
+                name: "IX_CuonSach_MaSach",
+                table: "CuonSach",
                 column: "MaSach");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HoaDonPhats_MaPhat",
-                table: "HoaDonPhats",
+                name: "IX_HoaDonPhat_MaPhat",
+                table: "HoaDonPhat",
                 column: "MaPhat");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NguoiMuons_CCCD",
-                table: "NguoiMuons",
+                name: "IX_NguoiMuon_CCCD",
+                table: "NguoiMuon",
                 column: "CCCD",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_NhanViens_TaiKhoan",
-                table: "NhanViens",
+                name: "IX_NhanVien_TaiKhoan",
+                table: "NhanVien",
                 column: "TaiKhoan",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhanLoais_MaDanhMuc",
-                table: "PhanLoais",
+                name: "IX_PhanLoai_MaDanhMuc",
+                table: "PhanLoai",
                 column: "MaDanhMuc");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuMuons_MaNguoiMuon",
-                table: "PhieuMuons",
+                name: "IX_PhieuMuon_MaNguoiMuon",
+                table: "PhieuMuon",
                 column: "MaNguoiMuon");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuMuons_MaNhanVien",
-                table: "PhieuMuons",
+                name: "IX_PhieuMuon_MaNhanVien",
+                table: "PhieuMuon",
                 column: "MaNhanVien");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuPhats_MaPhieuMuon",
-                table: "PhieuPhats",
+                name: "IX_PhieuPhat_MaPhieuMuon",
+                table: "PhieuPhat",
                 column: "MaPhieuMuon");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sachs_ISBN",
-                table: "Sachs",
+                name: "IX_Sach_ISBN",
+                table: "Sach",
                 column: "ISBN",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Sachs_MaTacGia",
-                table: "Sachs",
+                name: "IX_Sach_MaTacGia",
+                table: "Sach",
                 column: "MaTacGia");
         }
 
@@ -319,37 +319,37 @@ namespace LibraryManagement.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "ChiTietPhieuMuons");
+                name: "ChiTietPhieuMuon");
 
             migrationBuilder.DropTable(
-                name: "HoaDonPhats");
+                name: "HoaDonPhat");
 
             migrationBuilder.DropTable(
-                name: "PhanLoais");
+                name: "PhanLoai");
 
             migrationBuilder.DropTable(
-                name: "CuonSachs");
+                name: "CuonSach");
 
             migrationBuilder.DropTable(
-                name: "PhieuPhats");
+                name: "PhieuPhat");
 
             migrationBuilder.DropTable(
-                name: "DanhMucs");
+                name: "DanhMuc");
 
             migrationBuilder.DropTable(
-                name: "Sachs");
+                name: "Sach");
 
             migrationBuilder.DropTable(
-                name: "PhieuMuons");
+                name: "PhieuMuon");
 
             migrationBuilder.DropTable(
-                name: "TacGias");
+                name: "TacGia");
 
             migrationBuilder.DropTable(
-                name: "NguoiMuons");
+                name: "NguoiMuon");
 
             migrationBuilder.DropTable(
-                name: "NhanViens");
+                name: "NhanVien");
         }
     }
 }

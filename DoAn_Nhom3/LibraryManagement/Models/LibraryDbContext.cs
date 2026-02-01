@@ -8,17 +8,17 @@ public class LibraryDbContext : DbContext
     {
     }
     
-    public DbSet<TacGia> TacGias { get; set; }
-    public DbSet<DanhMuc> DanhMucs { get; set; }
-    public DbSet<Sach> Sachs { get; set; }
-    public DbSet<PhanLoai> PhanLoais { get; set; }
-    public DbSet<CuonSach> CuonSachs { get; set; }
-    public DbSet<NguoiMuon> NguoiMuons { get; set; }
-    public DbSet<NhanVien> NhanViens { get; set; }
-    public DbSet<PhieuMuon> PhieuMuons { get; set; }
-    public DbSet<ChiTietPhieuMuon> ChiTietPhieuMuons { get; set; }
-    public DbSet<PhieuPhat> PhieuPhats { get; set; }
-    public DbSet<HoaDonPhat> HoaDonPhats { get; set; }
+    public DbSet<TacGia> TacGia { get; set; }
+    public DbSet<DanhMuc> DanhMuc { get; set; }
+    public DbSet<Sach> Sach { get; set; }
+    public DbSet<PhanLoai> PhanLoai { get; set; }
+    public DbSet<CuonSach> CuonSach { get; set; }
+    public DbSet<NguoiMuon> NguoiMuon { get; set; }
+    public DbSet<NhanVien> NhanVien { get; set; }
+    public DbSet<PhieuMuon> PhieuMuon { get; set; }
+    public DbSet<ChiTietPhieuMuon> ChiTietPhieuMuon { get; set; }
+    public DbSet<PhieuPhat> PhieuPhat { get; set; }
+    public DbSet<HoaDonPhat> HoaDonPhat { get; set; }
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -67,38 +67,38 @@ public class LibraryDbContext : DbContext
         // Sach - TacGia (N-1) : Sach.MaTacGia -> TacGia.MaTacGia
         mb.Entity<Sach>()
             .HasOne(s => s.TacGia)
-            .WithMany(t => t.Sachs)
+            .WithMany(t => t.Sach)
             .HasForeignKey(s => s.MaTacGia)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Sach - DanhMuc (N-N) qua PhanLoai (PhanLoai.MaSach, PhanLoai.MaDanhMuc)
         mb.Entity<PhanLoai>()
             .HasOne(p => p.Sach)
-            .WithMany(s => s.PhanLoais)
+            .WithMany(s => s.PhanLoai)
             .HasForeignKey(p => p.MaSach);
 
         mb.Entity<PhanLoai>()
             .HasOne(p => p.DanhMuc)
-            .WithMany(d => d.PhanLoais)
+            .WithMany(d => d.PhanLoai)
             .HasForeignKey(p => p.MaDanhMuc);
 
         // CuonSach - Sach (N-1) : CuonSach.MaSach -> Sach.MaSach
         mb.Entity<CuonSach>()
             .HasOne(c => c.Sach)
-            .WithMany(s => s.CuonSachs)
+            .WithMany(s => s.CuonSach)
             .HasForeignKey(c => c.MaSach);
 
         // PhieuMuon - NguoiMuon : PhieuMuon.MaNguoiMuon -> NguoiMuon.MaNguoiMuon
         mb.Entity<PhieuMuon>()
             .HasOne(p => p.NguoiMuon)
-            .WithMany(n => n.PhieuMuons)
+            .WithMany(n => n.PhieuMuon)
             .HasForeignKey(p => p.MaNguoiMuon)
             .OnDelete(DeleteBehavior.Restrict);
 
         // PhieuMuon - NhanVien : PhieuMuon.MaNhanVien -> NhanVien.MaNhanVien
         mb.Entity<PhieuMuon>()
             .HasOne(p => p.NhanVien)
-            .WithMany(nv => nv.PhieuMuons)
+            .WithMany(nv => nv.PhieuMuon)
             .HasForeignKey(p => p.MaNhanVien)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -106,27 +106,27 @@ public class LibraryDbContext : DbContext
         // FK -> PhieuMuon (MaPhieuMuon)
         mb.Entity<ChiTietPhieuMuon>()
             .HasOne(c => c.PhieuMuon)
-            .WithMany(p => p.ChiTietPhieuMuons)
+            .WithMany(p => p.ChiTietPhieuMuon)
             .HasForeignKey(c => c.MaPhieuMuon)
             .OnDelete(DeleteBehavior.Cascade);
 
         // FK -> CuonSach (MaCuon)
         mb.Entity<ChiTietPhieuMuon>()
             .HasOne(c => c.CuonSach)
-            .WithMany(cs => cs.ChiTietPhieuMuons)
+            .WithMany(cs => cs.ChiTietPhieuMuon)
             .HasForeignKey(c => c.MaCuon)
             .OnDelete(DeleteBehavior.Restrict);
 
         // PhieuPhat - PhieuMuon : PhieuPhat.MaPhieuMuon -> PhieuMuon.MaPhieuMuon
         mb.Entity<PhieuPhat>()
             .HasOne(pp => pp.PhieuMuon)
-            .WithMany(pm => pm.PhieuPhats)
+            .WithMany(pm => pm.PhieuPhat)
             .HasForeignKey(pp => pp.MaPhieuMuon);
 
         // HoaDonPhat - PhieuPhat : HoaDonPhat.MaPhat -> PhieuPhat.MaPhat
         mb.Entity<HoaDonPhat>()
             .HasOne(h => h.PhieuPhat)
-            .WithMany(p => p.HoaDonPhats)
+            .WithMany(p => p.HoaDonPhat)
             .HasForeignKey(h => h.MaPhat);
 
         /* =========================

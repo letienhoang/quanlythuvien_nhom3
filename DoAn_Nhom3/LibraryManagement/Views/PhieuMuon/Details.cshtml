@@ -63,7 +63,7 @@
     <!-- Chi tiết sách mượn -->
     <div class="card">
         <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Danh sách sách mượn (@(Model.ChiTietPhieuMuons?.Count ?? 0) cuốn)</h5>
+            <h5 class="mb-0">Danh sách sách mượn (@(Model.ChiTietPhieuMuon?.Count ?? 0) cuốn)</h5>
             @if (Model.TrangThai == LibraryManagement.Enums.LoanStatus.DangMuon)
             {
                 <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#themSachModal">
@@ -72,7 +72,7 @@
             }
         </div>
         <div class="card-body p-0">
-            @if (Model.ChiTietPhieuMuons != null && Model.ChiTietPhieuMuons.Any())
+            @if (Model.ChiTietPhieuMuon != null && Model.ChiTietPhieuMuon.Any())
             {
                 <div class="table-responsive">
                     <table class="table table-striped table-hover mb-0">
@@ -91,7 +91,7 @@
                             @{
                                 int stt = 1;
                             }
-                            @foreach (var ct in Model.ChiTietPhieuMuons)
+                            @foreach (var ct in Model.ChiTietPhieuMuon)
                             {
                                 <tr>
                                     <td>@(stt++)</td>

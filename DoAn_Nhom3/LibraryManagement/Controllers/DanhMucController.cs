@@ -6,36 +6,36 @@ using LibraryManagement.ViewModels;
 
 namespace LibraryManagement.Controllers
 {
-    public class DanhMucsController : Controller
+    public class DanhMucController : Controller
     {
         private readonly LibraryDbContext _context;
 
-        public DanhMucsController(LibraryDbContext context)
+        public DanhMucController(LibraryDbContext context)
         {
             _context = context;
         }
         
-        // GET: DanhMucs
+        // GET: DanhMuc
         public async Task<IActionResult> Index()
         {
-            var list = await _context.DanhMucs.AsNoTracking().ToListAsync();
+            var list = await _context.DanhMuc.AsNoTracking().ToListAsync();
             return View(list);
         }
 
-        // GET: DanhMucs/Details/5
+        // GET: DanhMuc/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             // Load DanhMuc basic
-            var danhMuc = await _context.DanhMucs
+            var danhMuc = await _context.DanhMuc
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.MaDanhMuc == id.Value);
 
             if (danhMuc == null) return NotFound();
 
-            // Lấy sách liên quan qua PhanLoais -> Sach (set-based)
-            var bookItems = await _context.PhanLoais
+            // Lấy sách liên quan qua PhanLoai -> Sach (set-based)
+            var bookItems = await _context.PhanLoai
                 .AsNoTracking()
                 .Where(pl => pl.MaDanhMuc == id.Value)
                 .Select(pl => new
@@ -51,7 +51,7 @@ namespace LibraryManagement.Controllers
             var bookIds = bookItems.Select(b => b.MaSach).ToList();
 
             // Lấy số bản có sẵn (CoSan) nhóm theo MaSach
-            var availableCounts = await _context.CuonSachs
+            var availableCounts = await _context.CuonSach
                 .AsNoTracking()
                 .Where(c => bookIds.Contains(c.MaSach) && c.TrangThai == CopyStatus.CoSan)
                 .GroupBy(c => c.MaSach)
@@ -75,7 +75,7 @@ namespace LibraryManagement.Controllers
             return View(vm);
         }
 
-        // GET: DanhMucs/Create
+        // GET: DanhMuc/Create
         public async Task<IActionResult> Create()
         {
             var vm = new DanhMucEditViewModel();
@@ -83,7 +83,7 @@ namespace LibraryManagement.Controllers
             return View(vm);
         }
 
-        // POST: DanhMucs/Create
+        // POST: DanhMuc/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(DanhMucEditViewModel vm)
@@ -98,7 +98,7 @@ namespace LibraryManagement.Controllers
             try
             {
                 // Lưu DanhMuc trước để có MaDanhMuc (IDENTITY)
-                _context.DanhMucs.Add(vm.DanhMuc);
+                _context.DanhMuc.Add(vm.DanhMuc);
                 await _context.SaveChangesAsync();
 
                 // Nếu có sách chọn -> tạo PhanLoai (nếu chưa tồn tại)
@@ -106,14 +106,14 @@ namespace LibraryManagement.Controllers
                 {
                     var distinctIds = vm.SelectedBookIds.Distinct().ToList();
 
-                    var phanLoais = distinctIds.Select(sid => new PhanLoai
+                    var PhanLoai = distinctIds.Select(sid => new PhanLoai
                     {
                         MaSach = sid,
                         MaDanhMuc = vm.DanhMuc.MaDanhMuc
                     }).ToList();
 
                     // tránh duplicate key (nếu có ràng buộc unique)
-                    _context.AddRange(phanLoais);
+                    _context.AddRange(PhanLoai);
                     await _context.SaveChangesAsync();
                 }
 
@@ -129,12 +129,12 @@ namespace LibraryManagement.Controllers
             }
         }
 
-        // GET: DanhMucs/Edit/5
+        // GET: DanhMuc/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
-            var danhMuc = await _context.DanhMucs
+            var danhMuc = await _context.DanhMuc
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.MaDanhMuc == id.Value);
 
@@ -142,8 +142,8 @@ namespace LibraryManagement.Controllers
 
             var vm = new DanhMucEditViewModel { DanhMuc = danhMuc };
 
-            // load selected book ids from PhanLoais
-            vm.SelectedBookIds = await _context.PhanLoais
+            // load selected book ids from PhanLoai
+            vm.SelectedBookIds = await _context.PhanLoai
                 .Where(p => p.MaDanhMuc == danhMuc.MaDanhMuc)
                 .Select(p => p.MaSach)
                 .ToListAsync();
@@ -152,7 +152,7 @@ namespace LibraryManagement.Controllers
             return View(vm);
         }
 
-        // POST: DanhMucs/Edit/5
+        // POST: DanhMuc/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, DanhMucEditViewModel vm)
@@ -169,7 +169,7 @@ namespace LibraryManagement.Controllers
             try
             {
                 // Load existing entity to update tracked entity (avoid attaching detached instance)
-                var existing = await _context.DanhMucs.FindAsync(id);
+                var existing = await _context.DanhMuc.FindAsync(id);
                 if (existing == null) return NotFound();
 
                 // Update simple properties
@@ -178,8 +178,8 @@ namespace LibraryManagement.Controllers
 
                 await _context.SaveChangesAsync();
 
-                // Sync PhanLoais (set-based)
-                var currentBookIds = await _context.PhanLoais
+                // Sync PhanLoai (set-based)
+                var currentBookIds = await _context.PhanLoai
                     .Where(p => p.MaDanhMuc == id)
                     .Select(p => p.MaSach)
                     .ToListAsync();
@@ -196,15 +196,15 @@ namespace LibraryManagement.Controllers
                         MaSach = bid,
                         MaDanhMuc = id
                     });
-                    _context.PhanLoais.AddRange(addEntities);
+                    _context.PhanLoai.AddRange(addEntities);
                 }
 
                 if (toRemove.Any())
                 {
-                    var removeEntities = await _context.PhanLoais
+                    var removeEntities = await _context.PhanLoai
                         .Where(p => p.MaDanhMuc == id && toRemove.Contains(p.MaSach))
                         .ToListAsync();
-                    _context.PhanLoais.RemoveRange(removeEntities);
+                    _context.PhanLoai.RemoveRange(removeEntities);
                 }
 
                 await _context.SaveChangesAsync();
@@ -228,12 +228,12 @@ namespace LibraryManagement.Controllers
             }
         }
         
-        // GET: DanhMucs/Delete/5
+        // GET: DanhMuc/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
-            var danhMuc = await _context.DanhMucs
+            var danhMuc = await _context.DanhMuc
                 .AsNoTracking()
                 .FirstOrDefaultAsync(m => m.MaDanhMuc == id.Value);
 
@@ -242,20 +242,20 @@ namespace LibraryManagement.Controllers
             return View(danhMuc);
         }
 
-        // Delete / Index etc remain mostly the same, but ensure cascade or manual cleanup of PhanLoais on delete
+        // Delete / Index etc remain mostly the same, but ensure cascade or manual cleanup of PhanLoai on delete
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var danhMuc = await _context.DanhMucs.FindAsync(id);
+            var danhMuc = await _context.DanhMuc.FindAsync(id);
             if (danhMuc != null)
             {
-                // Option A: if FK PhanLoais has cascade delete, direct remove ok
-                // Option B: remove PhanLoais manually to be safe
-                var phans = _context.PhanLoais.Where(p => p.MaDanhMuc == id);
-                _context.PhanLoais.RemoveRange(phans);
+                // Option A: if FK PhanLoai has cascade delete, direct remove ok
+                // Option B: remove PhanLoai manually to be safe
+                var phans = _context.PhanLoai.Where(p => p.MaDanhMuc == id);
+                _context.PhanLoai.RemoveRange(phans);
 
-                _context.DanhMucs.Remove(danhMuc);
+                _context.DanhMuc.Remove(danhMuc);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
@@ -263,13 +263,13 @@ namespace LibraryManagement.Controllers
 
         private bool DanhMucExists(int id)
         {
-            return _context.DanhMucs.Any(e => e.MaDanhMuc == id);
+            return _context.DanhMuc.Any(e => e.MaDanhMuc == id);
         }
 
         // Helper to populate book list
         private async Task PopulateBooksFor(DanhMucEditViewModel vm)
         {
-            var books = await _context.Sachs
+            var books = await _context.Sach
                 .AsNoTracking()
                 .OrderBy(b => b.TenSach)
                 .Select(b => new { b.MaSach, b.TenSach, b.ISBN })
