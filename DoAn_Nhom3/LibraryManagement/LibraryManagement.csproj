@@ -21,4 +21,11 @@
     <Folder Include="Views\Shared\Components\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\ThongKeSachs\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\ThongKeTienPhats\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\SachQuaHans\Details.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\SachQuaHans\Index.cshtml" />
+  </ItemGroup>
+
 </Project>

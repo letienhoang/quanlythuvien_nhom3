@@ -36,7 +36,7 @@ namespace LibraryManagement.Controllers
                 {
                     //Funtion số sách đang mượn 
                     var soSach = await _context.Database
-                        .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({item.MaNguoiMuon}) AS Value")
+                        .SqlQuery<int>($"SELECT dbo.fn_CountBooksCurrentlyBorrowed({item.MaNguoiMuon}) AS Value")
                         .FirstOrDefaultAsync();
 
                     soSachDangMuon[item.MaNguoiMuon] = soSach;
@@ -78,7 +78,7 @@ namespace LibraryManagement.Controllers
             ViewBag.CuonSachCoSan = await query.Take(1000).ToListAsync();
 
             var soSachDangMuon = await _context.Database
-                .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({phieuMuon.MaNguoiMuon}) AS Value")
+                .SqlQuery<int>($"SELECT dbo.fn_CountBooksCurrentlyBorrowed({phieuMuon.MaNguoiMuon}) AS Value")
                 .FirstOrDefaultAsync();
 
             ViewBag.RemainingSlots = Math.Max(0, 3 - soSachDangMuon);
@@ -100,9 +100,9 @@ namespace LibraryManagement.Controllers
             var phieuMuon = await _context.PhieuMuons.FindAsync(maPhieuMuon);
             if (phieuMuon == null) return NotFound();
 
-            // Kiểm tra số slot còn lại (server-side) bằng hàm fn_SoSachDangMuon
+            // Kiểm tra số slot còn lại (server-side) bằng hàm fn_CountBooksCurrentlyBorrowed
             var soSachDangMuon = await _context.Database
-                .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({phieuMuon.MaNguoiMuon}) AS Value")
+                .SqlQuery<int>($"SELECT dbo.fn_CountBooksCurrentlyBorrowed({phieuMuon.MaNguoiMuon}) AS Value")
                 .FirstOrDefaultAsync();
 
             var remainingSlots = Math.Max(0, 3 - soSachDangMuon);
@@ -207,7 +207,7 @@ namespace LibraryManagement.Controllers
             if (selectedNguoiMuon.HasValue && selectedNguoiMuon.Value > 0)
             {
                 ViewBag.SoSachDangMuon = await _context.Database
-                    .SqlQuery<int>($"SELECT dbo.fn_SoSachDangMuon({selectedNguoiMuon.Value}) AS Value")
+                    .SqlQuery<int>($"SELECT dbo.fn_CountBooksCurrentlyBorrowed({selectedNguoiMuon.Value}) AS Value")
                     .FirstOrDefaultAsync();
             }
             else
@@ -433,17 +433,7 @@ namespace LibraryManagement.Controllers
 
             ViewBag.CuonSachCoSan = cuonSachCoSan;
         }
-
-        // Function In SQL 
-        public async Task<int> GetSoSachDangMuon(int maNguoiMuon)
-        {
-            var result = await _context.Database
-                .SqlQuery<int>($"SELECT dbo.fn_TinhSoNgayTre({maNguoiMuon})")
-                .FirstOrDefaultAsync();
-
-            return result;
-        }
-
+        
         // POST: PhieuMuons/TraSach - Cập nhật tình trạng trả sách
         [HttpPost]
         [ValidateAntiForgeryToken]
