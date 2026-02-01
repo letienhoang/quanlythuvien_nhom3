@@ -285,7 +285,7 @@ BEGIN
 END;
 GO
 
--- Stored Procedure 4. Gia hạn mượnStored Procedure 
+-- Stored Procedure 4. Gia hạn mượn
 CREATE PROCEDURE usp_RenewLoan
 (
     @MaPhieuMuon INT,
